@@ -18,8 +18,21 @@
 
 int main(int argc, char **argv)
 {
-    if(validargs(argc, argv))
+    if(validargs(argc, argv) == -1){
         USAGE(*argv, EXIT_FAILURE);
+        return EXIT_FAILURE;
+    }
+    else if(validargs(argc,argv) == 0){
+    	if(global_options == 0x80000000){// -h flag is specified
+    		USAGE(*argv, EXIT_SUCCESS);
+    		return EXIT_SUCCESS;
+    	}
+    	char *input;
+    	input = "tobereplace";
+    	fgets(input,1024,stdin);
+    	fprintf(stdout, "%s", input);
+    	return EXIT_SUCCESS; // <- not sure here
+    }
     if(global_options & HELP_OPTION)
         USAGE(*argv, EXIT_SUCCESS);
     // TO BE IMPLEMENTED

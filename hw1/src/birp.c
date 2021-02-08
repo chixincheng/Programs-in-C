@@ -64,11 +64,14 @@ int validargs(int argc, char **argv) {
     int zz=-1;
     int Z = -1;
     int ZZ =-1;
-    if(pos == 0){
+    if(pos == 0 && argc >= 1){
         *argv = *(argv+1);
         argc--;
         pos++;
         argc--;
+    }
+    else{
+        return -1; //no argument
     }
     while(stringcmp(*argv,"\n") != 0){ //while not end of argv
         if(pos == 1 && argc >= 1){
@@ -124,7 +127,7 @@ int validargs(int argc, char **argv) {
                 argc--;
                 *argv = *(argv+1);
                 if(argc >= 1){
-                    int temp = atoi(*argv);
+                    int temp = stringtoint(*argv);
                     if(temp >= 0 && temp <= 255){
                         t= 00000200;
                         tt = temp;
@@ -138,7 +141,7 @@ int validargs(int argc, char **argv) {
                 argc--;
                 *argv = *(argv+1);
                 if(argc >= 1){
-                    int temp = atoi(*argv);
+                    int temp = stringtoint(*argv);
                     if(temp >= 0 && temp <= 16){
                         z = 00000300;
                         zz = -temp; //negative
@@ -152,7 +155,7 @@ int validargs(int argc, char **argv) {
                 argc--;
                 *argv = *(argv+1);
                 if(argc >= 1){
-                    int temp = atoi(*argv);
+                    int temp = stringtoint(*argv);
                     if(temp >= 0 && temp <= 16){
                         Z = 00000300;
                         ZZ = temp; // positve
@@ -224,7 +227,7 @@ int validargs(int argc, char **argv) {
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
-                        int temp = atoi(*argv);
+                        int temp = stringtoint(*argv);
                         if(temp >= 0 && temp <= 16){
                             t = 00000200;
                             tt = temp;
@@ -242,7 +245,7 @@ int validargs(int argc, char **argv) {
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
-                        int temp = atoi(*argv);
+                        int temp = stringtoint(*argv);
                         if(temp >= 0 && temp <= 16){
                             z = 00000300;
                             zz = temp;
@@ -260,7 +263,7 @@ int validargs(int argc, char **argv) {
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
-                        int temp = atoi(*argv);
+                        int temp = stringtoint(*argv);
                         if(temp >= 0 && temp <= 16){
                             Z = 00000300;
                             ZZ = temp;
@@ -296,7 +299,7 @@ int validargs(int argc, char **argv) {
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
-                        int temp = atoi(*argv);
+                        int temp = stringtoint(*argv);
                         if(temp >= 0 && temp <= 16){
                             t = 00000200;
                             tt = temp;
@@ -314,7 +317,7 @@ int validargs(int argc, char **argv) {
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
-                        int temp = atoi(*argv);
+                        int temp = stringtoint(*argv);
                         if(temp >= 0 && temp <= 16){
                             z = 00000300;
                             zz = temp;
@@ -332,7 +335,7 @@ int validargs(int argc, char **argv) {
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
-                        int temp = atoi(*argv);
+                        int temp = stringtoint(*argv);
                         if(temp >= 0 && temp <= 16){
                             Z = 00000300;
                             ZZ = temp;
@@ -354,17 +357,17 @@ int validargs(int argc, char **argv) {
     }
     if(t > 0){
         global_options = global_options + tt;
-        global_options >> 8;
+        global_options = global_options >> 8;//shift right
         global_options = global_options + inp + outp + t;
     }
     else if(z > 0){
         global_options = global_options + zz;
-        global_options >> 8;
+        global_options = global_options >> 8;
         global_options = global_options + inp + outp + z;
     }
     else if(Z > 0){
         global_options = global_options + ZZ;
-        global_options >> 8;
+        global_options = global_options >> 8;
         global_options = global_options + inp + outp + Z;
     }
     else if(n > 0){
