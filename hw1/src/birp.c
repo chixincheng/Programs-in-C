@@ -73,7 +73,7 @@ int validargs(int argc, char **argv) {
     else{
         return -1; //no argument
     }
-    while(stringcmp(*argv,"\n") != 0){ //while not end of argv
+    while(stringcmp(*argv,"\0") != 0){ //while not end of argv
         if(pos == 1 && argc >= 1){
             if(stringcmp(*argv,"-h") == 0){// if -h is first argument
                 global_options = 0x80000000;

@@ -3,13 +3,13 @@
 //return 0 if strings are equal, 1 otherwise.
 int stringcmp(char *a, char *b){
 	int ret = 0;
-	while(*a != '\n' || *b != '\n'){
+	while(*a != '\0' || *b != '\0'){
 		if(*a != *b){
 			ret =1;
 			break;
 		}
-		*a = *(a+1);
-		*b = *(b+1);
+		a++;
+		b++;
 	}
 	return ret;
 }
@@ -21,7 +21,7 @@ int stringtoint(char *str){
 		*str = *(str+1);
 	}
 	int revoutput = 0;
-	while(*str != '\n'){
+	while(*str != '\0'){
 		revoutput = revoutput * 10 + *str;
 	}
 	int output = 0;
