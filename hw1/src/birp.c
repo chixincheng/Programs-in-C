@@ -64,24 +64,28 @@ int validargs(int argc, char **argv) {
     int zz=-1;
     int Z = -1;
     int ZZ =-1;
+    char *ptr = *(argv);
+    int ofset = 1;
     if(pos == 0 && argc >= 1){
-        *argv = *(argv+1);
+        ptr = *(argv+ofset);
+        ofset++;
         argc--;
         pos++;
     }
     else{
         return -1; //no argument
     }
-    while(stringcmp(*argv,"\0") != 0){ //while not end of argv
+    while(stringcmp(ptr,'\0') != 0){ //while not end of argv
         if(pos == 1 && argc >= 1){
-            if(stringcmp(*argv,"-h") == 0){// if -h is first argument
+            if(stringcmp(ptr,"-h") == 0){// if -h is first argument
                 global_options = 0x80000000;
                 return 0;
             }
-            else if(stringcmp(*argv,"-i") == 0){ // if -i is first argument
-                *argv = *(argv+1);
+            else if(stringcmp(ptr,"-i") == 0){ // if -i is first argument
+                ptr = *(argv+ofset);
+                ofset++;
                 argc--;
-                if(stringcmp(*argv,"pgm") == 0 && argc >= 1)//if input format = pgm
+                if(stringcmp(ptr,"pgm") == 0 && argc >= 1)//if input format = pgm
                 {
                     informat = "pgm";
                     inp = 00000001; //input exist
@@ -352,7 +356,8 @@ int validargs(int argc, char **argv) {
         }
         pos++;
         argc--;
-        *argv = *(argv+1);
+        ptr = *(argv+ofset);
+        ofset++;
     }
     if(t > 0){
         global_options = global_options + tt;

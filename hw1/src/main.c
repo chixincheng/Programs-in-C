@@ -22,15 +22,17 @@ int main(int argc, char **argv)
         USAGE(*argv, EXIT_FAILURE);
         return EXIT_FAILURE;
     }
-    else if(validargs(argc,argv) == 0){
+    else if(validargs(argc,argv) == 0){ //when valiargs return 0
+    	char *input;
+    	input = "tobereplace";
+
+    	fgets(input,1024,stdin);
+    	fprintf(stdout, "%s", input);
+
     	if(global_options == 0x80000000){// -h flag is specified
     		USAGE(*argv, EXIT_SUCCESS);
     		return EXIT_SUCCESS;
     	}
-    	char *input;
-    	input = "tobereplace";
-    	fgets(input,1024,stdin);
-    	fprintf(stdout, "%s", input);
     	return EXIT_SUCCESS; // <- not sure here
     }
     if(global_options & HELP_OPTION)
