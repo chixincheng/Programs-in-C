@@ -68,7 +68,6 @@ int validargs(int argc, char **argv) {
         *argv = *(argv+1);
         argc--;
         pos++;
-        argc--;
     }
     else{
         return -1; //no argument
@@ -117,13 +116,13 @@ int validargs(int argc, char **argv) {
                     return -1; //-o not followed by prg or birp or ascii
                 }
             }
-            else if(stringcmp(*argv,"-n") == 0 && argc >= 1){
+            else if(stringcmp(*argv,"-n") == 0 && argc >= 1){ //if -n is first argument
                 n = 00000100;
             }
-            else if(stringcmp(*argv,"-r") == 0 && argc >= 1){
+            else if(stringcmp(*argv,"-r") == 0 && argc >= 1){ // if -r is first argument
                 r = 00000400;
             }
-            else if(stringcmp(*argv,"-t") == 0 && argc >= 1){
+            else if(stringcmp(*argv,"-t") == 0 && argc >= 1){ // if -t is first argument
                 argc--;
                 *argv = *(argv+1);
                 if(argc >= 1){
@@ -137,7 +136,7 @@ int validargs(int argc, char **argv) {
                     }
                 }
             }
-            else if(stringcmp(*argv,"z") == 0 && argc >= 1){
+            else if(stringcmp(*argv,"z") == 0 && argc >= 1){// if -z is first argument
                 argc--;
                 *argv = *(argv+1);
                 if(argc >= 1){
@@ -151,7 +150,7 @@ int validargs(int argc, char **argv) {
                     }
                 }
             }
-            else if(stringcmp(*argv,"Z") == 0 && argc >= 1){
+            else if(stringcmp(*argv,"Z") == 0 && argc >= 1){ // if -Z is first argument
                 argc--;
                 *argv = *(argv+1);
                 if(argc >= 1){
@@ -165,11 +164,11 @@ int validargs(int argc, char **argv) {
                     }
                 }
             }
-            else{
+            else{ //invalid first argument
                 return -1;
             }
         }
-        else if(pos == 2 && argc >= 1){ //check for output/input format
+        else if(pos == 2 && argc >= 1){ //check for second argument
             if(stringcmp(*argv,"-i") == 0){ // if -i is second argument
                 *argv = *(argv+1);
                 argc--;
@@ -209,21 +208,21 @@ int validargs(int argc, char **argv) {
                 }
             }
             else if(stringcmp(*argv,"-n") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && n<0){
                     n = 00000100;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(*argv,"-r") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && r<0){
                     r = 00000400;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(*argv,"-t") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && t<0){
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
@@ -241,7 +240,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(*argv,"-z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && z<0){
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
@@ -259,7 +258,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(*argv,"-Z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && Z<0){
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
@@ -281,21 +280,21 @@ int validargs(int argc, char **argv) {
         }
         else{
             if(stringcmp(*argv,"-n") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && n<0){
                     n = 00000100;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(*argv,"-r") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && r<0){
                     r = 00000400;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(*argv,"-t") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && t<0){
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
@@ -313,7 +312,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(*argv,"-z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && z<0){
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
@@ -331,7 +330,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(*argv,"-Z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && Z<0){
                     argc--;
                     *argv = *(argv+1);
                     if(argc >= 1){
