@@ -3,6 +3,7 @@
 
 #include "bdd.h"
 #include "debug.h"
+#include "helper.h"
 
 /*
  * Macros that take a pointer to a BDD node and obtain pointers to its left
@@ -16,6 +17,8 @@
 #define LEFT(np, l) ((l) > (np)->level ? (np) : bdd_nodes + (np)->left)
 #define RIGHT(np, l) ((l) > (np)->level ? (np) : bdd_nodes + (np)->right)
 
+int indexnonleaf = BDD_NUM_LEAVES; //index of nonleaf node to be added, start at [256]
+
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
  * inserting a new node if a matching node does not already exist.
@@ -24,12 +27,21 @@
  * The function aborts if the arguments passed are out-of-bounds.
  */
 int bdd_lookup(int level, int left, int right) {
-    // TO BE IMPLEMENTED
-    return -1;
+    BDD_NODE tofind = {level,left,right};
+    int travel = indexnonleaf-1;
+    while(travel > 255){ //256 leaf node
+        if(nodecompare(tofind,bdd_nodes[travel]) == 0){ //if the node is found
+            return travel;
+        }
+        travel --;
+    }
+    //node not found, add to end of bdd_nodes and return index
+    bdd_nodes[indexnonleaf] = tofind;
+    return indexnonleaf;
 }
 
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
-    // TO BE IMPLEMENTED
+    // TO BE IMPLEMENTEDd
     return NULL;
 }
 

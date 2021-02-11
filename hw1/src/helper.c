@@ -1,5 +1,5 @@
 #include "helper.h"
-
+#include "bdd.h"
 //return 0 if strings are equal, 1 otherwise.
 int stringcmp(char *a, char *b){
 	int ret = 0;
@@ -46,4 +46,15 @@ int stringtoint(char *str){
 		output = -output;
 	}
 	return output;
+}
+//compare two bdd_node, 0 means equal, -1 means unequal
+int nodecompare(BDD_NODE a, BDD_NODE b){
+	if(a.level == b.level){
+		if(a.left == b.left){
+			if(a.right == b.right){
+				return 0;
+			}
+		}
+	}
+	return -1;
 }

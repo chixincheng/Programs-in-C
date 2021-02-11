@@ -8,6 +8,18 @@
 #include "debug.h"
 #include "helper.h"
 
+char *informat; //input format
+char *outformat; //output format
+int n= -1;
+int r = -1;
+int t= -1;
+int tt=-1;
+int z = -1;
+int zz=-1;
+int Z = -1;
+int ZZ =-1;
+
+
 int pgm_to_birp(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     return -1;
@@ -50,20 +62,10 @@ int birp_to_ascii(FILE *in, FILE *out) {
  */
 int validargs(int argc, char **argv) {
     int pos = 0;
-    char *informat;
     informat = "birp";
     int inp = 00000002;
-    char *outformat;
     outformat = "birp";
     int outp = 00000020;
-    int n= -1;
-    int r = -1;
-    int t= -1;
-    int tt=-1;
-    int z = -1;
-    int zz=-1;
-    int Z = -1;
-    int ZZ =-1;
     char *ptr = *(argv);
     int ofset = 1;
     if(pos == 0 && argc >= 1){
