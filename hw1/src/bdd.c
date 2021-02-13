@@ -27,17 +27,40 @@ int indexnonleaf = BDD_NUM_LEAVES; //index of nonleaf node to be added, start at
  * The function aborts if the arguments passed are out-of-bounds.
  */
 int bdd_lookup(int level, int left, int right) {
-    BDD_NODE tofind = {level,left,right};
-    int travel = indexnonleaf-1;
-    while(travel > 255){ //256 leaf node
-        if(nodecompare(tofind,bdd_nodes[travel]) == 0){ //if the node is found
-            return travel;
-        }
-        travel --;
+    if(left == right){ //left child and right child are equal,no new node created
+        return left;
     }
-    //node not found, add to end of bdd_nodes and return index
-    bdd_nodes[indexnonleaf] = tofind;
-    return indexnonleaf;
+    else{
+        BDD_NODE cmp = {level,left,right};
+        int found = searchNode(indexnonleaf,cmp); //if found != -1, some existing node is found
+        if(found != -1){ //a existing same node is found
+            BDD_NODE *path = bdd_hash_map[found];//the pointer pointing to BDDNODE obj in bdd_nodes
+            int sz = sizeof(BDD_NODE);//size of each BDD_NODE
+            BDD_NODE *beg = &bdd_nodes[256];//beginning address of bdd_nodes[]
+            int retindex = ((path - beg) / sz) + 256;//difference of address divide by the size of struct
+            return retindex;
+        }
+        else{// new node is added
+            int hkey = hashKey(indexnonleaf);
+            int added = -1;
+            bdd_nodes[indexnonleaf] = cmp; // add to bdd_nodes table
+            // add to hashmap
+            while(added == -1){
+                if(bdd_hash_map[hkey] == NULL){
+                    bdd_hash_map[hkey] = &bdd_nodes[indexnonleaf];
+                    added = 0;
+                }
+                else{
+                    hkey++;
+                    if(hkey > BDD_HASH_SIZE-1){
+                        hkey = hkey % BDD_HASH_SIZE;
+                    }
+                }
+            }
+            indexnonleaf++;
+            return indexnonleaf;
+        }
+    }
 }
 
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {

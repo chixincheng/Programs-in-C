@@ -48,12 +48,36 @@ int stringtoint(char *str){
 	return output;
 }
 //compare two bdd_node, 0 means equal, -1 means unequal
+/*struct HashMap{
+	int lev;
+	int lef;
+	int right;
+};*/
+
 int nodecompare(BDD_NODE a, BDD_NODE b){
 	if(a.level == b.level){
 		if(a.left == b.left){
 			if(a.right == b.right){
 				return 0;
 			}
+		}
+	}
+	return -1;
+}
+//implement hash table function below
+int hashKey(int key){
+	return key % BDD_HASH_SIZE;
+}
+int searchNode(int key, BDD_NODE tocompare){
+	int startindex = hashKey(key);
+
+	while(bdd_hash_map[startindex] != NULL){
+		if(nodecompare(*bdd_hash_map[startindex],tocompare) == 0){
+			return startindex;
+		}
+		startindex++;
+		if(startindex > BDD_HASH_SIZE-1){
+			startindex = startindex % BDD_HASH_SIZE;
 		}
 	}
 	return -1;

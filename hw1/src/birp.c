@@ -18,6 +18,8 @@ int z = -1;
 int zz=-1;
 int Z = -1;
 int ZZ =-1;
+int width;
+int height;
 
 
 int pgm_to_birp(FILE *in, FILE *out) {
@@ -35,9 +37,34 @@ int birp_to_birp(FILE *in, FILE *out) {
     return -1;
 }
 
-int pgm_to_ascii(FILE *in, FILE *out) {
-    // TO BE IMPLEMENTED
-    return -1;
+int pgm_to_ascii(FILE *in, FILE *out) { //this works
+    int sucread = -1;
+    int pos = 0;
+    sucread = img_read_pgm(in,&width,&height,raster_data,sizeof(raster_data));
+    if(sucread == 0){ //read pgm successfully
+        for(int i=0;i<height;i++){
+            for(int j=0;j<width;j++){
+                if(raster_data[pos] > 191 && raster_data[pos] < 256){
+                    fputc('@',out);
+                }
+                else if(raster_data[pos] > 127 && raster_data[pos] < 192){
+                    fputc('*',out);
+                }
+                else if(raster_data[pos] > 63 && raster_data[pos] < 128){
+                    fputc('.',out);
+                }
+                else if(raster_data[pos] > -1 && raster_data[pos] < 64){
+                    fputc(' ',out);
+                }
+                pos++;
+            }
+            fputc('\n',out);
+        }
+        return 0;
+    }
+    else{
+        return -1;
+    }
 }
 
 int birp_to_ascii(FILE *in, FILE *out) {
