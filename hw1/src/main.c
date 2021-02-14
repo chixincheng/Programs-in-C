@@ -28,7 +28,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
     else if(validargs(argc,argv) == 0){ //when valiargs return 0
-    	pgm_to_ascii(stdin,stdout);
+    	pgm_to_birp(stdin,stdout);
 
     	//
     	if(global_options == 0x80000000){// -h flag is specified

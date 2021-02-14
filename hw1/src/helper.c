@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "bdd.h"
+
 //return 0 if strings are equal, 1 otherwise.
 int stringcmp(char *a, char *b){
 	int ret = 0;
@@ -81,4 +82,19 @@ int searchNode(int key, BDD_NODE tocompare){
 		}
 	}
 	return -1;
+}
+unsigned char *rasterind(int width, int orgh, int height, unsigned char *raster,int half){
+	if(half == 1){ //first half
+		return raster;
+	}
+	else{ // second half
+		int add;
+		if(width != height){
+			add = width * orgh;
+		}
+		else{
+			add = width;
+		}
+		return raster+add;
+	}
 }
