@@ -19,7 +19,6 @@
 
 int indexnonleaf = BDD_NUM_LEAVES; //index of nonleaf node to be added, start at [256]
 int firstent = -1; //helper var in bdd_from_raster
-int lev; //helper var in bdd_from_raster
 int newsize;//helper var in bdd_from_raster
 int orgh;//helper var in bdd_from_raster
 
@@ -31,9 +30,6 @@ int orgh;//helper var in bdd_from_raster
  * The function aborts if the arguments passed are out-of-bounds.
  */
 int bdd_lookup(int level, int left, int right) {
-    printf("%i\n", level);
-    printf("%i\n", left);
-    printf("%i\n", right);
     if(left == right){ //left child and right child are equal,no new node created
         return left;
     }
@@ -43,8 +39,8 @@ int bdd_lookup(int level, int left, int right) {
         if(found != -1){ //a existing same node is found
             BDD_NODE *path = bdd_hash_map[found];//the pointer pointing to BDDNODE obj in bdd_nodes
             int sz = sizeof(BDD_NODE);//size of each BDD_NODE
-            BDD_NODE *beg = &bdd_nodes[256];//beginning address of bdd_nodes[]
-            int retindex = ((path - beg) / sz) + 256;//difference of address divide by the size of struct
+            BDD_NODE *beg = &bdd_nodes[0];//beginning address of bdd_nodes[]
+            int retindex = ((path - beg) / sz);//difference of address divide by the size of struct
             return retindex;
         }
         else{// new node is added
@@ -74,12 +70,10 @@ int bdd_lookup(int level, int left, int right) {
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     if(firstent == -1){
         newsize = 2; //size of return matirx.
-        lev = 1;
         orgh = h; //original height
         if(w == h){ //given square
             while(newsize < w){
                 newsize = newsize * 2;
-                lev = lev+1;
             }
         }
         else{ //given rectangle
@@ -91,14 +85,9 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
             }
             while(newsize < cmp){
                 newsize = newsize * 2;
-                lev = lev+1;
             }
         }
-        lev = lev*2;
         firstent = 0;
-    }
-    else{
-        lev --;
     }
     //loop through the new 2d array
     if(w == 1 && h == 1){ //base case
@@ -111,15 +100,21 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
             h = newsize;
             firstent = -2;
         }
+        int curw;
+        int curh;
         if(w == h){ //divide horizontal
+            curw = w;
+            curh = h;
             w = w/2;
         }
         else{ //divide vertical
+            curw = w;
+            curh = h;
             h = h/2;
         }
         // the - &bdd_nodes[0] is to get the index of the node, since &bdd_ndoes[0] is the
         // starting index.
-        int ret = bdd_lookup(lev,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - &bdd_nodes[0]
+        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - &bdd_nodes[0]
             ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - &bdd_nodes[0]);
         return &bdd_nodes[ret];
     }
@@ -131,7 +126,38 @@ void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
 }
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
-    // TO BE IMPLEMENTED
+    int serial = 0;//helper var
+    BDD_NODE root = *node;
+    int lev = root.level;
+    unsigned char opc = lev+64;//opcode
+    if(lev == 0){
+        serial++;
+        if(bdd_index_map[bdd_lookup(lev,root.left,root.right)] == 0){
+            bdd_index_map[bdd_lookup(lev,root.left,root.right)] = serial;
+            fputc(opc,out);
+            //leave node's value = their index in bdd_nodes
+            int leaveval = bdd_lookup(lev,root.left,root.right);
+            fputc(leaveval,out);
+            return serial;
+        }
+        else{
+            return bdd_index_map[bdd_lookup(lev,root.left,root.right)];
+        }
+    }else{
+        serial = bdd_serialize(&bdd_nodes[root.left],out) + 1;//traverse left
+        if(bdd_index_map[bdd_lookup(lev,root.left,root.right)] == 0){
+            bdd_index_map[bdd_lookup(lev,root.left,root.right)] = serial;
+        }
+        //
+        serial = bdd_serialize(&bdd_nodes[root.right],out) + 1;//traverse right
+        if(bdd_index_map[bdd_lookup(lev,root.left,root.right)] == 0){
+            bdd_index_map[bdd_lookup(lev,root.left,root.right)] = serial;
+        }
+        fputc(opc,out);
+        fputc(bdd_index_map[root.left],out);
+        fputc(bdd_index_map[root.right],out);
+    }
+
     return -1;
 }
 

@@ -98,3 +98,12 @@ unsigned char *rasterind(int width, int orgh, int height, unsigned char *raster,
 		return raster+add;
 	}
 }
+int levelcal(int width, int height){
+	int ret = -1;
+	int area = width * height;
+	while(area != 0){
+		area = area/2;
+		ret ++;
+	}
+	return ret;
+}
