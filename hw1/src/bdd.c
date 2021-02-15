@@ -37,21 +37,22 @@ int bdd_lookup(int level, int left, int right) {
         BDD_NODE cmp = {level,left,right};
         int found = searchNode(level+left+right,cmp); //if found != -1, some existing node is found
         if(found != -1){ //a existing same node is found
-            BDD_NODE *path = bdd_hash_map[found];//the pointer pointing to BDDNODE obj in bdd_nodes
+            BDD_NODE *path = *(bdd_hash_map + found);//the pointer pointing to BDDNODE obj in bdd_nodes
             int sz = sizeof(BDD_NODE);//size of each BDD_NODE
-            BDD_NODE *beg = &bdd_nodes[0];//beginning address of bdd_nodes[]
+            BDD_NODE *beg = bdd_nodes;//beginning address of bdd_nodes[]
             int retindex = ((path - beg) / sz);//difference of address divide by the size of struct
             return retindex;
         }
         else{// new node is added
+            printf("bdd_lookup\n");
             int hkey = hashKey(level+left+right);
             int added = -1;
-            bdd_nodes[indexnonleaf] = cmp; // add to bdd_nodes table
+            *(bdd_nodes + indexnonleaf) = cmp; // add to bdd_nodes table
             int ret = indexnonleaf;
             // add to hashmap
             while(added == -1){
-                if(bdd_hash_map[hkey] == NULL){
-                    bdd_hash_map[hkey] = &bdd_nodes[indexnonleaf];
+                if(*(bdd_hash_map + hkey) == NULL){
+                    *(bdd_hash_map + hkey) = bdd_nodes + indexnonleaf;
                     added = 0;
                 }
                 else{
@@ -92,7 +93,7 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     //loop through the new 2d array
     if(w == 1 && h == 1){ //base case
 
-        return &bdd_nodes[*raster];//leave node can be access by direct indexing
+        return bdd_nodes + *raster;//leave node can be access by direct indexing
     }
     else{
         if(firstent == 0){ //first time entering bddfromraster, expand the matrix
@@ -114,9 +115,10 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
         }
         // the - &bdd_nodes[0] is to get the index of the node, since &bdd_ndoes[0] is the
         // starting index.
-        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - &bdd_nodes[0]
-            ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - &bdd_nodes[0]);
-        return &bdd_nodes[ret];
+        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - bdd_nodes
+            ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - bdd_nodes);
+
+        return bdd_nodes + ret;
     }
     return NULL;
 }
@@ -127,42 +129,49 @@ void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
     int serial = 0;//helper var
-    BDD_NODE root = *node;
-    int lev = root.level;
+    int enterandprint = -1;
+    BDD_NODE root = *node; //current node
+    int lev = root.level; //level of current node
     unsigned char opc = lev+64;//opcode
     if(lev == 0){
         serial++;
-        if(bdd_index_map[bdd_lookup(lev,root.left,root.right)] == 0){
-            bdd_index_map[bdd_lookup(lev,root.left,root.right)] = serial;
+        if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){
+            *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
             fputc(opc,out);
             //leave node's value = their index in bdd_nodes
-            int leaveval = bdd_lookup(lev,root.left,root.right);
+            int leaveval = (bdd_nodes + bdd_lookup(lev,root.left,root.right)
+            - bdd_nodes) / sizeof(BDD_NODE);
             fputc(leaveval,out);
             return serial;
         }
         else{
-            return bdd_index_map[bdd_lookup(lev,root.left,root.right)];
+            return *(bdd_index_map + bdd_lookup(lev,root.left,root.right));
         }
-    }else{
-        serial = bdd_serialize(&bdd_nodes[root.left],out) + 1;//traverse left
-        if(bdd_index_map[bdd_lookup(lev,root.left,root.right)] == 0){
-            bdd_index_map[bdd_lookup(lev,root.left,root.right)] = serial;
+    }
+    else{
+        serial = bdd_serialize((bdd_nodes + root.left),out) + 1;//traverse left
+        if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){//if not visited
+            *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
         }
         //
-        serial = bdd_serialize(&bdd_nodes[root.right],out) + 1;//traverse right
-        if(bdd_index_map[bdd_lookup(lev,root.left,root.right)] == 0){
-            bdd_index_map[bdd_lookup(lev,root.left,root.right)] = serial;
+        serial = bdd_serialize((bdd_nodes + root.right),out) + 1;//traverse right
+        if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){//if not visited
+            *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
         }
         fputc(opc,out);
-        fputc(bdd_index_map[root.left],out);
-        fputc(bdd_index_map[root.right],out);
+        fputc(*(bdd_index_map + root.left),out);
+        fputc(*(bdd_index_map + root.right),out);
+        enterandprint = 0;
     }
-
-    return -1;
+    if(enterandprint == 0){
+        return 0;
+    }
+    else{
+        return -1;
+    }
 }
 
 BDD_NODE *bdd_deserialize(FILE *in) {
-    // TO BE IMPLEMENTED
     return NULL;
 }
 

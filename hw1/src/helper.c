@@ -72,8 +72,8 @@ int hashKey(int key){
 int searchNode(int key, BDD_NODE tocompare){
 	int startindex = hashKey(key);
 
-	while(bdd_hash_map[startindex] != NULL){
-		if(nodecompare(*bdd_hash_map[startindex],tocompare) == 0){
+	while(*(bdd_hash_map + startindex) != NULL){
+		if(nodecompare(*(*(bdd_hash_map + startindex)),tocompare) == 0){
 			return startindex;
 		}
 		startindex++;
