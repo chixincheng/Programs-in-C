@@ -22,7 +22,6 @@ int firstent = -1; //helper var in bdd_from_raster
 int newsize;//helper var in bdd_from_raster
 int orgh;//helper var in bdd_from_raster
 int serial = 0;//helper var
-int alte = 1;//helper var in bdd_serialize
 int currnode = -1;//helper var in bdd_serialize
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
@@ -119,7 +118,6 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
         // starting index.
         int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - bdd_nodes
             ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - bdd_nodes);
-
         return bdd_nodes + ret;
     }
     return NULL;
@@ -130,45 +128,47 @@ void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
 }
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
-    if(alte == 1){
-        alte = 2; //left
-    }
-    else{
-        alte = 1;//right
-    }
     int enterandprint = -1;
     BDD_NODE root = *node; //current node
     int lev = root.level; //level of current node
     unsigned char opc = lev+64;//opcode
-    if(lev == 0){
-        if(*(bdd_index_map + currnode) == 0){
+    if(lev == 0){ // current level
+        if(*(bdd_index_map + currnode) == 0)// not visited
+        {
             serial++;
             *(bdd_index_map + currnode) = serial;
             //leave node's value = their index in bdd_nodes
             fputc(opc,out);
             fputc(currnode,out);
-            return serial;
         }
     }
-    else{
-        if(alte == 2){
-            currnode = root.right;
-            bdd_serialize(bdd_nodes+root.right, out);
-        }
-        else{
-            currnode = root.left;
-            bdd_serialize(bdd_nodes+root.left, out);
-        }
-        if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){//if not visited
+    else
+    {
+        currnode = root.right;
+        bdd_serialize((bdd_nodes+root.right),out);
+        currnode = root.left;
+        bdd_serialize((bdd_nodes+root.left),out);
+
+        if(*(bdd_index_map + root.left) != 0 && *(bdd_index_map + root.right) != 0
+            && lev != 0){
+            //
             serial++;
-            *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
+            currnode = node - bdd_nodes;
+            *(bdd_index_map + currnode) = serial;
+            fputc(opc,out);
+            fputc(*(bdd_index_map + root.right),out);
+            fputc('\0',out);
+            fputc('\0',out);
+            fputc('\0',out);
+            fputc(*(bdd_index_map + root.left),out);
+            fputc('\0',out);
+            fputc('\0',out);
+            fputc('\0',out);
         }
-        fputc(opc,out);
-        fputc(*(bdd_index_map + root.left),out);
-        fputc(*(bdd_index_map + root.right),out);
         enterandprint = 0;
         //printf("%i\n", serial);
         return serial;
+
     }
     if(enterandprint == 0){
         return 0;
