@@ -21,7 +21,9 @@ int indexnonleaf = BDD_NUM_LEAVES; //index of nonleaf node to be added, start at
 int firstent = -1; //helper var in bdd_from_raster
 int newsize;//helper var in bdd_from_raster
 int orgh;//helper var in bdd_from_raster
-
+int serial = 0;//helper var
+int alte = 1;//helper var in bdd_serialize
+int currnode = -1;//helper var in bdd_serialize
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
  * inserting a new node if a matching node does not already exist.
@@ -30,6 +32,7 @@ int orgh;//helper var in bdd_from_raster
  * The function aborts if the arguments passed are out-of-bounds.
  */
 int bdd_lookup(int level, int left, int right) {
+    //printf("%i,%i,%i,\n", level,left,right);
     if(left == right){ //left child and right child are equal,no new node created
         return left;
     }
@@ -38,13 +41,12 @@ int bdd_lookup(int level, int left, int right) {
         int found = searchNode(level+left+right,cmp); //if found != -1, some existing node is found
         if(found != -1){ //a existing same node is found
             BDD_NODE *path = *(bdd_hash_map + found);//the pointer pointing to BDDNODE obj in bdd_nodes
-            int sz = sizeof(BDD_NODE);//size of each BDD_NODE
             BDD_NODE *beg = bdd_nodes;//beginning address of bdd_nodes[]
-            int retindex = ((path - beg) / sz);//difference of address divide by the size of struct
+            int retindex = path - beg;//difference of address divide by the size of struct
             return retindex;
         }
         else{// new node is added
-            printf("bdd_lookup\n");
+            //printf("%i,%i,%i,\n", level,left,right);
             int hkey = hashKey(level+left+right);
             int added = -1;
             *(bdd_nodes + indexnonleaf) = cmp; // add to bdd_nodes table
@@ -128,40 +130,45 @@ void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
 }
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
-    int serial = 0;//helper var
+    if(alte == 1){
+        alte = 2; //left
+    }
+    else{
+        alte = 1;//right
+    }
     int enterandprint = -1;
     BDD_NODE root = *node; //current node
     int lev = root.level; //level of current node
     unsigned char opc = lev+64;//opcode
     if(lev == 0){
-        serial++;
-        if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){
-            *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
-            fputc(opc,out);
+        if(*(bdd_index_map + currnode) == 0){
+            serial++;
+            *(bdd_index_map + currnode) = serial;
             //leave node's value = their index in bdd_nodes
-            int leaveval = (bdd_nodes + bdd_lookup(lev,root.left,root.right)
-            - bdd_nodes) / sizeof(BDD_NODE);
-            fputc(leaveval,out);
+            fputc(opc,out);
+            fputc(currnode,out);
             return serial;
-        }
-        else{
-            return *(bdd_index_map + bdd_lookup(lev,root.left,root.right));
         }
     }
     else{
-        serial = bdd_serialize((bdd_nodes + root.left),out) + 1;//traverse left
-        if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){//if not visited
-            *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
+        if(alte == 2){
+            currnode = root.right;
+            bdd_serialize(bdd_nodes+root.right, out);
         }
-        //
-        serial = bdd_serialize((bdd_nodes + root.right),out) + 1;//traverse right
+        else{
+            currnode = root.left;
+            bdd_serialize(bdd_nodes+root.left, out);
+        }
         if(*(bdd_index_map + bdd_lookup(lev,root.left,root.right)) == 0){//if not visited
+            serial++;
             *(bdd_index_map + bdd_lookup(lev,root.left,root.right)) = serial;
         }
         fputc(opc,out);
         fputc(*(bdd_index_map + root.left),out);
         fputc(*(bdd_index_map + root.right),out);
         enterandprint = 0;
+        //printf("%i\n", serial);
+        return serial;
     }
     if(enterandprint == 0){
         return 0;
@@ -169,6 +176,7 @@ int bdd_serialize(BDD_NODE *node, FILE *out) {
     else{
         return -1;
     }
+    return -1;
 }
 
 BDD_NODE *bdd_deserialize(FILE *in) {
