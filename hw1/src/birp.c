@@ -22,7 +22,7 @@ int width;
 int height;
 
 
-int pgm_to_birp(FILE *in, FILE *out) {
+int pgm_to_birp(FILE *in, FILE *out) { // this works
     int sucread = -1;
     sucread = img_read_pgm(in,&width,&height,raster_data,sizeof(raster_data));
     if(sucread == 0){ //successfully read image data
@@ -34,8 +34,17 @@ int pgm_to_birp(FILE *in, FILE *out) {
 }
 
 int birp_to_pgm(FILE *in, FILE *out) {
-    // TO BE IMPLEMENTED
-    return -1;
+    BDD_NODE *root = img_read_birp(in,&width,&height);
+    if(root != NULL){
+        bdd_to_raster(root,width,height,raster_data);
+    }
+    int ret = img_write_pgm(raster_data,width,height,out);
+    if(ret == -1){
+        return -1; //unsuccessful
+    }
+    else{
+        return 0; //successful
+    }
 }
 
 int birp_to_birp(FILE *in, FILE *out) {

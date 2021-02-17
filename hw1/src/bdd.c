@@ -21,8 +21,9 @@ int indexnonleaf = BDD_NUM_LEAVES; //index of nonleaf node to be added, start at
 int firstent = -1; //helper var in bdd_from_raster
 int newsize;//helper var in bdd_from_raster
 int orgh;//helper var in bdd_from_raster
-int serial = 0;//helper var
+int serial = 0;//helper var in bdd_serialize
 int currnode = -1;//helper var in bdd_serialize
+int deserial = 1;//helper var in bdd_deserialize
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
  * inserting a new node if a matching node does not already exist.
@@ -180,7 +181,39 @@ int bdd_serialize(BDD_NODE *node, FILE *out) {
 }
 
 BDD_NODE *bdd_deserialize(FILE *in) {
-    return NULL;
+    char input;
+    int cursor = 256;
+    while (input != EOF){
+        input =fgetc(in);
+        if(input == '@'){
+            *(bdd_index_map + deserial) = fgetc(in);
+            deserial++;
+        }
+        else{
+            while(input == 0){
+                input = fgetc(in);
+            }
+            int lev = input-64;
+            int left= fgetc(in);
+            int right = fgetc(in);
+            while(right == 0){
+                right = fgetc(in);
+            }
+            BDD_NODE temp = {lev,*(bdd_index_map + left),*(bdd_index_map + right)};
+            *(bdd_nodes+cursor) = temp;
+            *(bdd_index_map + deserial) = cursor;
+            deserial++;
+            cursor++;
+        }
+    }
+    BDD_NODE *root = (bdd_nodes+cursor-1);//pointer to root node
+    BDD_NODE check = *root;//actual root node
+    if(check.level == 0){//check root node's level
+        return NULL;
+    }
+    else{
+        return root;
+    }
 }
 
 unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
