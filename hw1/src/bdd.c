@@ -179,11 +179,11 @@ int bdd_serialize(BDD_NODE *node, FILE *out) {
     }
     return -1;
 }
-
+//return node will follow left traverse
 BDD_NODE *bdd_deserialize(FILE *in) {
     char input;
     int cursor = 256;
-    while (input != EOF){
+    while (input != -1){
         input =fgetc(in);
         if(input == '@'){
             *(bdd_index_map + deserial) = fgetc(in);
@@ -193,17 +193,19 @@ BDD_NODE *bdd_deserialize(FILE *in) {
             while(input == 0){
                 input = fgetc(in);
             }
-            int lev = input-64;
-            int left= fgetc(in);
-            int right = fgetc(in);
-            while(right == 0){
-                right = fgetc(in);
+            if(input != -1){
+                int lev = input-64;
+                int left= fgetc(in);
+                int right = fgetc(in);
+                while(right == 0){
+                    right = fgetc(in);
+                }
+                BDD_NODE temp = {lev,*(bdd_index_map + left),*(bdd_index_map + right)};
+                *(bdd_nodes+cursor) = temp;
+                *(bdd_index_map + deserial) = cursor;
+                deserial++;
+                cursor++;
             }
-            BDD_NODE temp = {lev,*(bdd_index_map + left),*(bdd_index_map + right)};
-            *(bdd_nodes+cursor) = temp;
-            *(bdd_index_map + deserial) = cursor;
-            deserial++;
-            cursor++;
         }
     }
     BDD_NODE *root = (bdd_nodes+cursor-1);//pointer to root node
