@@ -24,6 +24,10 @@ int orgh;//helper var in bdd_from_raster
 int serial = 0;//helper var in bdd_serialize
 int currnode = -1;//helper var in bdd_serialize
 int deserial = 1;//helper var in bdd_deserialize
+int leafpos = -1;//helper var in bdd_apply
+int user = 0;//helper var in bdd_apply
+int d = -1;//helper var in bdd_apply
+int enterfirst = -1;//helper var in bdd_apply
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
  * inserting a new node if a matching node does not already exist.
@@ -125,7 +129,12 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
 }
 
 void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
-    // TO BE IMPLEMENTED
+    for(int i=0;i<w;i++){
+        for(int j=0;j<h;j++){
+            *raster = bdd_apply(node,i,j);
+            raster++;
+        }
+    }
 }
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
@@ -219,8 +228,54 @@ BDD_NODE *bdd_deserialize(FILE *in) {
 }
 
 unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
-    // TO BE IMPLEMENTED
-    return 0;
+    BDD_NODE curoot = *node;
+    int lev = curoot.level;
+    unsigned char ret = -1;
+    if(enterfirst == -1){
+        d = lev/2;
+        enterfirst = -2;
+    }
+    if(lev != 0){
+        int choselr = -1;
+        if(user ==0){ //use row index
+            int bitnum = d-1;
+            if(bitnum > 0){
+                choselr = (r >> bitnum) & 1;
+            }
+            else{
+                choselr = r & 1;
+            }
+            user = 1;
+        }
+        else{ //use col index
+            int bitnum = d-1;
+            if(bitnum > 0){
+                choselr = (c >> bitnum) & 1;
+            }
+            else{
+                choselr = c & 1;
+            }
+            user = 0;
+            d--;
+        }
+        if(choselr == 0){//take left
+            leafpos = curoot.left;
+            ret = bdd_apply((bdd_nodes+curoot.left),r,c);
+        }
+        else{//take right
+            leafpos = curoot.right;
+            ret = bdd_apply((bdd_nodes+curoot.right),r,c);
+        }
+    }
+    else{
+        if(enterfirst == -2){
+            unsigned char leaf = leafpos;
+            enterfirst = -1;//reset var
+            user = 0;//reset var
+            return leaf;
+        }
+    }
+    return ret;
 }
 
 BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
