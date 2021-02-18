@@ -50,7 +50,7 @@ int bdd_lookup(int level, int left, int right) {
             return retindex;
         }
         else{// new node is added
-            //printf("%i,%i,%i,\n", level,left,right);
+            printf("%i,%i,%i,\n", level,left,right);
             int hkey = hashKey(level+left+right);
             int added = -1;
             *(bdd_nodes + indexnonleaf) = cmp; // add to bdd_nodes table
@@ -121,8 +121,8 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
         }
         // the - &bdd_nodes[0] is to get the index of the node, since &bdd_ndoes[0] is the
         // starting index.
-        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - bdd_nodes
-            ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - bdd_nodes);
+        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - bdd_nodes
+            ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - bdd_nodes);
         return bdd_nodes + ret;
     }
     return NULL;
@@ -260,10 +260,32 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
         }
         if(choselr == 0){//take left
             leafpos = curoot.left;
+            BDD_NODE temp = *(bdd_nodes+curoot.left);
+            int jumplev = temp.level;
+            if(lev-jumplev > 1){
+                if(jumplev %2 ==0)
+                {
+                    d = jumplev/2;
+                }
+                else{
+                    d = jumplev/2+1;
+                }
+            }
             ret = bdd_apply((bdd_nodes+curoot.left),r,c);
         }
         else{//take right
             leafpos = curoot.right;
+            BDD_NODE temp = *(bdd_nodes+curoot.right);
+            int jumplev = temp.level;
+            if(lev-jumplev > 1){
+                if(jumplev %2 ==0)
+                {
+                    d = jumplev/2;
+                }
+                else{
+                    d = jumplev/2+1;
+                }
+            }
             ret = bdd_apply((bdd_nodes+curoot.right),r,c);
         }
     }

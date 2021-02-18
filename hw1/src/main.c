@@ -23,19 +23,59 @@
 
 int main(int argc, char **argv)
 {
+	extern char *informat;
+	extern char *outformat;
     if(validargs(argc, argv) == -1){
         USAGE(*argv, EXIT_FAILURE);
         return EXIT_FAILURE;
     }
-    else if(validargs(argc,argv) == 0){ //when valiargs return 0
-    	birp_to_pgm(stdin,stdout);
-
-    	//
+    else if(validargs(argc,argv) == 0){ //when valiargs return 0, input valid
     	if(global_options == 0x80000000){// -h flag is specified
     		USAGE(*argv, EXIT_SUCCESS);
     		return EXIT_SUCCESS;
     	}
-    	return EXIT_SUCCESS; // <- not sure here
+    	if(stringcmp(informat,"pgm") == 0)//input is pgm format
+    	{
+    		if(stringcmp(outformat,"birp") == 0)//outformat = birp
+    		{
+    			int ret =pgm_to_birp(stdin,stdout);
+    			if(ret ==0){
+    				return EXIT_SUCCESS;
+    			}
+    		}
+    		else if(stringcmp(outformat,"ascii") == 0){
+    			int ret =pgm_to_ascii(stdin,stdout);
+    			if(ret ==0){
+    				return EXIT_SUCCESS;
+    			}
+    		}
+    		return EXIT_FAILURE;//invalid output
+    	}
+    	else if(stringcmp(informat,"birp") == 0)//input is birp format
+    	{
+    		if(stringcmp(outformat,"pgm") == 0)//output pgm
+    		{
+    			int ret =birp_to_pgm(stdin,stdout);
+    			if(ret ==0){
+    				return EXIT_SUCCESS;
+    			}
+    		}
+    		else if(stringcmp(outformat,"ascii") == 0)//output ascii
+    		{
+    			int ret =birp_to_ascii(stdin,stdout);
+    			if(ret ==0){
+    				return EXIT_SUCCESS;
+    			}
+    		}
+    		else if(stringcmp(outformat,"birp") ==0){//birp to birp perform transformation
+    			int ret =birp_to_birp(stdin,stdout);
+    			if(ret ==0){
+    				return EXIT_SUCCESS;
+    			}
+    		}
+    		return EXIT_FAILURE;//invalid output
+    	}
+    	return EXIT_FAILURE; // <- not sure here
     }
     if(global_options & HELP_OPTION)
         USAGE(*argv, EXIT_SUCCESS);
