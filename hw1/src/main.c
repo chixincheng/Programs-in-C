@@ -77,9 +77,10 @@ int main(int argc, char **argv)
     	}
     	return EXIT_FAILURE; // <- not sure here
     }
-    if(global_options & HELP_OPTION)
+    if(global_options & HELP_OPTION){
         USAGE(*argv, EXIT_SUCCESS);
-    // TO BE IMPLEMENTED
+        return EXIT_SUCCESS;
+    }
     return EXIT_FAILURE;
 }
 

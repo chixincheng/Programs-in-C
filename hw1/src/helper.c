@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "bdd.h"
+#include "stdlib.h"
 
 //return 0 if strings are equal, 1 otherwise.
 int stringcmp(char *a, char *b){
@@ -106,4 +107,16 @@ int levelcal(int width, int height){
 		ret ++;
 	}
 	return ret;
+}
+unsigned char ntransformhelper(unsigned char value){
+	return abs(value-255);
+}
+unsigned char ttransformhelper(unsigned char value){
+	extern int tt;
+	if(value >= tt){
+		return 255;
+	}
+	else{
+		return 0;
+	}
 }

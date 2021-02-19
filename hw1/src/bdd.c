@@ -4,6 +4,7 @@
 #include "bdd.h"
 #include "debug.h"
 #include "helper.h"
+#include "const.h"
 
 /*
  * Macros that take a pointer to a BDD node and obtain pointers to its left
@@ -28,6 +29,7 @@ int leafpos = -1;//helper var in bdd_apply
 int user = 0;//helper var in bdd_apply
 int d = -1;//helper var in bdd_apply
 int enterfirst = -1;//helper var in bdd_apply
+int rlev = 1;//helper var  in bdd_rotate
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
  * inserting a new node if a matching node does not already exist.
@@ -129,10 +131,11 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
 }
 
 void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
+    int pos = 0;
     for(int i=0;i<w;i++){
         for(int j=0;j<h;j++){
-            *raster = bdd_apply(node,i,j);
-            raster++;
+            *(raster+pos) = bdd_apply(node,i,j);
+            pos++;
         }
     }
 }
@@ -340,13 +343,65 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
 }
 
 BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
-    // TO BE IMPLEMENTED
+    extern int width;
+    extern int height;
+    for(int i=0; i<width;i++){
+        for (int j =0; j<height;j++){
+            *(raster_data+(i*width)+j) = (*func)(*(raster_data+(i*width)+j));
+        }
+    }
+    BDD_NODE *ret = bdd_from_raster(width,height,raster_data);
+    if(ret != NULL){
+        return ret;
+    }
     return NULL;
 }
-
-BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {
-    // TO BE IMPLEMENTED
-    return NULL;
+//
+BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {//keep rotate and divide, ends at level 1,then switch pointer
+    BDD_NODE root = *node;
+    BDD_NODE currleft;
+    BDD_NODE currright;
+    int leftval;
+    int rightval;
+    if(level == 2)//base case, contain 2 level 1, 1 of top 1 of bottem,each level 1 contain left and right
+    {
+        currleft = *(bdd_nodes+root.left); //left  =A right =B level 1 or 0
+        leftval = root.left;
+        currright = *(bdd_nodes+root.right);//left =C right =D level 1 or 0
+        rightval = root.right;
+    }
+    else{
+        currleft = *bdd_rotate((bdd_nodes+root.left),level-1);//recursive to left
+        currright = *bdd_rotate((bdd_nodes+root.right),level-1);//recursive to right
+    }
+    if(currleft.level > 0){
+        if(currright.level > 0){
+            BDD_NODE top = {rlev,currleft.right,currright.right};// (B,D)
+            *(bdd_nodes+indexnonleaf) = top;
+            indexnonleaf++;
+        }
+        else{//currright is a leaf
+            BDD_NODE top ={rlev,currleft.right,rightval};// (B,D/C)
+            *(bdd_nodes+indexnonleaf) = top;
+            indexnonleaf++;
+        }
+    }
+    else{//currleft is a leaf
+        if(currright.level > 0){
+            BDD_NODE down = {rlev,leftval,currright.left};// (A/B,C)
+            *(bdd_nodes+indexnonleaf) = down;
+            indexnonleaf++;
+        }
+        else{//currright is a leaf
+            BDD_NODE down = {rlev,leftval,rightval}; //(A/B,C/D)
+            *(bdd_nodes+indexnonleaf) = down;
+            indexnonleaf++;
+        }
+    }
+    rlev++;
+    BDD_NODE ret = {rlev,indexnonleaf--,indexnonleaf};
+    BDD_NODE *rett = &ret;
+    return rett;
 }
 
 BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {

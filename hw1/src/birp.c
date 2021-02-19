@@ -10,12 +10,12 @@
 
 char *informat; //input format
 char *outformat; //output format
-int n= -1;
+int n = -1;
 int r = -1;
-int t= -1;
-int tt=-1;
+int t = -1;
+int tt =-1;
 int z = -1;
-int zz=-1;
+int zz =-1;
 int Z = -1;
 int ZZ =-1;
 int width;
@@ -35,9 +35,9 @@ int pgm_to_birp(FILE *in, FILE *out) { // this works
 
 int birp_to_pgm(FILE *in, FILE *out) { // this works
     BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
-    unsigned char temp = bdd_apply(root,6,0);//255
+/*    unsigned char temp = bdd_apply(root,6,0);//255
     temp = bdd_apply(root,7,0);//255
-    if(temp);
+    if(temp);*/
     if(root != NULL){
         bdd_to_raster(root,width,height,raster_data);//use bddapply
     }
@@ -51,7 +51,47 @@ int birp_to_pgm(FILE *in, FILE *out) { // this works
 }
 
 int birp_to_birp(FILE *in, FILE *out) {
-    //BDD_NODE *root = img_read_birp(in,&width,&height);
+    BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
+    if(root != NULL){
+        bdd_to_raster(root,width,height,raster_data);
+        if(n == 00000100){ // -n option, complement node
+            BDD_NODE *data = bdd_map(root,*ntransformhelper);
+            if(data != NULL){
+                img_write_birp(data,width,height,out);
+                return 0;
+            }
+            else{
+                return -1;
+            }
+        }
+        else if(t == 00000200){//replace node by threshold
+            BDD_NODE *data =bdd_map(root,*ttransformhelper);
+            if(data != NULL){
+                img_write_birp(data,width,height,out);
+                return 0;
+            }
+            else{
+                return -1;
+            }
+        }
+        else if(r == 00000400){//rotate
+            int lev = levelcal(width,height);//calculate proper level
+            BDD_NODE *data = bdd_rotate(root,lev);
+            if(data != NULL){
+                img_write_birp(data,width,height,out);
+                return 0;
+            }
+            else{
+                return -1;
+            }
+        }
+        else if(z == 00000300){//zoom out
+            ;
+        }
+        else if(Z == 00000300){// zoom in
+            ;
+        }
+    }
     return -1;
 }
 
@@ -288,21 +328,21 @@ int validargs(int argc, char **argv) {
                 }
             }
             else if(stringcmp(ptr,"-n") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && n<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     n = 00000100;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(ptr,"-r") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && r<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     r = 00000400;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(ptr,"-t") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && t<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     argc--;
                     ptr = *(argv+ofset);
                     ofset++;
@@ -321,7 +361,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(ptr,"-z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && z<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     argc--;
                     ptr = *(argv+ofset);
                     ofset++;
@@ -340,7 +380,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(ptr,"-Z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && Z<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     argc--;
                     ptr = *(argv+ofset);
                     ofset++;
@@ -363,21 +403,21 @@ int validargs(int argc, char **argv) {
         }
         else{
             if(stringcmp(ptr,"-n") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && n<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     n = 00000100;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(ptr,"-r") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && r<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     r = 00000400;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(ptr,"-t") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && t<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     argc--;
                     ptr = *(argv+ofset);
                     ofset++;
@@ -396,7 +436,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(ptr,"-z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && z<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     argc--;
                     ptr = *(argv+ofset);
                     ofset++;
@@ -415,7 +455,7 @@ int validargs(int argc, char **argv) {
                     return -1;
             }
             else if(stringcmp(ptr,"-Z") == 0 && argc >= 1){
-                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0 && Z<0){
+                if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
                     argc--;
                     ptr = *(argv+ofset);
                     ofset++;
