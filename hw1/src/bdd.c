@@ -50,7 +50,7 @@ int bdd_lookup(int level, int left, int right) {
             return retindex;
         }
         else{// new node is added
-            printf("%i,%i,%i,\n", level,left,right);
+            //printf("%i,%i,%i,\n", level,left,right);
             int hkey = hashKey(level+left+right);
             int added = -1;
             *(bdd_nodes + indexnonleaf) = cmp; // add to bdd_nodes table
@@ -155,9 +155,15 @@ int bdd_serialize(BDD_NODE *node, FILE *out) {
     else
     {
         currnode = root.right;
-        bdd_serialize((bdd_nodes+root.right),out);
+        if(*(bdd_index_map + currnode) == 0)//not visited
+        {
+            bdd_serialize((bdd_nodes+root.right),out);
+        }
         currnode = root.left;
-        bdd_serialize((bdd_nodes+root.left),out);
+        if(*(bdd_index_map + currnode) == 0) //not visited
+        {
+            bdd_serialize((bdd_nodes+root.left),out);
+        }
 
         if(*(bdd_index_map + root.left) != 0 && *(bdd_index_map + root.right) != 0
             && lev != 0){
@@ -210,6 +216,7 @@ BDD_NODE *bdd_deserialize(FILE *in) {
                     right = fgetc(in);
                 }
                 BDD_NODE temp = {lev,*(bdd_index_map + left),*(bdd_index_map + right)};
+                //printf("%i,%i,%i,\n", lev,*(bdd_index_map + left),*(bdd_index_map + right));
                 *(bdd_nodes+cursor) = temp;
                 *(bdd_index_map + deserial) = cursor;
                 deserial++;
@@ -268,7 +275,23 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
                     d = jumplev/2;
                 }
                 else{
-                    d = jumplev/2+1;
+                    d = (jumplev+1)/2;
+                }
+                if(lev % 2 == 0){//even
+                    if(jumplev % 2 == 0){
+                        user =0;
+                    }
+                    else{
+                        user = 1;
+                    }
+                }
+                else{//odd
+                    if(jumplev % 2 == 1){//odd to odd
+                        user = 1;
+                    }
+                    else{
+                        user = 0;
+                    }
                 }
             }
             ret = bdd_apply((bdd_nodes+curoot.left),r,c);
@@ -283,7 +306,23 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
                     d = jumplev/2;
                 }
                 else{
-                    d = jumplev/2+1;
+                    d = (jumplev+1)/2;
+                }
+                if(lev % 2 == 0){//even
+                    if(jumplev % 2 == 0){
+                        user =0;
+                    }
+                    else{
+                        user = 1;
+                    }
+                }
+                else{//odd
+                    if(jumplev % 2 == 1){//odd to odd
+                        user = 1;
+                    }
+                    else{
+                        user = 0;
+                    }
                 }
             }
             ret = bdd_apply((bdd_nodes+curoot.right),r,c);

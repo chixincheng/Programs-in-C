@@ -33,10 +33,13 @@ int pgm_to_birp(FILE *in, FILE *out) { // this works
     return -1; //reading image unsuccessful
 }
 
-int birp_to_pgm(FILE *in, FILE *out) {
-    BDD_NODE *root = img_read_birp(in,&width,&height);
+int birp_to_pgm(FILE *in, FILE *out) { // this works
+    BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
+    unsigned char temp = bdd_apply(root,6,0);//255
+    temp = bdd_apply(root,7,0);//255
+    if(temp);
     if(root != NULL){
-        bdd_to_raster(root,width,height,raster_data);
+        bdd_to_raster(root,width,height,raster_data);//use bddapply
     }
     int ret = img_write_pgm(raster_data,width,height,out);
     if(ret == -1){
@@ -82,7 +85,7 @@ int pgm_to_ascii(FILE *in, FILE *out) { //this works
     }
 }
 
-int birp_to_ascii(FILE *in, FILE *out) { //not working
+int birp_to_ascii(FILE *in, FILE *out) { //this works
     BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize
     if(root != NULL){
         bdd_to_raster(root,width,height,raster_data);
