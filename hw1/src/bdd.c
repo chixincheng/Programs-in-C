@@ -52,7 +52,7 @@ int bdd_lookup(int level, int left, int right) {
             return retindex;
         }
         else{// new node is added
-            printf("%i,%i,%i,\n", level,left,right);
+            //printf("%i,%i,%i,\n", level,left,right);
             int hkey = hashKey(level+left+right);
             int added = -1;
             *(bdd_nodes + indexnonleaf) = cmp; // add to bdd_nodes table
