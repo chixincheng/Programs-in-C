@@ -47,12 +47,12 @@ typedef struct bdd_node {
 BDD_NODE bdd_nodes[BDD_NODES_MAX];
 
 /*
- * Open-addressed hash map mapping pairs (l, r) of BDD node indices
- * to BDD node indices.  Each node can be present at most once, so
- * there will be at most BDD_NODES_MAX entries in the table.
- * We define the table size to yield a load factor of no more than 0.5;
- * in particular the table will never be full.  So the table size must
- * be a prime number >= 2 * BDD_NODES_MAX.
+ * Open-addressed hash map mapping triples (v, l, r), where l and r are
+ * BDD node indices and v is a level number, to BDD node indices.
+ * Each node can be present at most once, so there will be at most
+ * BDD_NODES_MAX entries in the table.  We define the table size to yield
+ * a load factor of no more than 0.5; in particular the table will never
+ * be full.  So the table size must be a prime number >= 2 * BDD_NODES_MAX.
  */
 #define BDD_HASH_SIZE 2097169
 BDD_NODE *bdd_hash_map[BDD_HASH_SIZE];
