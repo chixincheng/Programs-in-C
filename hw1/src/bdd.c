@@ -52,7 +52,7 @@ int bdd_lookup(int level, int left, int right) {
             return retindex;
         }
         else{// new node is added
-            //printf("%i,%i,%i,\n", level,left,right);
+            printf("%i,%i,%i,\n", level,left,right);
             int hkey = hashKey(level+left+right);
             int added = -1;
             *(bdd_nodes + indexnonleaf) = cmp; // add to bdd_nodes table
@@ -123,8 +123,8 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
         }
         // the - &bdd_nodes[0] is to get the index of the node, since &bdd_ndoes[0] is the
         // starting index.
-        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - bdd_nodes
-            ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - bdd_nodes);
+        int ret = bdd_lookup(levelcal(curw,curh),bdd_from_raster(w,h,rasterind(w,orgh,h,raster,2)) - bdd_nodes
+            ,bdd_from_raster(w,h,rasterind(w,orgh,h,raster,1)) - bdd_nodes);
         return bdd_nodes + ret;
     }
     return NULL;
@@ -363,7 +363,9 @@ BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {//keep rotate and divide, ends 
     BDD_NODE currright;
     int leftval;
     int rightval;
-    if(level == 2)//base case, contain 2 level 1, 1 of top 1 of bottem,each level 1 contain left and right
+    int t;
+    int b;
+    if(root.level == 2)//base case, contain 2 level 1, 1 of top 1 of bottem,each level 1 contain left and right
     {
         currleft = *(bdd_nodes+root.left); //left  =A right =B level 1 or 0
         leftval = root.left;
@@ -371,37 +373,41 @@ BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {//keep rotate and divide, ends 
         rightval = root.right;
     }
     else{
-        currleft = *bdd_rotate((bdd_nodes+root.left),level-1);//recursive to left
-        currright = *bdd_rotate((bdd_nodes+root.right),level-1);//recursive to right
-    }
-    if(currleft.level > 0){
-        if(currright.level > 0){
-            BDD_NODE top = {rlev,currleft.right,currright.right};// (B,D)
-            *(bdd_nodes+indexnonleaf) = top;
-            indexnonleaf++;
+        leftval = root.left;
+        if(leftval > 255){ // hit leaf node
+            currleft = *bdd_rotate((bdd_nodes+root.left),level-1);//recursive to left
         }
-        else{//currright is a leaf
-            BDD_NODE top ={rlev,currleft.right,rightval};// (B,D/C)
-            *(bdd_nodes+indexnonleaf) = top;
-            indexnonleaf++;
+        rightval = root.right;
+        if(rightval > 255){// hit leaf node
+            currright = *bdd_rotate((bdd_nodes+root.right),level-1);//recursive to right
         }
     }
-    else{//currleft is a leaf
-        if(currright.level > 0){
-            BDD_NODE down = {rlev,leftval,currright.left};// (A/B,C)
-            *(bdd_nodes+indexnonleaf) = down;
-            indexnonleaf++;
+    if(root.level % 2 ==0){
+        if(currleft.level > 0){
+            if(currright.level > 0){
+                t = bdd_lookup(root.level-1,currleft.right,currright.right);
+                b = bdd_lookup(root.level-1,currleft.left,currright.left);
+            }
+            else{//currright is a leaf
+                t = bdd_lookup(root.level-1,currleft.right,rightval);// (B,D/C)
+                b = bdd_lookup(root.level-1,currleft.left,rightval);// (A,C/D)
+            }
         }
-        else{//currright is a leaf
-            BDD_NODE down = {rlev,leftval,rightval}; //(A/B,C/D)
-            *(bdd_nodes+indexnonleaf) = down;
-            indexnonleaf++;
+        else{//currleft is a leaf
+            if(currright.level > 0){
+                t =bdd_lookup(root.level-1,leftval,currright.right);// (A/B,D)
+                b=bdd_lookup(root.level-1,leftval,currright.left);// (A/B,C)
+            }
+            else{//currright is a leaf
+                t = bdd_lookup(root.level-1,leftval,rightval); //(A/B,C/D)
+                b = bdd_lookup(root.level-1,leftval,rightval); //(A/B,C/D)
+            }
         }
+        int p = bdd_lookup(root.level,t,b);
+        BDD_NODE *ret = (bdd_nodes + p);
+        return ret;
     }
-    rlev++;
-    BDD_NODE ret = {rlev,indexnonleaf--,indexnonleaf};
-    BDD_NODE *rett = &ret;
-    return rett;
+    return node;
 }
 
 BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {

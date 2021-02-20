@@ -54,7 +54,7 @@ int birp_to_birp(FILE *in, FILE *out) {
     BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
     if(root != NULL){
         bdd_to_raster(root,width,height,raster_data);
-        if(n == 00000100){ // -n option, complement node
+        if(n == 00000100){ // -n option, complement node (this works)
             BDD_NODE *data = bdd_map(root,*ntransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);

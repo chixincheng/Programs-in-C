@@ -85,7 +85,7 @@ int searchNode(int key, BDD_NODE tocompare){
 	return -1;
 }
 unsigned char *rasterind(int width, int orgh, int height, unsigned char *raster,int half){
-	if(half == 2){ //first half
+	if(half == 1){ //first half
 		return raster;
 	}
 	else{ // second half

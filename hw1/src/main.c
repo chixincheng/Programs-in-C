@@ -25,11 +25,12 @@ int main(int argc, char **argv)
 {
 	extern char *informat;
 	extern char *outformat;
-    if(validargs(argc, argv) == -1){
+	int validcheck = validargs(argc, argv);
+    if(validcheck == -1){
         USAGE(*argv, EXIT_FAILURE);
         return EXIT_FAILURE;
     }
-    else if(validargs(argc,argv) == 0){ //when valiargs return 0, input valid
+    else if(validcheck == 0){ //when valiargs return 0, input valid
     	if(global_options == 0x80000000){// -h flag is specified
     		USAGE(*argv, EXIT_SUCCESS);
     		return EXIT_SUCCESS;
