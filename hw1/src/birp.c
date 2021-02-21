@@ -53,8 +53,8 @@ int birp_to_pgm(FILE *in, FILE *out) { // this works
 int birp_to_birp(FILE *in, FILE *out) {
     BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
     if(root != NULL){
-        bdd_to_raster(root,width,height,raster_data);
         if(n == 0x100){ // -n option, complement node (this works)
+            bdd_to_raster(root,width,height,raster_data);
             BDD_NODE *data = bdd_map(root,*ntransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -65,6 +65,7 @@ int birp_to_birp(FILE *in, FILE *out) {
             }
         }
         else if(t == 0x200){//replace node by threshold
+            bdd_to_raster(root,width,height,raster_data);
             BDD_NODE *data =bdd_map(root,*ttransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -86,10 +87,30 @@ int birp_to_birp(FILE *in, FILE *out) {
             }
         }
         else if(z == 0x300){//zoom out
-            ;
+            BDD_NODE *data = bdd_zoom(root,0,zz);
+            int topos = -zz;
+            int times = 1;
+            for(int i=0;i<topos;++i){
+                times *= 2;
+            }
+            if(data != NULL){
+                img_write_birp(data,width/times,height/times,out);
+                return 0;
+            }
+            return -1;
         }
-        else if(Z == 0x300){// zoom in
-            ;
+        else if(Z == 0x300){// zoom in works
+            bdd_to_raster(root,width,height,raster_data);
+            BDD_NODE *data = bdd_zoom(root,0,ZZ);
+            int times = 1;
+            for(int i=0;i<ZZ;++i){
+                times *= 2;
+            }
+            if(data != NULL){
+                img_write_birp(data,width*times,height*times,out);
+                return 0;
+            }
+            return -1;
         }
     }
     return -1;
@@ -369,7 +390,7 @@ int validargs(int argc, char **argv) {
                         int temp = stringtoint(ptr);
                         if(temp >= 0 && temp <= 16){
                             z = 0x300;
-                            zz = temp;
+                            zz = -temp;
                         }
                         else{
                             return -1;
@@ -444,7 +465,7 @@ int validargs(int argc, char **argv) {
                         int temp = stringtoint(ptr);
                         if(temp >= 0 && temp <= 16){
                             z = 0x300;
-                            zz = temp;
+                            zz = -temp;
                         }
                         else{
                             return -1;

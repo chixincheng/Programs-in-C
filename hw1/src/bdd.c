@@ -39,7 +39,7 @@ int serialswitch = -1;//helper var in bdd_rotate
  */
 int bdd_lookup(int level, int left, int right) {
     //printf("%i,%i,%i,\n", level,left,right);
-    if(left == right){ //left child and right child are equal,no new node created
+    if(left == right && left <256){ //left child and right child are equal,no new node created
         return left;
     }
     else{
@@ -409,11 +409,11 @@ BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {//keep rotate and divide, ends 
     else{
         leftval = root.left;
         if(leftval > 255){ // hit leaf node
-            currleft = *bdd_rotate((bdd_nodes+root.left),level-1);//recursive to left
+            currleft = *bdd_rotate((bdd_nodes+root.left),(*(bdd_nodes+root.left)).level);//recursive to left
         }
         rightval = root.right;
         if(rightval > 255){// hit leaf node
-            currright = *bdd_rotate((bdd_nodes+root.right),level-1);//recursive to right
+            currright = *bdd_rotate((bdd_nodes+root.right),(*(bdd_nodes+root.right)).level);//recursive to right
         }
     }
     if(root.level % 2 ==0){
@@ -445,6 +445,98 @@ BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {//keep rotate and divide, ends 
 }
 
 BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
-    // TO BE IMPLEMENTED
-    return NULL;
+    if(factor > 0){
+        extern int width;
+        extern int height;
+        int pos=0;
+        int times = 1;
+        for(int i=0;i<factor;++i){
+            times *= 2;
+        }
+        int tempstore = (times*width*times*height);
+        for(int i=0;i<height;i++){//store temp
+            for(int j=0;j<width;j++){
+                *(raster_data+tempstore+pos) = *(raster_data+pos);
+                pos++;
+            }
+        }
+        pos=0;//reset
+        int secpos=0;
+        for(int i=0;i<height;i++){
+            for(int f =0;f<times;f++){
+                for(int j=0;j<width;j++){
+                    for(int k=0;k<times;k++){
+                        *(raster_data+secpos) = *(raster_data+pos+tempstore);
+                        secpos++;
+                    }
+                    pos++;
+                }
+                pos = i*width;
+            }
+        }
+        pos = 0;//reset
+        for(int i=0;i<height;i++){//reset the temp store
+            for(int j=0;j<width;j++){
+                *(raster_data+tempstore+pos) = 0;
+                pos++;
+            }
+        }
+        BDD_NODE *ret = bdd_from_raster(width*times,height*times,raster_data);
+        if(ret != NULL){
+            return ret;
+        }
+        return NULL;
+    }
+    else{
+        int ft = -factor;
+        int times = 1;
+        for(int i=0;i<ft;++i){
+            times *= 2;
+        }
+        BDD_NODE root = *node;
+        BDD_NODE *currleft;
+        BDD_NODE *currright;
+        int leftval;
+        int rightval;
+        serialswitch =0;
+        if(root.level-times < 0){ //base case
+            if(root.left == 0 && root.right == 0){//full black
+                return (bdd_nodes+0);
+            }
+            else{
+                return (bdd_nodes+255);
+            }
+        }
+        else{
+            leftval = root.left;
+            if(leftval > 255){ // hit leaf node
+                currleft = (bdd_zoom(bdd_nodes+root.left,root.level,factor));//recursive to left
+            }
+            rightval = root.right;
+            if(rightval > 255){// hit leaf node
+                currright = (bdd_zoom(bdd_nodes+root.right,root.level,factor));//recursive to right
+            }
+
+            if(leftval > 255 && rightval > 255){
+                int p = bdd_lookup(root.level-times,currleft-bdd_nodes,currright-bdd_nodes);
+                BDD_NODE *ret = (bdd_nodes+p);
+                return ret;
+            }
+            else if(leftval > 255){
+                int p = bdd_lookup(root.level-times,currleft-bdd_nodes,rightval);
+                BDD_NODE *ret = (bdd_nodes+p);
+                return ret;
+            }
+            else if (rightval >255){
+                int p = bdd_lookup(root.level-times,leftval,currright-bdd_nodes);
+                BDD_NODE *ret = (bdd_nodes+p);
+                return ret;
+            }
+            else{
+                int p = bdd_lookup(root.level-times,leftval,rightval);
+                BDD_NODE *ret = (bdd_nodes+p);
+                return ret;
+            }
+        }
+    }
 }
