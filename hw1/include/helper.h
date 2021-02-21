@@ -9,4 +9,6 @@ int searchNode(int key, BDD_NODE tocompare);
 int hashKey(int key);
 unsigned char *rasterind(int width, int orgh, int height, unsigned char *raster,int half);
 int levelcal(int width, int height);
+unsigned char ntransformhelper(unsigned char value);
+unsigned char ttransformhelper(unsigned char value);
 #endif
