@@ -54,7 +54,7 @@ int birp_to_birp(FILE *in, FILE *out) {
     BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
     if(root != NULL){
         bdd_to_raster(root,width,height,raster_data);
-        if(n == 00000100){ // -n option, complement node (this works)
+        if(n == 0x100){ // -n option, complement node (this works)
             BDD_NODE *data = bdd_map(root,*ntransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -64,7 +64,7 @@ int birp_to_birp(FILE *in, FILE *out) {
                 return -1;
             }
         }
-        else if(t == 00000200){//replace node by threshold
+        else if(t == 0x200){//replace node by threshold
             BDD_NODE *data =bdd_map(root,*ttransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -74,7 +74,7 @@ int birp_to_birp(FILE *in, FILE *out) {
                 return -1;
             }
         }
-        else if(r == 00000400){//rotate
+        else if(r == 0x400){//rotate
             int lev = levelcal(width,height);//calculate proper level
             BDD_NODE *data = bdd_rotate(root,lev);
             if(data != NULL){
@@ -85,10 +85,10 @@ int birp_to_birp(FILE *in, FILE *out) {
                 return -1;
             }
         }
-        else if(z == 00000300){//zoom out
+        else if(z == 0x300){//zoom out
             ;
         }
-        else if(Z == 00000300){// zoom in
+        else if(Z == 0x300){// zoom in
             ;
         }
     }
@@ -171,9 +171,9 @@ int birp_to_ascii(FILE *in, FILE *out) { //this works
 int validargs(int argc, char **argv) {
     int pos = 0;
     informat = "birp";
-    int inp = 00000002;
+    int inp = 0x2;
     outformat = "birp";
-    int outp = 00000020;
+    int outp = 0x20;
     char *ptr = *(argv);
     int ofset = 1;
     if(pos == 0 && argc >= 1){
@@ -198,12 +198,12 @@ int validargs(int argc, char **argv) {
                 if(stringcmp(ptr,"pgm") == 0 && argc >= 1)//if input format = pgm
                 {
                     informat = "pgm";
-                    inp = 00000001; //input exist
+                    inp = 0x1; //input exist
                 }
                 else if(stringcmp(ptr,"birp") == 0 && argc >= 1)//if input format = birp
                 {
                     informat = "birp";
-                    inp = 00000002; //input exist
+                    inp = 0x2; //input exist
                 }
                 else{
                     return -1;//-i not followed by prg or birp
@@ -215,27 +215,27 @@ int validargs(int argc, char **argv) {
                 argc--;
                 if(stringcmp(ptr,"pgm") == 0 && argc >= 1){//if output format = pgm
                     outformat = "pgm";
-                    outp = 00000010;
+                    outp = 0x10;
                 }
                 else if(stringcmp(ptr,"birp") == 0 && argc >= 1)//if output format = birp
                 {
                     outformat = "birp";
-                    outp = 00000020; //input exist
+                    outp = 0x20; //input exist
                 }
                 else if(stringcmp(ptr,"ascii") == 0 && argc >= 1)//if output format = ascii
                 {
                     outformat = "ascii";
-                    outp = 00000030; //input exist
+                    outp = 0x30; //input exist
                 }
                 else{
                     return -1; //-o not followed by prg or birp or ascii
                 }
             }
             else if(stringcmp(ptr,"-n") == 0 && argc >= 1){ //if -n is first argument
-                n = 00000100;
+                n = 0x100;
             }
             else if(stringcmp(ptr,"-r") == 0 && argc >= 1){ // if -r is first argument
-                r = 00000400;
+                r = 0x400;
             }
             else if(stringcmp(ptr,"-t") == 0 && argc >= 1){ // if -t is first argument
                 argc--;
@@ -244,7 +244,7 @@ int validargs(int argc, char **argv) {
                 if(argc >= 1){
                     int temp = stringtoint(ptr);
                     if(temp >= 0 && temp <= 255){
-                        t= 00000200;
+                        t= 0x200;
                         tt = temp;
                     }
                     else{
@@ -252,14 +252,14 @@ int validargs(int argc, char **argv) {
                     }
                 }
             }
-            else if(stringcmp(ptr,"z") == 0 && argc >= 1){// if -z is first argument
+            else if(stringcmp(ptr,"-z") == 0 && argc >= 1){// if -z is first argument
                 argc--;
                 ptr = *(argv+ofset);
                 ofset++;
                 if(argc >= 1){
                     int temp = stringtoint(ptr);
                     if(temp >= 0 && temp <= 16){
-                        z = 00000300;
+                        z = 0x300;
                         zz = -temp; //negative
                     }
                     else{
@@ -267,14 +267,14 @@ int validargs(int argc, char **argv) {
                     }
                 }
             }
-            else if(stringcmp(ptr,"Z") == 0 && argc >= 1){ // if -Z is first argument
+            else if(stringcmp(ptr,"-Z") == 0 && argc >= 1){ // if -Z is first argument
                 argc--;
                 ptr = *(argv+ofset);
                 ofset++;
                 if(argc >= 1){
                     int temp = stringtoint(ptr);
                     if(temp >= 0 && temp <= 16){
-                        Z = 00000300;
+                        Z = 0x300;
                         ZZ = temp; // positve
                     }
                     else{
@@ -294,12 +294,12 @@ int validargs(int argc, char **argv) {
                 if(stringcmp(ptr,"pgm") == 0 && argc >= 1)//if input format = pgm
                 {
                     informat = "pgm";
-                    inp = 00000001; //input exist
+                    inp = 0x1; //input exist
                 }
                 else if(stringcmp(ptr,"birp") == 0 && argc >= 1)//if input format = birp
                 {
                     informat = "birp";
-                    inp = 00000002; //input exist
+                    inp = 0x2; //input exist
                 }
                 else{
                     return -1;//-i not followed by prg or birp
@@ -311,17 +311,17 @@ int validargs(int argc, char **argv) {
                 argc--;
                 if(stringcmp(ptr,"pgm") == 0 && argc >= 1){//if output format = pgm
                     outformat = "pgm";
-                    outp = 00000010;
+                    outp = 0x10;
                 }
                 else if(stringcmp(ptr,"birp") == 0 && argc >= 1)//if output format = birp
                 {
                     outformat = "birp";
-                    outp = 00000020; //input exist
+                    outp = 0x20; //input exist
                 }
                 else if(stringcmp(ptr,"ascii") == 0 && argc >= 1)//if output format = ascii
                 {
                     outformat = "ascii";
-                    outp = 00000030; //input exist
+                    outp = 0x30; //input exist
                 }
                 else{
                     return -1; //-o not followed by prg or birp or ascii
@@ -329,14 +329,14 @@ int validargs(int argc, char **argv) {
             }
             else if(stringcmp(ptr,"-n") == 0 && argc >= 1){
                 if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
-                    n = 00000100;
+                    n = 0x100;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(ptr,"-r") == 0 && argc >= 1){
                 if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
-                    r = 00000400;
+                    r = 0x400;
                 }
                 else
                     return -1;
@@ -348,8 +348,8 @@ int validargs(int argc, char **argv) {
                     ofset++;
                     if(argc >= 1){
                         int temp = stringtoint(ptr);
-                        if(temp >= 0 && temp <= 16){
-                            t = 00000200;
+                        if(temp >= 0 && temp <= 255){
+                            t = 0x200;
                             tt = temp;
                         }
                         else{
@@ -368,7 +368,7 @@ int validargs(int argc, char **argv) {
                     if(argc >= 1){
                         int temp = stringtoint(ptr);
                         if(temp >= 0 && temp <= 16){
-                            z = 00000300;
+                            z = 0x300;
                             zz = temp;
                         }
                         else{
@@ -387,7 +387,7 @@ int validargs(int argc, char **argv) {
                     if(argc >= 1){
                         int temp = stringtoint(ptr);
                         if(temp >= 0 && temp <= 16){
-                            Z = 00000300;
+                            Z = 0x300;
                             ZZ = temp;
                         }
                         else{
@@ -404,14 +404,14 @@ int validargs(int argc, char **argv) {
         else{
             if(stringcmp(ptr,"-n") == 0 && argc >= 1){
                 if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
-                    n = 00000100;
+                    n = 0x100;
                 }
                 else
                     return -1;
             }
             else if(stringcmp(ptr,"-r") == 0 && argc >= 1){
                 if(stringcmp(informat,"birp") == 0 && stringcmp(outformat,"birp") == 0){
-                    r = 00000400;
+                    r = 0x400;
                 }
                 else
                     return -1;
@@ -423,8 +423,8 @@ int validargs(int argc, char **argv) {
                     ofset++;
                     if(argc >= 1){
                         int temp = stringtoint(ptr);
-                        if(temp >= 0 && temp <= 16){
-                            t = 00000200;
+                        if(temp >= 0 && temp <= 255){
+                            t = 0x200;
                             tt = temp;
                         }
                         else{
@@ -443,7 +443,7 @@ int validargs(int argc, char **argv) {
                     if(argc >= 1){
                         int temp = stringtoint(ptr);
                         if(temp >= 0 && temp <= 16){
-                            z = 00000300;
+                            z = 0x300;
                             zz = temp;
                         }
                         else{
@@ -462,7 +462,7 @@ int validargs(int argc, char **argv) {
                     if(argc >= 1){
                         int temp = stringtoint(ptr);
                         if(temp >= 0 && temp <= 16){
-                            Z = 00000300;
+                            Z = 0x300;
                             ZZ = temp;
                         }
                         else{
@@ -482,18 +482,21 @@ int validargs(int argc, char **argv) {
         ofset++;
     }
     if(t > 0){
-        global_options = global_options + tt;
-        global_options = global_options >> 8;//shift right
+        int factor = 256-tt;
+        global_options = global_options + factor;
+        global_options = global_options << 16;//shift right
         global_options = global_options + inp + outp + t;
     }
     else if(z > 0){
-        global_options = global_options + zz;
-        global_options = global_options >> 8;
+        int factor = 256 +zz;
+        global_options = global_options + factor;
+        global_options = global_options << 16;
         global_options = global_options + inp + outp + z;
     }
     else if(Z > 0){
-        global_options = global_options + ZZ;
-        global_options = global_options >> 8;
+        int factor = 256-ZZ;
+        global_options = global_options + factor;
+        global_options = global_options << 16;
         global_options = global_options + inp + outp + Z;
     }
     else if(n > 0){
@@ -501,6 +504,9 @@ int validargs(int argc, char **argv) {
     }
     else if(r > 0){
         global_options = global_options + inp + outp + r;
+    }
+    else{
+        global_options = global_options+inp+outp;
     }
     return 0;
 }

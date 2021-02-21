@@ -35,14 +35,9 @@ int stringtoint(char *str){
 		neg = -1;
 		*str = *(str+1);
 	}
-	int revoutput = 0;
-	while(*str != '\0'){
-		revoutput = revoutput * 10 + *str;
-	}
 	int output = 0;
-	while(revoutput != 0){
-		output = output * 10 + (revoutput%10);
-		revoutput = revoutput/10;
+	for(int i=0;*(str+i) != '\0';i++){
+		output = output *10 + (*(str+i) -48);
 	}
 	if(neg == -1){
 		output = -output;
