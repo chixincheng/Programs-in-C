@@ -52,6 +52,9 @@ int birp_to_pgm(FILE *in, FILE *out) { // this works
 
 int birp_to_birp(FILE *in, FILE *out) {
     BDD_NODE *root = img_read_birp(in,&width,&height);//use deserialize (this works)
+    for(int i=0;i<BDD_NODES_MAX;i++){
+        *(bdd_index_map+i) = 0;
+    }
     if(root != NULL){
         if(n == 0x100){ // -n option, complement node (this works)
             bdd_to_raster(root,width,height,raster_data);

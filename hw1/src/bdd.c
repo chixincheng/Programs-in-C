@@ -516,6 +516,7 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
             if(rightval > 255){// hit leaf node
                 currright = (bdd_zoom(bdd_nodes+root.right,root.level,factor));//recursive to right
             }
+            //--------------------------------------------
             if(leftval > 255 && rightval > 255){
                 int p = bdd_lookup(root.level-times,currleft-bdd_nodes,currright-bdd_nodes);
                 BDD_NODE *ret = (bdd_nodes+p);
