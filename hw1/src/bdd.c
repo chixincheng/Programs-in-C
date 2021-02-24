@@ -29,7 +29,6 @@ int leafpos = -1;//helper var in bdd_apply
 int user = 0;//helper var in bdd_apply
 int d = -1;//helper var in bdd_apply
 int enterfirst = -1;//helper var in bdd_apply
-int serialswitch = -1;//helper var in bdd_rotate
 /**
  * Look up, in the node table, a BDD node having the specified level and children,
  * inserting a new node if a matching node does not already exist.
@@ -157,66 +156,32 @@ int bdd_serialize(BDD_NODE *node, FILE *out) {
     }
     else
     {
-        if(serialswitch == -1){
-            currnode = root.right;
-            if(*(bdd_index_map + currnode) == 0)//not visited
-            {
-                bdd_serialize((bdd_nodes+root.right),out);
-            }
-            currnode = root.left;
-            if(*(bdd_index_map + currnode) == 0) //not visited
-            {
-                bdd_serialize((bdd_nodes+root.left),out);
-            }
-
-            if(*(bdd_index_map + root.left) != 0 && *(bdd_index_map + root.right) != 0
-                && lev != 0){
-                //
-                serial++;
-                currnode = node - bdd_nodes;
-                *(bdd_index_map + currnode) = serial;
-                fputc(opc,out);
-                fputc(*(bdd_index_map + root.right),out);
-                fputc('\0',out);
-                fputc('\0',out);
-                fputc('\0',out);
-                fputc(*(bdd_index_map + root.left),out);
-                fputc('\0',out);
-                fputc('\0',out);
-                fputc('\0',out);
-            }
-            enterandprint = 0;
-            //printf("%i\n", serial);
-            return serial;
+        currnode = root.right;
+        if(*(bdd_index_map + currnode) == 0)//not visited
+        {
+            bdd_serialize((bdd_nodes+root.right),out);
         }
-        else{
-            currnode = root.left;
-            if(*(bdd_index_map + currnode) == 0)//not visited
-            {
-                bdd_serialize((bdd_nodes+root.left),out);
-            }
-            currnode = root.right;
-            if(*(bdd_index_map + currnode) == 0) //not visited
-            {
-                bdd_serialize((bdd_nodes+root.right),out);
-            }
+        currnode = root.left;
+        if(*(bdd_index_map + currnode) == 0) //not visited
+        {
+            bdd_serialize((bdd_nodes+root.left),out);
+        }
 
-            if(*(bdd_index_map + root.left) != 0 && *(bdd_index_map + root.right) != 0
-                && lev != 0){
-                //
-                serial++;
-                currnode = node - bdd_nodes;
-                *(bdd_index_map + currnode) = serial;
-                fputc(opc,out);
-                fputc(*(bdd_index_map + root.left),out);
-                fputc('\0',out);
-                fputc('\0',out);
-                fputc('\0',out);
-                fputc(*(bdd_index_map + root.right),out);
-                fputc('\0',out);
-                fputc('\0',out);
-                fputc('\0',out);
-            }
+        if(*(bdd_index_map + root.left) != 0 && *(bdd_index_map + root.right) != 0
+            && lev != 0){
+            //
+            serial++;
+            currnode = node - bdd_nodes;
+            *(bdd_index_map + currnode) = serial;
+            fputc(opc,out);
+            fputc(*(bdd_index_map + root.right),out);
+            fputc('\0',out);
+            fputc('\0',out);
+            fputc('\0',out);
+            fputc(*(bdd_index_map + root.left),out);
+            fputc('\0',out);
+            fputc('\0',out);
+            fputc('\0',out);
             enterandprint = 0;
             //printf("%i\n", serial);
             return serial;
@@ -398,7 +363,6 @@ BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {//keep rotate and divide, ends 
     int rightval;
     int t;
     int b;
-    serialswitch=0;
     if(root.level == 2)//base case, contain 2 level 1, 1 of top 1 of bottem,each level 1 contain left and right
     {
         currleft = *(bdd_nodes+root.left); //left  =A right =B level 1 or 0
@@ -498,7 +462,6 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
         BDD_NODE *currright;
         int leftval;
         int rightval;
-        serialswitch =0;
         if(root.level-times <= 0){ //base case
             if(root.left == 0 && root.right == 0){//full black
                 return (bdd_nodes+0);
