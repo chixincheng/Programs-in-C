@@ -58,6 +58,7 @@ int birp_to_birp(FILE *in, FILE *out) {
     if(root != NULL){
         if(n == 0x100){ // -n option, complement node (this works)
             bdd_to_raster(root,width,height,raster_data);
+            n=-1;
             BDD_NODE *data = bdd_map(root,*ntransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -69,6 +70,7 @@ int birp_to_birp(FILE *in, FILE *out) {
         }
         else if(t == 0x200){//replace node by threshold
             bdd_to_raster(root,width,height,raster_data);
+            t=-1;
             BDD_NODE *data =bdd_map(root,*ttransformhelper);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -80,6 +82,7 @@ int birp_to_birp(FILE *in, FILE *out) {
         }
         else if(r == 0x400){//rotate
             int lev = levelcal(width,height);//calculate proper level
+            r=-1;
             BDD_NODE *data = bdd_rotate(root,lev);
             if(data != NULL){
                 img_write_birp(data,width,height,out);
@@ -91,11 +94,13 @@ int birp_to_birp(FILE *in, FILE *out) {
         }
         else if(z == 0x300){//zoom out
             BDD_NODE *data = bdd_zoom(root,0,zz);
+            z=-1;
             int topos = -zz;
             int times = 1;
             for(int i=0;i<topos;++i){
                 times *= 2;
             }
+            zz=-1;
             if(data != NULL){
                 img_write_birp(data,width/times,height/times,out);
                 return 0;
@@ -104,16 +109,22 @@ int birp_to_birp(FILE *in, FILE *out) {
         }
         else if(Z == 0x300){// zoom in works
             bdd_to_raster(root,width,height,raster_data);
+            Z=-1;
             BDD_NODE *data = bdd_zoom(root,0,ZZ);
             int times = 1;
             for(int i=0;i<ZZ;++i){
                 times *= 2;
             }
+            ZZ=-1;
             if(data != NULL){
                 img_write_birp(data,width*times,height*times,out);
                 return 0;
             }
             return -1;
+        }
+        else{//identity transform
+            img_write_birp(root,width,height,out);
+            return 0;
         }
     }
     return -1;
