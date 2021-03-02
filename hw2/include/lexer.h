@@ -12,10 +12,7 @@ extern FILE * yyin;
 extern FILE * yyout;
 
 #ifdef __STDC__
-extern int yylex(/*void*/);
-#else
-extern int yylex(/*void*/);
+extern int yylex(void); //*void*/
 #endif
-
-
+extern int yylex_destory(void);
 #endif
