@@ -1550,7 +1550,7 @@ int  parse_move(token)
   int etat =0;
   int code;
 
-  m = add_trailing_move(m);
+  //m = add_trailing_move(m);
   init_parse(m);
   m->type = MOVE;
 
