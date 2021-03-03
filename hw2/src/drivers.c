@@ -155,7 +155,7 @@ static void flush_buffer(d)
     case D_TEX:
       (void) fprintf(d->outfile,
 		     "%s %s %s\n",
-		     d->move_buffer,FigDots,d->black_buffer);
+		     d->move_buffer,"...",d->black_buffer);
       break;
     case D_GNU:
     case D_XCHESS:
@@ -184,7 +184,7 @@ static void flush_buffer(d)
 	(void) fprintf(d->outfile,"%3s.", d->move_buffer);
     case D_GNU:
       if (d->iswhiteturn)
-	(void) fprintf(d->outfile,"\t%s",d-> white_buffer);
+	(void) fprintf(d->outfile,"\t%s",d->white_buffer);
       else
 	(void) fprintf(d->outfile,"\t%s\n",d->black_buffer);
       break;
