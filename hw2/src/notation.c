@@ -1836,7 +1836,7 @@ int notation_main(argc,argv)
   theplay->initial = tos ;
   theplay->chain   = m ;
   movecount = 1;
-
+  free(theplay);//added to free theplay
   /* main analysis routine */
   yyin = infile ;
   yyout = stderr ;

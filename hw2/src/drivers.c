@@ -829,6 +829,6 @@ void init_driver(dr,driver)
     dr->out_move = null_driver ;
 
   dr->variation = 0;
-  dr->iswhiteturn = FALSE ;
+  dr->iswhiteturn = TRUE;//
   dr->interrupt = FALSE;
 }
