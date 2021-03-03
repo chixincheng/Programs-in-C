@@ -489,8 +489,8 @@ depl * new_move()
   for (i=0; i < ((sizeof (depl))/ sizeof (int)) ; i++)
     ((int *) tmp)[i] = 0;
   tmp->uid = ++counter;
-  tmp->whiteturn = FALSE;
-  tmp->move = 0;
+  tmp->whiteturn = TRUE;
+  tmp->move = 1;
   return(tmp);
 }
 
@@ -502,8 +502,8 @@ void init_move(m)
      depl *m;
 #endif
 {
-  m->move= 1 ;
-  m->whiteturn = TRUE ;
+  m->move= 0 ;
+  m->whiteturn = FALSE ;
 }
 
 #ifdef __STDC__
@@ -1550,7 +1550,7 @@ int  parse_move(token)
   int etat =0;
   int code;
 
-  //m = add_trailing_move(m);
+  m = add_trailing_move(m);
   init_parse(m);
   m->type = MOVE;
 

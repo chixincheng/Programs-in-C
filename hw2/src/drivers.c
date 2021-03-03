@@ -253,7 +253,7 @@ static void output_move_generic(dr,d)
     /* we check here for ambiguous move */
     if ((d->type != GRANDROQUE) && (d->type != PETITROQUE)) {
       ambigue = ambiguity (d, &ambigueline, &ambiguecols );
-      /* if ( (ambigue ) && (d->piece != PAWN ))
+/*       if ( (ambigue ) && (d->piece != PAWN ))
        * (void) fprintf (stderr,"output ambiguity at move %d %d",
        * d->move,d->whiteturn);
        */
@@ -829,6 +829,6 @@ void init_driver(dr,driver)
     dr->out_move = null_driver ;
 
   dr->variation = 0;
-  dr->iswhiteturn = TRUE;//
+  dr->iswhiteturn = FALSE;//
   dr->interrupt = FALSE;
 }
