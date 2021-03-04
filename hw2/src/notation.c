@@ -1826,16 +1826,15 @@ int notation_main(argc,argv)
   /* allocation of board descriptor */
   tos = new_board();
   init_board(tos);
-
   /* allocation of move descriptor */
   m = new_move();//m->type = VOID ;
   init_move(m);//init is commented
-
   /* allocation of the play descriptor */
   theplay = (play *) malloc (sizeof(play)) ;
   theplay->initial = tos ;
   theplay->chain   = m ;
   movecount = 1;
+  depl *firstm = m;
   free(theplay);//added to free theplay
   /* main analysis routine */
   yyin = infile ;
@@ -1843,7 +1842,6 @@ int notation_main(argc,argv)
 
   /*init_parse(m); */
   yylex();
-
   if ((count == 0) && !error_flag)
     output_board(dr,tos);
 
@@ -1852,13 +1850,15 @@ int notation_main(argc,argv)
     output_board(dr,tos);
     fatal((stderr,"\nToo many errors"));
   }
-
   /* terminates output files */
   output_end(dr);
-
   /* close files */
   close_files();
-
+  free_move_list(firstm);
+  free(firstm);
+  free(tos);
+  free(dr);
+  yylex_destroy();
   /* exit properly */
   return 0;
 }
