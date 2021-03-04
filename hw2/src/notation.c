@@ -385,10 +385,10 @@ static int find_keyword(tab, nbentry,defaut,key,warning)
 #endif
 {
   int i ;
-
-  for(i=0; (i< nbentry) ;i++)
-    if (strcmp(tab[i],key))
+  for(i=0;i< nbentry;i++)
+    if (strcmp(tab[i],key) == 0){
       return(i);
+    }
 
   /* we failed to find the keyword */
   if (warning)
@@ -427,7 +427,7 @@ game * new_board()
   ALLOCP(tmp);
   for (i=0; i < ((sizeof (game))/ sizeof (int)) ; i++)
     ((int *) tmp)[i] = 0;
-  return(tmp);
+  return tmp;
 }
 
 #ifdef __STDC__
@@ -743,7 +743,6 @@ void enter_variation()
     /* set variables */
     l++;
     dr->variation = l;
-
     output_variation(dr,VARIATION_IN);
   }
 }
@@ -764,7 +763,8 @@ void exit_variation()
     output_variation(dr,VARIATION_OUT);
 
     l--;
-    free(m);
+    //free(m);
+    //free(tos);//added
     m = stack[l].d ;
     tos = stack[l].b ;
 
