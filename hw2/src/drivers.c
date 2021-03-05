@@ -688,8 +688,9 @@ void output_text(dr, type, string, code)
      int code;
 #endif
 {
-  if ((dr->type != D_GNU) && (dr->type != D_XCHESS))
+  if ((dr->type != D_GNU) && (dr->type != D_XCHESS)){
     dr->out_text(dr, type, string, code);
+  }
 }
 
 #ifdef __STDC__

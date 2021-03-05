@@ -754,6 +754,7 @@ void exit_variation(void)
 void exit_variation()
 #endif
 {
+  free(tos);//added
   int l ;
 
   l = dr->variation ;
@@ -764,11 +765,10 @@ void exit_variation()
     output_variation(dr,VARIATION_OUT);
 
     l--;
-    //free(m);
+    //free(m);//deleted
     //free(tos);//added
     m = stack[l].d ;
     tos = stack[l].b ;
-
     dr->iswhiteturn = stack[l].d1 ;
     dr->interrupt = stack[l].d2 ;
     dr->variation = l;
@@ -1422,10 +1422,10 @@ int parse_comment(com)
     t = find_keyword(com_short, NUM_COM_CODE, NUM_COM_CODE, com,FALSE);
     if (t == NUM_COM_CODE)
       fprintf (stderr,"\nWhat is \"%s\" ?\n",com);
+    else{
+      output_text(dr,T_COMMENT, com, t);
+    }
   }
-  if (t != NUM_COM_CODE){
-    printf("AAAAAAAAA");
-    output_text(dr,T_COMMENT, com, t);}
   return(TRUE);
 }
 
@@ -1837,7 +1837,6 @@ int notation_main(argc,argv)
   theplay->chain   = m ;
   movecount = 1;
   depl *firstm = m;
-  free(theplay);//added to free theplay
   /* main analysis routine */
   yyin = infile ;
   yyout = stderr ;
@@ -1856,6 +1855,7 @@ int notation_main(argc,argv)
   output_end(dr);
   /* close files */
   close_files();
+  free(theplay);
   free_move_list(firstm);
   free(firstm);
   free(tos);
