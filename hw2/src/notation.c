@@ -1,13 +1,13 @@
 /*
   Notation program
-  @(#)notation.c	3.9 (C) Henry Thomas   Release 3     Dated 12/10/91
+  @(#)notation.c  3.9 (C) Henry Thomas   Release 3     Dated 12/10/91
  */
 /* Programme d'analyse de notation echiquienne
    Copyright (C) 1990 Henry Thomas
    Nom: notation
    Auteur: Henry Thomas
    Date: 27/11/90
-   */
+*/
 /*
 This file is part of NOTATION program.
 
@@ -45,7 +45,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 extern void close_files();
 
 char * version_string =
-  "@(#)notation.c	3.9 (C) Henry Thomas.   Release 3     Dated 12/10/91";
+  "@(#)notation.c 3.9 (C) Henry Thomas.   Release 3     Dated 12/10/91";
 
 static char * keywords[]= {
   "@startplay" , "@clearboard" , "@showboard" ,
@@ -87,7 +87,7 @@ static char c_language[NBLANGUAGES][7] = {
 /* user_def  *//*{ '@' ,'X' , 'X' , 'X' , 'X' , 'X' , 'X' }*/
 /* russian not implemented : ASCII russian is an oxymoron */
 /* russian   *//*{ '@' ,'K' , 'F' , 'D' , 'C' , 'K' , 'P' }*/
-	       };
+         };
 
 /* input translation table */
 char *in_table;
@@ -105,8 +105,8 @@ char c_prise ='x';
 
 /* various comments */
 char * c_comments[] = { "+" , "++" ,
-			  "?" , "??", "!", "!!", "!?", "?!",
-			  "mate", "draw" };
+        "?" , "??", "!", "!!", "!?", "?!",
+        "mate", "draw" };
 
 /* movement tables */
 /* move only */
@@ -237,10 +237,10 @@ static stack_elt stack[VARIATION_MAX];
 /* ---------- automata definitions --------- */
 /* table for syntaxic analysis of move */
 
-#define FINAL	10
-#define TML 	FINAL   /* terminal state */
-#define NBETAT 	11
-#define NBCLAS 	8
+#define FINAL 10
+#define TML   FINAL   /* terminal state */
+#define NBETAT  11
+#define NBCLAS  8
 
 /* successor of state */
 static int transit[NBETAT][NBCLAS] = {
@@ -289,8 +289,8 @@ static depl * m = MULL ;
 
 
 int alternate_moves[10][2]; /* table of alternate moves, guessed by
-			       the "move generator": guess depl
-			       */
+             the "move generator": guess depl
+             */
 
 
 /* the output driver */
@@ -332,9 +332,9 @@ char * com_long[] = {
 
 
 #define setboard(A,I,J,P,C)  { (A)->board[(I)][(J)] = (P) ; \
-				 (A)->color[(I)][(J)] = (C); }
+         (A)->color[(I)][(J)] = (C); }
 #define clsboard(A,I,J)   { (A)->board[(I)][(J)] = VOID ; \
-				(A)->color[(I)][(J)] = VOID ;}
+        (A)->color[(I)][(J)] = VOID ;}
 
 /* --------------------------- code part --------------------- */
 
@@ -374,7 +374,7 @@ static int piece(c)
    */
 #ifdef __STDC__
 static int find_keyword(char *tab[], int nbentry,int defaut,
-			char *key,int warning)
+      char *key,int warning)
 #else
 static int find_keyword(tab, nbentry,defaut,key,warning)
      char * tab[]; /* the table to look in */
@@ -385,11 +385,10 @@ static int find_keyword(tab, nbentry,defaut,key,warning)
 #endif
 {
   int i ;
-  //printf("====");
-  for(i=0;i< nbentry;i++)
-    if (strcmp(tab[i],key) == 0){
+
+  for(i=0; (i< nbentry) ;i++)
+    if (strcmp(tab[i],key) == 0)
       return(i);
-    }
 
   /* we failed to find the keyword */
   if (warning)
@@ -428,7 +427,7 @@ game * new_board()
   ALLOCP(tmp);
   for (i=0; i < ((sizeof (game))/ sizeof (int)) ; i++)
     ((int *) tmp)[i] = 0;
-  return tmp;
+  return(tmp);
 }
 
 #ifdef __STDC__
@@ -485,13 +484,13 @@ depl * new_move()
   int i;
   static int counter = 0;
 
-  tmp = (depl *) malloc (sizeof(depl));//tmp = (depl *) malloc (sizeof(depl *));
+  tmp = (depl *) malloc (sizeof(depl));
   ALLOCP(tmp);
   for (i=0; i < ((sizeof (depl))/ sizeof (int)) ; i++)
     ((int *) tmp)[i] = 0;
   tmp->uid = ++counter;
-  tmp->whiteturn = TRUE;
-  tmp->move = 1;
+  tmp->whiteturn = FALSE;
+  tmp->move = 0;
   return(tmp);
 }
 
@@ -744,6 +743,7 @@ void enter_variation()
     /* set variables */
     l++;
     dr->variation = l;
+
     output_variation(dr,VARIATION_IN);
   }
 }
@@ -754,7 +754,7 @@ void exit_variation(void)
 void exit_variation()
 #endif
 {
-  free(tos);//added
+  free(tos);
   int l ;
 
   l = dr->variation ;
@@ -765,10 +765,10 @@ void exit_variation()
     output_variation(dr,VARIATION_OUT);
 
     l--;
-    //free(m);//deleted
-    //free(tos);//added
+    //free(m);
     m = stack[l].d ;
     tos = stack[l].b ;
+
     dr->iswhiteturn = stack[l].d1 ;
     dr->interrupt = stack[l].d2 ;
     dr->variation = l;
@@ -810,7 +810,7 @@ int l1,c1, l2, c2;
     col = c1;
     for (lig = l1 +li; lig != l2 ; lig +=li)
       if (tos->board[lig][col] != VOID)
-	return (FALSE);
+  return (FALSE);
     return(TRUE);
   }
 
@@ -818,7 +818,7 @@ int l1,c1, l2, c2;
     lig = l1 ;
     for (col = c1 + ci; col != c2 ; col +=ci)
       if (tos->board[lig][col] != VOID)
-	return (FALSE);
+  return (FALSE);
     return(TRUE);
   }
 
@@ -845,11 +845,11 @@ int check_roque()
   if (m->type == GRANDROQUE)
     for (col = 2; col < 5 ; col++)
       if (tos->board[lig][col] != VOID)
-	return(FALSE);
+  return(FALSE);
   if (m->type == PETITROQUE)
     for (col = 6; col < 7 ; col++)
       if (tos->board[lig][col] != VOID)
-	return(FALSE);
+  return(FALSE);
   return(TRUE);
 }
 
@@ -869,7 +869,7 @@ int guess_piece()
  */
 #ifdef __STDC__
 int guess_depl(int nb, int tab[][2],
-	       int * pl1, int * pc1, int l2, int c2, int path)
+         int * pl1, int * pc1, int l2, int c2, int path)
 #else
 int guess_depl(nb, tab, pl1, pc1, l2,c2,path)
      int nb;
@@ -877,7 +877,7 @@ int guess_depl(nb, tab, pl1, pc1, l2,c2,path)
      int *pl1, *pc1;
      int l2,c2;
      int path; /* tell if we have to check for a free path
-		  used for en passant */
+      used for en passant */
 #endif
 {
   int i, c, l;
@@ -888,15 +888,15 @@ int guess_depl(nb, tab, pl1, pc1, l2,c2,path)
     c = c2 - tab[i][1];
     if (in_board(l,c))
       if ((tos->board[l][c] == m->piece) &&
-	  (tos->color[l][c] == CURCOLOR(m)) &&
-	  ( !path || (path && path_free(l,c, l2, c2))) &&
-	  ( ((*pl1) == 0) || ((*pl1) == l) ) &&
-	  ( ((*pc1) == 0) || ((*pc1) == c) ) )
-	{
-	  alternate_moves[count][0] = l;
-	  alternate_moves[count][1] = c;
-	  count++;
-	}
+    (tos->color[l][c] == CURCOLOR(m)) &&
+    ( !path || (path && path_free(l,c, l2, c2))) &&
+    ( ((*pl1) == 0) || ((*pl1) == l) ) &&
+    ( ((*pc1) == 0) || ((*pc1) == c) ) )
+  {
+    alternate_moves[count][0] = l;
+    alternate_moves[count][1] = c;
+    count++;
+  }
   }
   alternate_moves[count][0] = alternate_moves[count][1] = 0;
   if (count > 0) {
@@ -938,14 +938,14 @@ int ambiguity(d, amline, amcols )
   case PAWN:
     if (m->type == PRISE) {
       if (m->whiteturn)
-	r = guess_depl(NB_M_PAWN_WX, m_pawn_wx, &l1,&c1, l2,c2, FALSE);
+  r = guess_depl(NB_M_PAWN_WX, m_pawn_wx, &l1,&c1, l2,c2, FALSE);
       else
-	r = guess_depl(NB_M_PAWN_BX, m_pawn_bx, &l1,&c1, l2,c2, FALSE);
+  r = guess_depl(NB_M_PAWN_BX, m_pawn_bx, &l1,&c1, l2,c2, FALSE);
     } else {
       if (m->whiteturn)
-	r = guess_depl(NB_M_PAWN_MOVE_WD,m_pawn_move_wd,&l1,&c1, l2,c2, FALSE);
+  r = guess_depl(NB_M_PAWN_MOVE_WD,m_pawn_move_wd,&l1,&c1, l2,c2, FALSE);
       else
-	r = guess_depl(NB_M_PAWN_MOVE_BD,m_pawn_move_bd,&l1,&c1,l2,c2, FALSE);
+  r = guess_depl(NB_M_PAWN_MOVE_BD,m_pawn_move_bd,&l1,&c1,l2,c2, FALSE);
     }
     break;
   case KNIGHT:
@@ -978,9 +978,9 @@ int ambiguity(d, amline, amcols )
     *amcols = TRUE ;
     for (i= 1; i < r ; i++) {
       if (alternate_moves[i][0] != alternate_moves[0][0])
-	*amline = FALSE;
+  *amline = FALSE;
       if (alternate_moves[i][1] != alternate_moves[0][1])
-	*amcols = FALSE;
+  *amcols = FALSE;
     }
   }
   return( (r > 1) );
@@ -1024,7 +1024,7 @@ int check_move(m)
   /* prendre une de ses propres pieces */
   if (tos->color[l2][c2] == tos->color[l1][c1] && m->prise) {
     (void) fprintf(stderr,"attempt to catch same color piece at move %d.\n",
-		   m->move);
+       m->move);
     return(FALSE);
   }
 
@@ -1035,18 +1035,18 @@ int check_move(m)
   case PAWN:
     if (m->prise) {
       if (m->whiteturn)
-	tmp = guess_depl(NB_M_PAWN_WX, m_pawn_wx, &l1,&c1, l2,c2, FALSE);
+  tmp = guess_depl(NB_M_PAWN_WX, m_pawn_wx, &l1,&c1, l2,c2, FALSE);
       else
-	tmp = guess_depl(NB_M_PAWN_BX, m_pawn_bx, &l1,&c1, l2,c2, FALSE);
+  tmp = guess_depl(NB_M_PAWN_BX, m_pawn_bx, &l1,&c1, l2,c2, FALSE);
     } else {
       if (m->whiteturn)
-	tmp = guess_depl(NB_M_PAWN_WD, m_pawn_wd, &l1,&c1, l2,c2, FALSE);
+  tmp = guess_depl(NB_M_PAWN_WD, m_pawn_wd, &l1,&c1, l2,c2, FALSE);
       else
-	tmp = guess_depl(NB_M_PAWN_BD, m_pawn_bd, &l1,&c1, l2,c2, FALSE);
+  tmp = guess_depl(NB_M_PAWN_BD, m_pawn_bd, &l1,&c1, l2,c2, FALSE);
     }
     /* is it a "prise en passant " */
     if ((c1 != c2) && (tos->board[l2][c2] == VOID)
-	&& (tos->board[l1][c2] == PAWN)) {
+  && (tos->board[l1][c2] == PAWN)) {
       m->type = EN_PASSANT ;
       /* we must perform here the "en passant" test */
       tos->board[l1][c2] = VOID ;
@@ -1099,14 +1099,14 @@ int guess_move()
   case PAWN:
     if (m->prise) {
       if (m->whiteturn)
-	(void) guess_depl(NB_M_PAWN_WX, m_pawn_wx, &l1,&c1, l2,c2, FALSE);
+  (void) guess_depl(NB_M_PAWN_WX, m_pawn_wx, &l1,&c1, l2,c2, FALSE);
       else
-	(void) guess_depl(NB_M_PAWN_BX, m_pawn_bx, &l1,&c1, l2,c2, FALSE);
+  (void) guess_depl(NB_M_PAWN_BX, m_pawn_bx, &l1,&c1, l2,c2, FALSE);
     } else {
       if (m->whiteturn)
-	(void) guess_depl(NB_M_PAWN_WD, m_pawn_wd, &l1,&c1, l2,c2, FALSE);
+  (void) guess_depl(NB_M_PAWN_WD, m_pawn_wd, &l1,&c1, l2,c2, FALSE);
       else
-	(void) guess_depl(NB_M_PAWN_BD, m_pawn_bd, &l1,&c1, l2,c2, FALSE);
+  (void) guess_depl(NB_M_PAWN_BD, m_pawn_bd, &l1,&c1, l2,c2, FALSE);
     }
     break;
   case KNIGHT:
@@ -1131,10 +1131,10 @@ int guess_move()
   if ((l1 == 0) || (c1 == 0)) {
     if (m->whiteturn)
       error((stderr,"\nUnable to guess white move %d, with piece %c\n",
-	     m->move,in_table[m->piece]));
+       m->move,in_table[m->piece]));
     else
       error((stderr,"\nUnable to guess black move %d, with piece %c\n",
-	     m->move,in_table[m->piece]));
+       m->move,in_table[m->piece]));
     return(FALSE);
   } else {
     m->fromcol = c1;
@@ -1222,12 +1222,12 @@ int execute_move()
   if (nb_move_to_dsp > 0) {
     for (i=0; i < nb_move_to_dsp; i++)
       if (m->move == (move_to_display[i] ) && !m->whiteturn ) {
-	output_board(dr,tos);
-	if (stop_at_display) {
-	  output_end(dr);
-	  close_files();
-	  exit(0);
-	}
+  output_board(dr,tos);
+  if (stop_at_display) {
+    output_end(dr);
+    close_files();
+    exit(0);
+  }
       }
   }
 
@@ -1300,7 +1300,7 @@ int execute(num,c)
     m->tocol = curcol;
     m->tolig = curlig ;
 
-    /*m->topiece = curpiece ;? */
+    /*m->topiece = curpiece ; ? */
 
     if (configuring)
       (void) configure();
@@ -1329,12 +1329,12 @@ int execute(num,c)
     (void) execute_move();
     break;
   case 13: /* case of simpliest algebraic notation ;
-	      only e2e4 : this is the transition from e2 to e4
-	      also the case of move such as Nge2
-	      from =cur; prise = FALSE;
-	      also:
-	      curcol = ...
-	      */
+        only e2e4 : this is the transition from e2 to e4
+        also the case of move such as Nge2
+        from =cur; prise = FALSE;
+        also:
+        curcol = ...
+        */
     m->piece = curpiece ;
     m->fromcol = curcol ;
     m->fromlig = curlig;
@@ -1422,10 +1422,9 @@ int parse_comment(com)
     t = find_keyword(com_short, NUM_COM_CODE, NUM_COM_CODE, com,FALSE);
     if (t == NUM_COM_CODE)
       fprintf (stderr,"\nWhat is \"%s\" ?\n",com);
-    else{
-      output_text(dr,T_COMMENT, com, t);
-    }
   }
+  if (t != NUM_COM_CODE)
+    output_text(dr,T_COMMENT, com, t);
   return(TRUE);
 }
 
@@ -1484,17 +1483,17 @@ int parse_keyword(token,text)
     free_move_list(m);
     break;
   case TITLE:
-    output_text(dr, T_TITLE, text, 0x0);
+    output_text(dr, T_TITLE, text, 0);
     break;
   case SUBTITLE:
-    output_text(dr, T_SUBTITLE, text, 0x0);
+    output_text(dr, T_SUBTITLE, text, 0);
     break;
   case SCORE:
-    output_text(dr, T_SCORE, text, 0x0);
+    output_text(dr, T_SCORE, text, 0);
     break;
   case LANGUE:
     in_language = find_keyword (t_language, NBLANGUAGES, in_language,
-			       text,TRUE);
+             text,TRUE);
     associe_traduction( &in_table, in_language);
     break;
   case SPECIAL: /* all input, up to \n is copied to output */
@@ -1602,9 +1601,9 @@ void init_parse(m)
 
   curdigit = curmove = 0;
 
-  /*if (movecount != m->move)
+  if (movecount != m->move)
     (void) fprintf(stderr,"problem in move numbering: %d vs %d\n",
-		   m->move, movecount);*/
+       m->move, movecount);
 
 }
 
@@ -1636,110 +1635,110 @@ int parse_options(argc,argv)
     case '-' :
       switch (cp[1]) {
       case 'f' : /* from langage */
-	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
-	narg++ ;
-	in_language = find_keyword (t_language, NBLANGUAGES,
-				    DEFAULT_INPUT_LANGUAGE,
-				    argv[narg],TRUE);
-	break;
+  if  ((narg+1) >= argc )
+    fatal((stderr,"missing argument to %s option",cp));
+  narg++ ;
+  in_language = find_keyword (t_language, NBLANGUAGES,
+            DEFAULT_INPUT_LANGUAGE,
+            argv[narg],TRUE);
+  break;
       case 't' : /* to langage */
-	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
-	narg++ ;
-	out_language = find_keyword (t_language, NBLANGUAGES,
-				     DEFAULT_OUTPUT_LANGUAGE,
-				     argv[narg],TRUE);
-	break;
+  if  ((narg+1) >= argc )
+    fatal((stderr,"missing argument to %s option",cp));
+  narg++ ;
+  out_language = find_keyword (t_language, NBLANGUAGES,
+             DEFAULT_OUTPUT_LANGUAGE,
+             argv[narg],TRUE);
+  break;
       case 'o' : /* next arg is output file */
-	narg++ ;
-	if ((dr->outfile = fopen (argv[narg],"w+")) == NULL) {
-	  (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
-	  (void) fprintf (stderr,"assume stdout for output\n");
-	}
+  narg++ ;
+  if ((dr->outfile = fopen (argv[narg],"w+")) == NULL) {
+    (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
+    (void) fprintf (stderr,"assume stdout for output\n");
+  }
       case 'e':
-	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
-	narg++ ;
+  if  ((narg+1) >= argc )
+    fatal((stderr,"missing argument to %s option",cp));
+  narg++ ;
 
-	i=0;
-	nb_move_to_dsp = 0;
-	move_to_display[nb_move_to_dsp] = 0;
-	while (isdigit(argv[narg][i])) {
-	  move_to_display[nb_move_to_dsp] =
-	    ((int) argv[narg][i] - (int) '0')
-	      + move_to_display[nb_move_to_dsp] * 10;
-	  i++;
-	}
-	nb_move_to_dsp++;
-	stop_at_display = TRUE;
-	break;
+  i=0;
+  nb_move_to_dsp = 0;
+  move_to_display[nb_move_to_dsp] = 0;
+  while (isdigit(argv[narg][i])) {
+    move_to_display[nb_move_to_dsp] =
+      ((int) argv[narg][i] - (int) '0')
+        + move_to_display[nb_move_to_dsp] * 10;
+    i++;
+  }
+  nb_move_to_dsp++;
+  stop_at_display = TRUE;
+  break;
       case 'c':
-	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
-	narg++ ;
+  if  ((narg+1) >= argc )
+    fatal((stderr,"missing argument to %s option",cp));
+  narg++ ;
 
-	i=0;
-	while (isdigit(argv[narg][i])) {
-	  move_to_display[nb_move_to_dsp] = 0;
-	  while (isdigit(argv[narg][i])) {
-	    move_to_display[nb_move_to_dsp] =
-	      ((int) argv[narg][i] - (int) '0')
-	      + move_to_display[nb_move_to_dsp] * 10;
-	    i++;
-	  }
-	  nb_move_to_dsp++;
+  i=0;
+  while (isdigit(argv[narg][i])) {
+    move_to_display[nb_move_to_dsp] = 0;
+    while (isdigit(argv[narg][i])) {
+      move_to_display[nb_move_to_dsp] =
+        ((int) argv[narg][i] - (int) '0')
+        + move_to_display[nb_move_to_dsp] * 10;
+      i++;
+    }
+    nb_move_to_dsp++;
 
-	  if (nb_move_to_dsp > NB_MOVE_TO_DISP)
-	    fatal((stderr,"max. number of move to display exceeded"));
+    if (nb_move_to_dsp > NB_MOVE_TO_DISP)
+      fatal((stderr,"max. number of move to display exceeded"));
 
-	  /* process next number */
-	  if (argv[narg][i] == ',')
-	    i++;
-	}
-	break;
+    /* process next number */
+    if (argv[narg][i] == ',')
+      i++;
+  }
+  break;
       case 'a': /* algebraic output */
-	dr->output_move_format = ALGEBRAIC;
-	break;
+  dr->output_move_format = ALGEBRAIC;
+  break;
       case 's':  /* shortened output */
-	dr->output_move_format = SHORTENED;
-	break;
+  dr->output_move_format = SHORTENED;
+  break;
       case 'b': /* display only the board, no move */
-	dr->only_board = TRUE;
-	break;
+  dr->only_board = TRUE;
+  break;
       case 'd': /* output driver */
-	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
-	narg++ ;
-	driver = find_keyword(t_output, NB_DRIVER, DEFAULT_DRIVER,
-			      argv[narg],TRUE);
-	break;
+  if  ((narg+1) >= argc )
+    fatal((stderr,"missing argument to %s option",cp));
+  narg++ ;
+  driver = find_keyword(t_output, NB_DRIVER, DEFAULT_DRIVER,
+            argv[narg],TRUE);
+  break;
       case 'i': /* no headers */
-	dr->print_headers = FALSE;
-	break;
+  dr->print_headers = FALSE;
+  break;
       case 'v': /* print version */
-	/* this already done, so exit() */
-	exit(0);
-	break;
+  /* this already done, so exit() */
+  exit(0);
+  break;
       case 'h': /* help file */
-	(void) strcpy(chaine,LIB_DIR);
+  (void) strcpy(chaine,LIB_DIR);
         if ((fhelp = fopen(strcat(chaine,HELP_FILE),"r")) == NULL)
           fatal((stderr,"Can't find help file.\n"));
         else {
           while ((c = getc(fhelp)) != EOF)
             (void) fputc(c,stderr);
           (void) fclose(fhelp);
-	  exit(0);
+    exit(0);
         }
          break;
       default:
-	error((stderr,"\nUnknown command line options %s\n",cp));
-	break;
+  error((stderr,"\nUnknown command line options %s\n",cp));
+  break;
       }
       break;
     default: /* assume this is the input file */
       if ((infile = fopen (cp,"r")) == NULL)
-	fatal((stderr,"can't open %s input file\n",cp));
+  fatal((stderr,"can't open %s input file\n",cp));
     }
     narg++;
   } /* process next arg */
@@ -1828,21 +1827,25 @@ int notation_main(argc,argv)
   /* allocation of board descriptor */
   tos = new_board();
   init_board(tos);
+
   /* allocation of move descriptor */
-  m = new_move();//m->type = VOID ;
-  init_move(m);//init is commented
+  m=new_move();
+  m->type = VOID ;
+  init_move(m);
+  depl *firstm = m;
+
   /* allocation of the play descriptor */
   theplay = (play *) malloc (sizeof(play)) ;
   theplay->initial = tos ;
   theplay->chain   = m ;
   movecount = 1;
-  depl *firstm = m;
   /* main analysis routine */
   yyin = infile ;
   yyout = stderr ;
 
-  /*init_parse(m); */
+  init_parse(m);
   yylex();
+
   if ((count == 0) && !error_flag)
     output_board(dr,tos);
 
@@ -1851,8 +1854,10 @@ int notation_main(argc,argv)
     output_board(dr,tos);
     fatal((stderr,"\nToo many errors"));
   }
+
   /* terminates output files */
   output_end(dr);
+
   /* close files */
   close_files();
   free(theplay);

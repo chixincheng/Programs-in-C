@@ -1,14 +1,13 @@
 /*
   Notation program
-  @(#)drivers.c	3.9 (C) Henry Thomas	Release 3     Dated 12/10/91
+  @(#)drivers.c 3.9 (C) Henry Thomas  Release 3     Dated 12/10/91
  */
 
 #ifdef __STDC__
 #include <stdlib.h>
 #endif
 #include<stdio.h>
-#include<string.h>//added
-
+#include <string.h>
 #include <ctype.h>
 #include "chesstype.h"
 #include "notation.h"
@@ -154,8 +153,8 @@ static void flush_buffer(d)
     switch (d->type) {
     case D_TEX:
       (void) fprintf(d->outfile,
-		     "%s %s %s\n",
-		     d->move_buffer,"...",d->black_buffer);
+         "%s %s %s\n",
+         d->move_buffer,FigDots,d->black_buffer);
       break;
     case D_GNU:
     case D_XCHESS:
@@ -164,7 +163,7 @@ static void flush_buffer(d)
       break;
     default:
       (void) fprintf(d->outfile,"\n%3s.%9s%9s",
-		     d->move_buffer,"...",d->black_buffer);
+         d->move_buffer,"...",d->black_buffer);
       break;
     }
     d->interrupt = FALSE ;
@@ -175,24 +174,24 @@ static void flush_buffer(d)
     switch (d->type) {
     case D_TEX:
       if (d->iswhiteturn)
-	(void) fprintf(d->outfile,"%s %s", d->move_buffer,d->white_buffer);
+  (void) fprintf(d->outfile,"%s %s", d->move_buffer,d->white_buffer);
       else
-	(void) fprintf(d->outfile," %s\n",d->black_buffer);
+  (void) fprintf(d->outfile," %s\n",d->black_buffer);
       break;
     case D_XCHESS:
       if (d->iswhiteturn)
-	(void) fprintf(d->outfile,"%3s.", d->move_buffer);
+  (void) fprintf(d->outfile,"%3s.", d->move_buffer);
     case D_GNU:
       if (d->iswhiteturn)
-	(void) fprintf(d->outfile,"\t%s",d->white_buffer);
+  (void) fprintf(d->outfile,"\t%s",d-> white_buffer);
       else
-	(void) fprintf(d->outfile,"\t%s\n",d->black_buffer);
+  (void) fprintf(d->outfile,"\t%s\n",d->black_buffer);
       break;
     default:
       if (d->iswhiteturn)
-	(void) fprintf(d->outfile,"\n%3s.%9s", d->move_buffer,d->white_buffer);
+  (void) fprintf(d->outfile,"\n%3s.%9s", d->move_buffer,d->white_buffer);
       else
-	(void) fprintf(d->outfile,"%9s", d->black_buffer);
+  (void) fprintf(d->outfile,"%9s", d->black_buffer);
       break;
     }
   } /* end printing */
@@ -253,7 +252,7 @@ static void output_move_generic(dr,d)
     /* we check here for ambiguous move */
     if ((d->type != GRANDROQUE) && (d->type != PETITROQUE)) {
       ambigue = ambiguity (d, &ambigueline, &ambiguecols );
-/*       if ( (ambigue ) && (d->piece != PAWN ))
+      /* if ( (ambigue ) && (d->piece != PAWN ))
        * (void) fprintf (stderr,"output ambiguity at move %d %d",
        * d->move,d->whiteturn);
        */
@@ -261,7 +260,7 @@ static void output_move_generic(dr,d)
 
     themove[0] = '\0' ;
     if ((dr->output_move_format == SHORTENED)
-	&& (d->type == PRISE) && (d->piece == PAWN))
+  && (d->type == PRISE) && (d->piece == PAWN))
       (void) sprintf (debcol, "%c",coltoletter(d->fromcol));
 
     if (dr->print_piece)
@@ -274,19 +273,19 @@ static void output_move_generic(dr,d)
 
     if ((dr->output_move_format == ALGEBRAIC))
       (void)sprintf(frommove,"%c%c",
-		    coltoletter(d->fromcol),ligtoletter(d->fromlig));
+        coltoletter(d->fromcol),ligtoletter(d->fromlig));
     if ( ambigue && dr->print_liaison ) {
       /* is the ambiguity on lines ? -> print col */
       if (ambigueline && !ambiguecols)
-	(void)sprintf(frommove,"%c", coltoletter(d->fromcol));
+  (void)sprintf(frommove,"%c", coltoletter(d->fromcol));
       /* is the ambiguity on lines ? -> print lig */
       if (ambiguecols && !ambigueline)
-	(void)sprintf(frommove,"%c", ligtoletter(d->fromlig));
+  (void)sprintf(frommove,"%c", ligtoletter(d->fromlig));
       /* unable to find where is ambiguity ? print all */
       /* ( I doubt this case ever occurs ... ) */
       if ( ambigueline && ambiguecols)
-	(void)sprintf(frommove,"%c%c",
-		      coltoletter(d->fromcol),ligtoletter(d->fromlig));
+  (void)sprintf(frommove,"%c%c",
+          coltoletter(d->fromcol),ligtoletter(d->fromlig));
       debcol[0] = '\0' ;
     }
 
@@ -297,22 +296,22 @@ static void output_move_generic(dr,d)
           else
             (void) sprintf(prom,"=%c",dr->out_table[d->promotion]);
       } else /* xchess - gnu output */
-	(void) sprintf(prom,"%c",dr->out_table[d->promotion]);
+  (void) sprintf(prom,"%c",dr->out_table[d->promotion]);
     }
 
     if (dr->print_liaison) {
       if ((d->type == PRISE) || (d->type == PROM_ET_PRISE)
-	  || (d->type == EN_PASSANT) )
-	(void) sprintf(lie,"%s",captsymb);
+    || (d->type == EN_PASSANT) )
+  (void) sprintf(lie,"%s",captsymb);
       else
-	if ((dr->output_move_format == ALGEBRAIC))
-	  (void) sprintf(lie,"%c",'-');
+  if ((dr->output_move_format == ALGEBRAIC))
+    (void) sprintf(lie,"%c",'-');
     }
 
     (void) sprintf(tomove,"%c%c",coltoletter(d->tocol),ligtoletter(d->tolig));
 
     (void) sprintf (themove,"%s%s%s%s%s%s",
-		    thepiece,debcol,frommove,lie, tomove,prom);
+        thepiece,debcol,frommove,lie, tomove,prom);
   }
 
   if (d->whiteturn)
@@ -423,12 +422,12 @@ static void output_board_ascii(dr,g)
     (void) fputc('|',dr->outfile);
     for (j=1 ; j<9 ; j++) {
       if (g->board[i][j] != VOID) {
-	if (g->color[i][j] == WHITE)
-	 (void) fputc(dr->out_table[g->board[i][j]], dr->outfile);
-	else
-	  (void) fputc(tolower(dr->out_table[g->board[i][j]]),dr->outfile);
+  if (g->color[i][j] == WHITE)
+   (void) fputc(dr->out_table[g->board[i][j]], dr->outfile);
+  else
+    (void) fputc(tolower(dr->out_table[g->board[i][j]]),dr->outfile);
       } else
-	(void) fputc ( ((i+j)% 2)?' ':'/', dr->outfile);
+  (void) fputc ( ((i+j)% 2)?' ':'/', dr->outfile);
       (void) fputc('|', dr->outfile);
     }
     (void) fputc('\n', dr->outfile);
@@ -467,7 +466,7 @@ static void output_board_ps(dr,g)
     (void) fprintf(dr->outfile,"(/");
     for (j=1 ; j<9 ; j++) {
     (void) fprintf(dr->outfile,"%s",
-		   postscript_table[g->board[i][j]][PSINDEX(g->color[i][j],(i+j))]);
+       postscript_table[g->board[i][j]][PSINDEX(g->color[i][j],(i+j))]);
     }
     (void) fprintf(dr->outfile,"\\\\) 72 %d T\n",474 + (i-1)*30);
   }
@@ -511,13 +510,13 @@ static void output_board_roff(dr, g)
     (void) fprintf(dr->outfile,".ce\n  ");
     for (j=1 ; j<9 ; j++) {
       if (g->board[i][j] != VOID) {
-	if (g->color[i][j] == WHITE)
-	 (void) fputc(dr->out_table[g->board[i][j]], dr->outfile);
-	else
-	  (void) fputc(tolower(dr->out_table[g->board[i][j]]),dr->outfile);
+  if (g->color[i][j] == WHITE)
+   (void) fputc(dr->out_table[g->board[i][j]], dr->outfile);
+  else
+    (void) fputc(tolower(dr->out_table[g->board[i][j]]),dr->outfile);
       } else
-	/*(void) fputc ( ((i+j)% 2)?' ':'/', dr->outfile);*/
-	(void) fprintf(dr->outfile,".");
+  /*(void) fputc ( ((i+j)% 2)?' ':'/', dr->outfile);*/
+  (void) fprintf(dr->outfile,".");
     }
     (void) fprintf(dr->outfile,"\n.br\n");
   }
@@ -602,7 +601,7 @@ static void output_board_tex(dr,g)
     (void) fprintf(dr->outfile,"\t{");
     for (j=1 ; j < 9 ; j++) {
     (void) fprintf(dr->outfile,"%s",
-		   texboard_table[g->board[i][j]][PSINDEX(g->color[i][j],(i+j))]);
+       texboard_table[g->board[i][j]][PSINDEX(g->color[i][j],(i+j))]);
     }
     (void) fprintf(dr->outfile,"}\n");
   }
@@ -663,7 +662,7 @@ void output_move(dr,d)
 #endif
 {
   if (! (((dr->type == D_GNU) || (dr->type == D_XCHESS))
-	&& (dr->variation > 0)))
+  && (dr->variation > 0)))
     dr->out_move(dr,d);
 }
 
@@ -688,9 +687,8 @@ void output_text(dr, type, string, code)
      int code;
 #endif
 {
-  if ((dr->type != D_GNU) && (dr->type != D_XCHESS)){
+  if ((dr->type != D_GNU) && (dr->type != D_XCHESS))
     dr->out_text(dr, type, string, code);
-  }
 }
 
 #ifdef __STDC__
@@ -830,6 +828,6 @@ void init_driver(dr,driver)
     dr->out_move = null_driver ;
 
   dr->variation = 0;
-  dr->iswhiteturn = FALSE;//
+  dr->iswhiteturn = FALSE ;
   dr->interrupt = FALSE;
 }
