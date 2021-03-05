@@ -385,6 +385,7 @@ static int find_keyword(tab, nbentry,defaut,key,warning)
 #endif
 {
   int i ;
+  //printf("====");
   for(i=0;i< nbentry;i++)
     if (strcmp(tab[i],key) == 0){
       return(i);
@@ -1422,8 +1423,9 @@ int parse_comment(com)
     if (t == NUM_COM_CODE)
       fprintf (stderr,"\nWhat is \"%s\" ?\n",com);
   }
-  if (t != NUM_COM_CODE)
-    output_text(dr,T_COMMENT, com, t);
+  if (t != NUM_COM_CODE){
+    printf("AAAAAAAAA");
+    output_text(dr,T_COMMENT, com, t);}
   return(TRUE);
 }
 
