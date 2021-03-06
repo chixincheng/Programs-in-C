@@ -374,9 +374,8 @@ static void output_text_generic(dr, type, string, code)
     if (*(com_short[code]) != '\0' )
       (void) fprintf(dr->outfile," %s ",com_short[code]);
     else{
-      (void) fprintf(dr->outfile," %s ",com_long[code]);
+      (void) fprintf(dr->outfile," %s ",com_long[code]);}
       break;
-    }
   case T_TEXT:
     (void) fprintf(dr->outfile," %s ",string);
     break;
@@ -661,8 +660,7 @@ void output_move(dr,d)
      depl *d;
 #endif
 {
-  if (! (((dr->type == D_GNU) || (dr->type == D_XCHESS))
-  && (dr->variation > 0)))
+  if (! (((dr->type == D_GNU) || (dr->type == D_XCHESS)) && (dr->variation > 0)))
     dr->out_move(dr,d);
 }
 

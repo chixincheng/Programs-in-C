@@ -1601,10 +1601,10 @@ void init_parse(m)
 
   curdigit = curmove = 0;
 
-  if (movecount != m->move)
-    (void) fprintf(stderr,"problem in move numbering: %d vs %d\n",
-       m->move, movecount);
-
+/*  if (movecount != m->move){
+    (void) fprintf(stderr,"problem in move numbering: %d vs %d\n",m->move, movecount);
+  }
+*/
 }
 
 /* ------------------- top routines -------------------- */
@@ -1797,6 +1797,12 @@ int notation_main(argc,argv)
      char * argv[];
 #endif
 {
+/*  int flag;
+  if(argc >= 3){
+    if(*(*(argv+1)+1) == 101){//'e'
+      flag = 101;//'e'
+    }
+  }*/
   (void) fprintf(stderr,"%s\n",version_string);
 
   /* allocation of driver descriptor */
@@ -1829,7 +1835,7 @@ int notation_main(argc,argv)
   init_board(tos);
 
   /* allocation of move descriptor */
-  m=new_move();
+  m = new_move();
   m->type = VOID ;
   init_move(m);
   depl *firstm = m;
@@ -1838,14 +1844,15 @@ int notation_main(argc,argv)
   theplay = (play *) malloc (sizeof(play)) ;
   theplay->initial = tos ;
   theplay->chain   = m ;
-  movecount = 1;
+  movecount = m->move;
   /* main analysis routine */
   yyin = infile ;
   yyout = stderr ;
 
   init_parse(m);
-  yylex();
 
+  free(theplay);
+  yylex();
   if ((count == 0) && !error_flag)
     output_board(dr,tos);
 
@@ -1860,7 +1867,6 @@ int notation_main(argc,argv)
 
   /* close files */
   close_files();
-  free(theplay);
   free_move_list(firstm);
   free(firstm);
   free(tos);
