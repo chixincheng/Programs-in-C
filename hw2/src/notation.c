@@ -32,6 +32,7 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    */
 #ifdef __STDC__
 #include <stdlib.h>
+#include <getopt.h>
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -287,6 +288,22 @@ static game * tos = GULL ;
 /* variable holding current move */
 static depl * m = MULL ;
 
+static struct option long_option[] = {
+
+  {"long-algebraic", no_argument, 0, 'a'},
+  {"short-algebraic", no_argument, 0, 's'},
+  {"input-language", required_argument, 0, 'f'},
+  {"output-language", required_argument, 0, 't'},
+  {"output-file", required_argument, 0 , 'o'},
+  {"show-after", required_argument, 0, 'c'},
+  {"end-after", required_argument, 0, 'e'},
+  {"board-only", no_argument, 0, 'b'},
+  {"driver", required_argument, 0, 'd'},
+  {"no-headers", no_argument, 0, 'i'},
+  {"help", no_argument, 0, 'h'},
+  {"version", no_argument, 0, 'v'},
+  {0,0,0,0}
+};
 
 int alternate_moves[10][2]; /* table of alternate moves, guessed by
              the "move generator": guess depl
@@ -1629,116 +1646,118 @@ int parse_options(argc,argv)
   dr->outfile = stdout;
   nb_move_to_dsp = 0;
 
-  while (narg < argc ) {
+  int opt=0;
+  int index = 0;
+  while ((opt = getopt_long(argc,argv,"asf:t:o:c:e:bd:ihv",long_option, &index)) != -1) {
     (void) strcpy (cp,argv[narg]);
-    switch (cp[0]) {
-    case '-' :
-      switch (cp[1]) {
-      case 'f' : /* from langage */
-  if  ((narg+1) >= argc )
-    fatal((stderr,"missing argument to %s option",cp));
-  narg++ ;
-  in_language = find_keyword (t_language, NBLANGUAGES,
-            DEFAULT_INPUT_LANGUAGE,
-            argv[narg],TRUE);
-  break;
-      case 't' : /* to langage */
-  if  ((narg+1) >= argc )
-    fatal((stderr,"missing argument to %s option",cp));
-  narg++ ;
-  out_language = find_keyword (t_language, NBLANGUAGES,
-             DEFAULT_OUTPUT_LANGUAGE,
-             argv[narg],TRUE);
-  break;
-      case 'o' : /* next arg is output file */
-  narg++ ;
-  if ((dr->outfile = fopen (argv[narg],"w+")) == NULL) {
-    (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
-    (void) fprintf (stderr,"assume stdout for output\n");
-  }
-      case 'e':
-  if  ((narg+1) >= argc )
-    fatal((stderr,"missing argument to %s option",cp));
-  narg++ ;
+    switch(cp[0]){
+      case'-':
+        switch (opt) {
+          case 'f' : /* from langage */
+            if  ((narg+1) >= argc )
+              fatal((stderr,"missing argument to %s option",cp));
+            narg++ ;
+            in_language = find_keyword (t_language, NBLANGUAGES,
+                      DEFAULT_INPUT_LANGUAGE,
+                      argv[narg],TRUE);
+            break;
+          case 't' : /* to langage */
+            if  ((narg+1) >= argc )
+              fatal((stderr,"missing argument to %s option",cp));
+            narg++ ;
+            out_language = find_keyword (t_language, NBLANGUAGES,
+                       DEFAULT_OUTPUT_LANGUAGE,
+                       argv[narg],TRUE);
+            break;
+          case 'o' : /* next arg is output file */
+            narg++ ;
+            if ((dr->outfile = fopen (argv[narg],"w+")) == NULL) {
+              (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
+              (void) fprintf (stderr,"assume stdout for output\n");
+            }
+          case 'e':
+            if  ((narg+1) >= argc )
+              fatal((stderr,"missing argument to %s option",cp));
+            narg++ ;
 
-  i=0;
-  nb_move_to_dsp = 0;
-  move_to_display[nb_move_to_dsp] = 0;
-  while (isdigit(argv[narg][i])) {
-    move_to_display[nb_move_to_dsp] =
-      ((int) argv[narg][i] - (int) '0')
-        + move_to_display[nb_move_to_dsp] * 10;
-    i++;
-  }
-  nb_move_to_dsp++;
-  stop_at_display = TRUE;
-  break;
-      case 'c':
-  if  ((narg+1) >= argc )
-    fatal((stderr,"missing argument to %s option",cp));
-  narg++ ;
+            i=0;
+            nb_move_to_dsp = 0;
+            move_to_display[nb_move_to_dsp] = 0;
+            while (isdigit(argv[narg][i])) {
+              move_to_display[nb_move_to_dsp] =
+                ((int) argv[narg][i] - (int) '0')
+                  + move_to_display[nb_move_to_dsp] * 10;
+              i++;
+            }
+            nb_move_to_dsp++;
+            stop_at_display = TRUE;
+            break;
+          case 'c':
+            if  ((narg+1) >= argc )
+              fatal((stderr,"missing argument to %s option",cp));
+            narg++ ;
 
-  i=0;
-  while (isdigit(argv[narg][i])) {
-    move_to_display[nb_move_to_dsp] = 0;
-    while (isdigit(argv[narg][i])) {
-      move_to_display[nb_move_to_dsp] =
-        ((int) argv[narg][i] - (int) '0')
-        + move_to_display[nb_move_to_dsp] * 10;
-      i++;
-    }
-    nb_move_to_dsp++;
+            i=0;
+            while (isdigit(argv[narg][i])) {
+              move_to_display[nb_move_to_dsp] = 0;
+              while (isdigit(argv[narg][i])) {
+                move_to_display[nb_move_to_dsp] =
+                  ((int) argv[narg][i] - (int) '0')
+                  + move_to_display[nb_move_to_dsp] * 10;
+                i++;
+              }
+              nb_move_to_dsp++;
 
-    if (nb_move_to_dsp > NB_MOVE_TO_DISP)
-      fatal((stderr,"max. number of move to display exceeded"));
+              if (nb_move_to_dsp > NB_MOVE_TO_DISP)
+                fatal((stderr,"max. number of move to display exceeded"));
 
-    /* process next number */
-    if (argv[narg][i] == ',')
-      i++;
-  }
-  break;
-      case 'a': /* algebraic output */
-  dr->output_move_format = ALGEBRAIC;
-  break;
-      case 's':  /* shortened output */
-  dr->output_move_format = SHORTENED;
-  break;
-      case 'b': /* display only the board, no move */
-  dr->only_board = TRUE;
-  break;
-      case 'd': /* output driver */
-  if  ((narg+1) >= argc )
-    fatal((stderr,"missing argument to %s option",cp));
-  narg++ ;
-  driver = find_keyword(t_output, NB_DRIVER, DEFAULT_DRIVER,
-            argv[narg],TRUE);
-  break;
-      case 'i': /* no headers */
-  dr->print_headers = FALSE;
-  break;
-      case 'v': /* print version */
-  /* this already done, so exit() */
-  exit(0);
-  break;
-      case 'h': /* help file */
-  (void) strcpy(chaine,LIB_DIR);
-        if ((fhelp = fopen(strcat(chaine,HELP_FILE),"r")) == NULL)
-          fatal((stderr,"Can't find help file.\n"));
-        else {
-          while ((c = getc(fhelp)) != EOF)
-            (void) fputc(c,stderr);
-          (void) fclose(fhelp);
-    exit(0);
-        }
-         break;
+              /* process next number */
+              if (argv[narg][i] == ',')
+                i++;
+            }
+            break;
+          case 'a': /* algebraic output */
+            dr->output_move_format = ALGEBRAIC;
+            break;
+          case 's':  /* shortened output */
+            dr->output_move_format = SHORTENED;
+            break;
+          case 'b': /* display only the board, no move */
+            dr->only_board = TRUE;
+            break;
+          case 'd': /* output driver */
+            if  ((narg+1) >= argc )
+              fatal((stderr,"missing argument to %s option",cp));
+            narg++ ;
+            driver = find_keyword(t_output, NB_DRIVER, DEFAULT_DRIVER,
+                      argv[narg],TRUE);
+            break;
+          case 'i': /* no headers */
+            dr->print_headers = FALSE;
+            break;
+          case 'v': /* print version */
+            /* this already done, so exit() */
+            exit(0);
+            break;
+          case 'h': /* help file */
+            (void) strcpy(chaine,LIB_DIR);
+            if ((fhelp = fopen(strcat(chaine,HELP_FILE),"r")) == NULL)
+              fatal((stderr,"Can't find help file.\n"));
+            else {
+              while ((c = getc(fhelp)) != EOF)
+                (void) fputc(c,stderr);
+              (void) fclose(fhelp);
+              exit(0);
+            }
+             break;
+          default:
+            error((stderr,"\nUnknown command line options %s\n",cp));
+            break;
+          }
+          break;
       default:
-  error((stderr,"\nUnknown command line options %s\n",cp));
-  break;
-      }
-      break;
-    default: /* assume this is the input file */
-      if ((infile = fopen (cp,"r")) == NULL)
-  fatal((stderr,"can't open %s input file\n",cp));
+        if ((infile = fopen (cp,"r")) == NULL)
+            fatal((stderr,"can't open %s input file\n",cp));
     }
     narg++;
   } /* process next arg */
