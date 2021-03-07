@@ -1647,19 +1647,12 @@ int parse_options(argc,argv)
 
   int opt=0;
   int index = 0;
-  while ((opt = getopt_long(argc,argv,"asf:t:o:c:e:bd:ihv",long_option, &index)) != -1) {
+  while (((opt = getopt_long(argc,argv,"asf:t:o:c:e:bd:ihv",long_option, &index)) != -1) || narg < argc ) {
     (void) strcpy (cp,argv[narg]);
     switch(cp[0]){
       case'-':
         switch (opt) {
           case 'f' : /* from langage */
-            if  ((narg+1) >= argc )
-              fatal((stderr,"missing argument to %s option",cp));
-            narg++ ;
-            in_language = find_keyword (t_language, NBLANGUAGES,
-                      DEFAULT_INPUT_LANGUAGE,
-                      argv[narg],TRUE);
-            break;
           case 't' : /* to langage */
             if  ((narg+1) >= argc )
               fatal((stderr,"missing argument to %s option",cp));
@@ -1674,7 +1667,6 @@ int parse_options(argc,argv)
               (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
               (void) fprintf (stderr,"assume stdout for output\n");
             }
-            break;
           case 'e':
             if  ((narg+1) >= argc )
               fatal((stderr,"missing argument to %s option",cp));
