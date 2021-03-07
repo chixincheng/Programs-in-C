@@ -1675,6 +1675,7 @@ int parse_options(argc,argv)
               (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
               (void) fprintf (stderr,"assume stdout for output\n");
             }
+            break;
           case 'e':
             if  ((narg+1) >= argc )
               fatal((stderr,"missing argument to %s option",cp));
