@@ -1590,7 +1590,6 @@ int  parse_move(token)
   if (correcte) {
     /*(void) fprintf(stderr, "ia panimaiou, davai\n");*/
   }
-  /*init_parse(m);*/
   return(TRUE);
 }
 
@@ -1871,8 +1870,8 @@ int notation_main(argc,argv)
 
   init_parse(m);
 
-  free(theplay);
   yylex();
+
   if ((count == 0) && !error_flag)
     output_board(dr,tos);
 
@@ -1887,6 +1886,7 @@ int notation_main(argc,argv)
 
   /* close files */
   close_files();
+  free(theplay);
   free_move_list(firstm);
   free(firstm);
   free(tos);
