@@ -452,7 +452,7 @@ static void output_board_ps(dr,g)
 
   /* header file */
   (void) strcpy(chaine,LIB_DIR);
-  if ((ftmp = fopen(strcat(chaine,PS_HEADER),"r")) == NULL)
+  if ((ftmp = fopen(PS_HEADER,"r")) == NULL)
     message((stderr,"Can't open ps header file.\n"));
   else {
     while ((c = getc(ftmp)) != EOF)
@@ -473,7 +473,7 @@ static void output_board_ps(dr,g)
 
   /* footer file */
   (void) strcpy(chaine,LIB_DIR);
-  if ((ftmp = fopen(strcat(chaine,PS_FOOTER),"r")) == NULL)
+  if ((ftmp = fopen(PS_FOOTER,"r")) == NULL)
     message((stderr,"Can't open ps footer file.\n"));
   else {
     while ((c = getc(ftmp)) != EOF)
