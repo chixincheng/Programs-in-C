@@ -1869,7 +1869,18 @@ int notation_main(argc,argv)
   if (error_flag) {
     error((stderr,"\nLast valid position:\n"));
     output_board(dr,tos);
-    fatal((stderr,"\nToo many errors"));
+    fprintf(stderr, "%s\n", "Too many errors");
+    if (!((infile == stdin)||(infile == NULL)))
+    (void) fclose(infile);
+    if (dr->outfile != stdout )
+    (void) fclose(dr->outfile);
+    free(theplay);
+    free_move_list(firstm);
+    free(firstm);
+    free(tos);
+    free(dr);
+    yylex_destroy();
+    exit(1);
   }
 
   /* terminates output files */
