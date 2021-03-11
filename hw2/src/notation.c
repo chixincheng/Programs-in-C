@@ -68,7 +68,8 @@ static char * t_language[] = {
   "french", "english", "italian", "spanish", "german", "dutch",
   "czech",  "hungarian","polish", "romanian", "FIDE"
 };
-
+depl *firstm;//first m
+game *firsttos;//first board
 static int in_language = DEFAULT_INPUT_LANGUAGE ;
 static int out_language = DEFAULT_OUTPUT_LANGUAGE ;
 
@@ -761,7 +762,6 @@ void enter_variation()
        */
     m = add_variation(stack[l].d);
     undo_move(tos,stack[l].d);
-
     /* set variables */
     l++;
     dr->variation = l;
@@ -1248,6 +1248,13 @@ int execute_move()
   if (stop_at_display) {
     output_end(dr);
     close_files();
+    free_move_list(firstm);
+    free(firstm);
+    free(theplay);
+    free(firsttos);
+    free(tos);
+    free(dr);
+    yylex_destroy();
     exit(0);
   }
       }
@@ -1576,7 +1583,6 @@ int  parse_move(token)
   m = add_trailing_move(m);
   init_parse(m);
   m->type = MOVE;
-
   i=0;
   while ( !correcte && !erreursyntaxe ) {
     code = typechar(token[i]);
@@ -1843,12 +1849,12 @@ int notation_main(argc,argv)
   /* allocation of board descriptor */
   tos = new_board();
   init_board(tos);
-
+  firsttos = tos;
   /* allocation of move descriptor */
   m = new_move();
   m->type = VOID ;
   init_move(m);
-  depl *firstm = m;
+  firstm = m;
 
   /* allocation of the play descriptor */
   theplay = (play *) malloc (sizeof(play)) ;
@@ -1860,7 +1866,6 @@ int notation_main(argc,argv)
   yyout = stderr ;
 
   init_parse(m);
-
   yylex();
 
   if ((count == 0) && !error_flag)
@@ -1877,7 +1882,7 @@ int notation_main(argc,argv)
     free(theplay);
     free_move_list(firstm);
     free(firstm);
-    free(tos);
+    free(firsttos);
     free(dr);
     yylex_destroy();
     exit(1);
@@ -1891,7 +1896,7 @@ int notation_main(argc,argv)
   free(theplay);
   free_move_list(firstm);
   free(firstm);
-  free(tos);
+  free(firsttos);
   free(dr);
   yylex_destroy();
   /* exit properly */
