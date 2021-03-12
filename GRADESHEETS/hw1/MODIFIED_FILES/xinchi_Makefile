@@ -1,0 +1,21 @@
+--- hw1/dev_repo/basecode/hw1/Makefile
+
++++ hw1/repos/xinchi/hw1/Makefile
+
+@@ -22,7 +22,7 @@
+
+ PRINT_STAMENTS := -DERROR -DSUCCESS -DWARN -DINFO
+
+ 
+
+ STD := -std=gnu11
+
+-TEST_LIB := -lcriterion tests/test_help/test_help.o
+
++TEST_LIB := -lcriterion
+
+ LIBS := -lm
+
+ 
+
+ CFLAGS += $(STD)

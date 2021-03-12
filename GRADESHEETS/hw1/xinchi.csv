@@ -1,0 +1,57 @@
+Graded Commit:2090a388e02217b814ea01a1b4f6cf2aabd103b8
+
+TEST NAME, POINTS,OUT OF
+basecode_tests_suite/birp_basic_test,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:17: Program output did not match reference output.
+black_box_tests/birp_to_pgm_cat,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:107: cat.pgm did NOT match reference output.
+blackbox_tests/BWHoriz_to_ASCII,1,1,
+blackbox_tests/BWHoriz_to_Birp,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:387: test_output/BWHoriz.birp does not match reference output
+blackbox_tests/BWHoriz_to_PGM,1,1,
+blackbox_tests/BWVert_to_ASCII,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:312: test_output/BWVert.asc does not match reference output
+blackbox_tests/BWVert_to_Birp,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:288: test_output/BWVert.birp does not match reference output
+blackbox_tests/BWVert_to_PGM,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:267: test_output/BWVert.pgm does not match reference output
+blackbox_tests/allBlack_to_ASCII,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:198: birp to asc did not return with EXIT_SUCCESS on allBlack. Returned with 1
+blackbox_tests/allBlack_to_birp,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:223: test_output/allBlack.birp does not match reference output
+blackbox_tests/allBlack_to_pgm,1,1,
+blackbox_tests/allWhite_to_ASCII,1,1,
+blackbox_tests/allWhite_to_birp,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:183: test_output/AllWhite.birp does not match reference output
+blackbox_tests/allWhite_to_pgm,1,1,
+blackbox_tests/birp_2_pgm1,1,1,
+blackbox_tests/birp_2_pgm_2,1,1,
+blackbox_tests/birp_2_pgm_3,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:77: cour25.pgm did NOT match reference output.
+blackbox_tests/birp_to_birp_1,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:403: test_output/M_birp.birp does not match reference output
+blackbox_tests/birp_to_birp_2,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:418: test_output/checker_birp.birp does not match reference output
+blackbox_tests/both_to_ascii,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:125: pgm_to_ascii and birp_to_ascii do not match output
+blackbox_tests/pgm_2_birp1,0,1,1 assertion(s) failed.: tests/blackBoxTests.c:33: Program output did not match reference output.
+blackbox_tests/pgm_2_birp_cat,0,1,The test timed out.: None
+invalid_args_tests/big_zoomIn_error,1,1,
+invalid_args_tests/big_zoomOut_error,1,1,
+invalid_args_tests/comp_trans_combo,0,1,1 assertion(s) failed.: tests/validargs_tests.c:153: Invalid return for valid args. Got: 0 | Expected: -1
+invalid_args_tests/input_rotation_error,1,1,
+invalid_args_tests/input_rotation_test,1,1,
+invalid_args_tests/negative_zoomIn_error,0,1,The test timed out.: None
+invalid_args_tests/negative_zoomOut_error,0,1,The test timed out.: None
+invalid_args_tests/out_of_order,1,1,
+invalid_args_tests/transform_check,0,1,1 assertion(s) failed.: tests/validargs_tests.c:234: Invalid Global options. Got 0xde0222 | Expected 0x220222
+invalid_args_tests/transform_error,1,1,
+unit_test_suite/bdd_apply_test,1,1,
+unit_test_suite/bdd_lookup_hash_stress,0,1,The test timed out.: None
+unit_test_suite/bdd_lookup_retrieval,1,1,
+unit_test_suite/bdd_lookup_skip,1,1,
+unit_test_suite/bdd_map_contrast_test,0,1,1 assertion(s) failed.: tests/bdd_unit_tests.c:206: bdd after map does not match expected
+unit_test_suite/bdd_raster_test,0,1,1 assertion(s) failed.: tests/bdd_unit_tests.c:144: bdd created from raster is not correct
+unit_test_suite/bdd_rotate_360_test,1,1,
+unit_test_suite/bdd_serialize,0,1,1 assertion(s) failed.: tests/bdd_unit_tests.c:354: The expression (ret) == (0) is false.
+unit_test_suite/bdd_serialize_twice,0,1,1 assertion(s) failed.: tests/bdd_unit_tests.c:248: The expression (ret) == (0) is false.
+unit_test_suite/zoom_in_out_test,0,1,1 assertion(s) failed.: tests/bdd_unit_tests.c:234: Zooming in then out must restore original bdd
+validargs_tests_suite/help_system_test,1,1,
+validargs_tests_suite/valid_args_ignore_flags_test,1,1,
+validargs_tests_suite/valid_args_incorrect_order_test,0,1,1 assertion(s) failed.: tests/validargs_tests.c:45: Invalid return for validargs.  Got: 0 | Expected: -1
+validargs_tests_suite/valid_args_no_parameter_test,0,1,The test timed out.: None
+validargs_tests_suite/valid_args_threshold_bounds_test,1,1,
+validargs_tests_suite/valid_args_zoom_out_test,1,1,
+validargs_tests_suite/validargs_error_test,1,1,
+validargs_tests_suite/validargs_help_test,1,1,
+validargs_tests_suite/validargs_input_test,1,1,
+validargs_tests_suite/validargs_output_test,1,1,
+validargs_tests_suite/validargs_transform_test,1,1,
+total,26,53

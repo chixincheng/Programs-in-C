@@ -1,0 +1,48 @@
+src/birp.c:140: Restricted symbol [ is used.
+                if(raster_data[pos] > 191 && raster_data[pos] < 256){
+
+src/birp.c:140: Restricted symbol ] is used.
+                if(raster_data[pos] > 191 && raster_data[pos] < 256){
+
+src/birp.c:143: Restricted symbol [ is used.
+                else if(raster_data[pos] > 127 && raster_data[pos] < 192){
+
+src/birp.c:143: Restricted symbol ] is used.
+                else if(raster_data[pos] > 127 && raster_data[pos] < 192){
+
+src/birp.c:146: Restricted symbol [ is used.
+                else if(raster_data[pos] > 63 && raster_data[pos] < 128){
+
+src/birp.c:146: Restricted symbol ] is used.
+                else if(raster_data[pos] > 63 && raster_data[pos] < 128){
+
+src/birp.c:149: Restricted symbol [ is used.
+                else if(raster_data[pos] > -1 && raster_data[pos] < 64){
+
+src/birp.c:149: Restricted symbol ] is used.
+                else if(raster_data[pos] > -1 && raster_data[pos] < 64){
+
+src/birp.c:170: Restricted symbol [ is used.
+                if(raster_data[pos] > 191 && raster_data[pos] < 256){
+
+src/birp.c:170: Restricted symbol ] is used.
+                if(raster_data[pos] > 191 && raster_data[pos] < 256){
+
+src/birp.c:173: Restricted symbol [ is used.
+                else if(raster_data[pos] > 127 && raster_data[pos] < 192){
+
+src/birp.c:173: Restricted symbol ] is used.
+                else if(raster_data[pos] > 127 && raster_data[pos] < 192){
+
+src/birp.c:176: Restricted symbol [ is used.
+                else if(raster_data[pos] > 63 && raster_data[pos] < 128){
+
+src/birp.c:176: Restricted symbol ] is used.
+                else if(raster_data[pos] > 63 && raster_data[pos] < 128){
+
+src/birp.c:179: Restricted symbol [ is used.
+                else if(raster_data[pos] > -1 && raster_data[pos] < 64){
+
+src/birp.c:179: Restricted symbol ] is used.
+                else if(raster_data[pos] > -1 && raster_data[pos] < 64){
+
