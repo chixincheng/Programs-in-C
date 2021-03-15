@@ -9,7 +9,12 @@
 #include "sfmm.h"
 
 void *sf_malloc(size_t size) {
-    return NULL;
+	if(size == 0){
+		return NULL;
+	}
+	else{
+
+	}
 }
 
 void sf_free(void *pp) {
