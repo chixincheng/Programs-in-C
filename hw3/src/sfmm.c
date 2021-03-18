@@ -40,7 +40,7 @@ void *sf_malloc(size_t size) {
 		sf_header *epilo = (sf_header *) (newmem+8192-8);
 		*epilo = epilohead;
 	}
-	//sf_show_heap();
+	sf_show_heap();
 	while(sf_errno != ENOMEM)
 	{
 		for(int i=0;i<NUM_FREE_LISTS;i++){ //search for free blocks in free_list_heads
@@ -78,9 +78,9 @@ void *sf_malloc(size_t size) {
 		sf_header epilohead= 1;//new epiloheader
 		*((sf_header *)(newend-8)) = epilohead;//setting new epiloheader
 		sf_header currheader = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header;
-		size_t newheadersize = (((currheader)>>4)<<4)+(PAGE_SZ-16);//PAGE_SZ -16 for epilo and footer
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize | 1<<1);//increase wilderness block size,set prev alloc
-		*((sf_header *)(newend-16)) = (newheadersize | 1<<1);//set the new footer same as header
+		size_t newheadersize = (((currheader)>>4)<<4)+(PAGE_SZ-8-sizeof(sf_footer));//PAGE_SZ -16 for epilo and footer
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize | 2);//increase wilderness block size,set prev alloc
+		*((sf_footer *)(newend-8-sizeof(sf_footer))) = (newheadersize | 2);//set the new footer same as header
 	}
 	return NULL;
 }

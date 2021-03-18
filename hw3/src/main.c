@@ -15,19 +15,20 @@ int main(int argc, char const *argv[]) {
 	*(ptr3+1)=69;
 	*(ptr3+2)=80;
 	*(ptr3+23)=69;
-	printf("\n" );
+	//printf("\n" );
 
 	char *ptr4 = sf_malloc(8168);
 	*(ptr4) = 'Y';
-	printf("\n" );
+	//printf("\n" );
 
 	int *ptr5=sf_malloc(9000);
 	if(ptr5!=NULL){
 		*(ptr5) = 'A';
 	}
-
+	//sf_show_heap();
+	//printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&");
 	sf_show_blocks();
-	printf("\n");
+	//printf("\n");
 
     return EXIT_SUCCESS;
 }
