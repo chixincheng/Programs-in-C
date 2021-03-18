@@ -9,5 +9,7 @@ int postosearch(size_t size);
 void initfreelisthead(void *ptr);
 void *coalesce(void *ptr);
 
+#define getsize(p) (((*p)>>4)<<4) //get the size of header
+
 
 #endif

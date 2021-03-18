@@ -12,7 +12,7 @@ int postosearch(size_t size){
 		return 0;
 	}
 	size_t comp = 64;
-	int pos = 2;
+	int pos = 1;
 	while(size > comp){
 		comp = comp*2;
 		pos = pos+1;
@@ -26,3 +26,8 @@ void initfreelisthead(void* heads){
 		sf_free_list_heads[i].body.links.prev = &sf_free_list_heads[i];
 	}
 }
+
+
+// void *coalesce(void *ptr){
+
+// }
