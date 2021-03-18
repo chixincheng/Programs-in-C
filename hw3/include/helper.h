@@ -7,7 +7,7 @@
 size_t roundup16(size_t toberound);
 int postosearch(size_t size);
 void initfreelisthead(void *ptr);
-
+void *coalesce(void *ptr);
 
 
 #endif
