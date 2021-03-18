@@ -13,33 +13,50 @@ void *sf_malloc(size_t size) {
 	if(size == 0){
 		return NULL;
 	}
-	else{
-		size_t required = roundup16(size);
-		int pos = postosearch(size);
-		int allc = 1;
-		for(int i=pos;i<NUM_FREE_LISTS;i++){
-			sf_block block = *(sf_free_list_heads+i);
-			sf_header head = block.header;
-			size_t len = head >> 4;
-			len = len << 4;//size of the free block
-			if(len > required){//got enough free space to allocate
-				size_t mask = 0x2;
-				//setting the prv alloc of the next block to be 1;
-				block.body.links.next->header = block.body.links.next->header | mask;
-				allc = 0;
-				//do i need to perform spliting block
-				return sf_free_list_heads+i;
+	size_t adjsize = size+16;
+	adjsize = roundup16(adjsize);//round to nearest multiple of 16
+	char *str = sf_mem_start();//start of heap
+	char *end = sf_mem_end();//end of heap
+	if(str == end){ //first time allocating, setting up prologue and epilogue
+		initfreelisthead((void *)(sf_free_list_heads+0));
+		char *newmem = sf_mem_grow();//pointer to new allocated block
+		sf_header prolohead= 1;//header of prologue
+		sf_block *prolo = (sf_block *)(newmem + 8);//skip the first 8 byte of garbage data
+		prolo->header = prolohead;//set the header of prologue
+		*(sf_header *)((void *) (prolo+8)) = prolohead;//set the footer of prologue
+		sf_header epilohead= 1;
+		sf_header *epilo = (sf_header *) (newmem+8192-8);
+		*epilo = epilohead;
+		//store the pointer to appropriate place in free_list_head
+		size_t blosz = PAGE_SZ - 32 - 8 - 8;//prologue = 32,8byte garbage,8byte epilogue
+		size_t freelistheadpos = postosearch(blosz);
+		//set header and footer, +2 to set the prv alloca to 1
+		sf_free_list_heads[freelistheadpos].header = PAGE_SZ +2;//set header of new free block
+		//set the footer of new free block
+		*(sf_header *)((void *)(sf_free_list_heads + freelistheadpos)+sizeof(sf_block)-sizeof(sf_header))
+		= PAGE_SZ +2;//+2 to set the prv alloca to 1
+		sf_free_list_heads[freelistheadpos].body.links.next = (sf_block *)(newmem + 40);//prologue = 32,8byte garbage
+	}
+	for(int i=0;i<NUM_FREE_LISTS;i++){ //search for free blocks in free_list_heads
+		while(sf_free_list_heads[i].body.links.next != &sf_free_list_heads[i]
+			|| sf_free_list_heads[i].body.links.prev != &sf_free_list_heads[i])
+		{	//when the block is not empty
+			size_t fbsz = ((sf_free_list_heads[i].header) >> 4) << 4;//free block size
+			if(fbsz >= adjsize){//if have enough free block
+				sf_block *ret = (sf_free_list_heads[i].body.links.next);//to be returned
+				sf_free_list_heads[i].body.links.prev->body.links.next =
+				sf_free_list_heads[i].body.links.next + adjsize;//set the prev block's next to next free block
+				//set the next block's prev to the return block's prev
+				((sf_block *)(sf_free_list_heads[i].body.links.next + adjsize))->body.links.prev =
+				sf_free_list_heads[i].body.links.prev;
+				return ret;
 			}
-			else{
-				;
-			}
-		}
-		while (allc == 1){//while allocation is not done keep looping
-			//current freelist do not have enought free space, do sf_mem_grow and coalescing
-			char *addres = sf_mem_grow();
 		}
 	}
+	//current free_list_heads do not have enough free space
 
+
+	return NULL;
 }
 
 void sf_free(void *pp) {

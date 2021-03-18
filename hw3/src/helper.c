@@ -1,4 +1,5 @@
 #include <helper.h>
+#include <sfmm.h>
 
 size_t roundup16(size_t toberound){
 	while(toberound % 16 != 0){
@@ -17,4 +18,11 @@ int postosearch(size_t size){
 		pos = pos+1;
 	}
 	return pos;
+}
+void initfreelisthead(void* heads){
+	for (int i = 0; i < NUM_FREE_LISTS; ++i)
+	{
+		sf_free_list_heads[i].body.links.next = &sf_free_list_heads[i];
+		sf_free_list_heads[i].body.links.prev = &sf_free_list_heads[i];
+	}
 }
