@@ -40,24 +40,26 @@ void *sf_malloc(size_t size) {
 		sf_header *epilo = (sf_header *) (newmem+8192-8);
 		*epilo = epilohead;
 	}
-	sf_show_heap();
+	//sf_show_heap();
 	while(sf_errno != ENOMEM)
 	{
 		for(int i=0;i<NUM_FREE_LISTS;i++){ //search for free blocks in free_list_heads
-			while(sf_free_list_heads[i].body.links.next != &sf_free_list_heads[i]
+			if(sf_free_list_heads[i].body.links.next != &sf_free_list_heads[i]
 				|| sf_free_list_heads[i].body.links.prev != &sf_free_list_heads[i])
 			{	//when the block is not empty
-				size_t fbsz = ((sf_free_list_heads[i].header) >> 4) << 4;//free block size
+				size_t fbsz = ((sf_free_list_heads[i].body.links.next->header) >> 4) << 4;//free block size
 				if(fbsz >= adjsize){//if have enough free block
 
 					//to be returned,free block position + header size
-					void *ret = ((void *)(&sf_free_list_heads[i].body.links.next)+8);
+					void *ret = ((void *)(sf_free_list_heads[i].body.links.next)+8);
 					fbsz = fbsz-adjsize;//remainder free block size
 
-					//new address of block
-					(sf_free_list_heads[i].body.links.next) = (sf_block *)(ret+adjsize-8);
-					//new header size for the allocated block
-					sf_free_list_heads[i].body.links.next->header = (fbsz | 2);
+					if(fbsz >= 32){//enough for 32 bytes
+						//new address of block
+						(sf_free_list_heads[i].body.links.next) = (ret-8+adjsize);
+						//new header size for the allocated block
+						sf_free_list_heads[i].body.links.next->header = (fbsz | 2);
+					}
 
 /*					//set header and footer, (PAGE_SZ | 1<<1) to set the prv alloca to 1
 					sf_free_list_heads[freelistheadpos].header = (fbsz | 1<<1);//set header of new free block
@@ -75,9 +77,9 @@ void *sf_malloc(size_t size) {
 		void *newend = sf_mem_end();//the new end
 		sf_header epilohead= 1;//new epiloheader
 		*((sf_header *)(newend-8)) = epilohead;//setting new epiloheader
-		sf_header currheader = sf_free_list_heads[NUM_FREE_LISTS-1].header;
+		sf_header currheader = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header;
 		size_t newheadersize = (((currheader)>>4)<<4)+(PAGE_SZ-16);//PAGE_SZ -16 for epilo and footer
-		sf_free_list_heads[NUM_FREE_LISTS-1].header = (newheadersize | 1<<1);//increase wilderness block size,set prev alloc
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize | 1<<1);//increase wilderness block size,set prev alloc
 		*((sf_header *)(newend-16)) = (newheadersize | 1<<1);//set the new footer same as header
 	}
 	return NULL;

@@ -6,7 +6,6 @@ int main(int argc, char const *argv[]) {
 	char *ptr1 = sf_malloc(1);
 	*(ptr1) = 'A';
 	printf("\n" );
-
 	char *ptr2 = sf_malloc(1);
 	*(ptr2) = 'B';
 	printf("\n" );
