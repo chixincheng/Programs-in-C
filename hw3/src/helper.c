@@ -28,20 +28,23 @@ void initfreelisthead(void* heads){
 	}
 }
 sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size class
-	sf_block *nextblock = (*ptr).body.links.next;//next block
-	sf_block *prevblock = (*ptr).body.links.prev;//previous block
-	size_t prevalloc = (((*prevblock).header) & 1);//prev alloc
-	size_t nextalloc = (((*nextblock).header) & 1);//next alloc
-	///////////////////////////////
 	sf_header currheader = (*ptr).header;//current header
 	size_t currsize = (currheader>>4)<<4;//current block size
-	sf_footer *currfooter = (sf_footer *)(ptr)+currsize-sizeof(sf_footer);//current footer pointer
+	sf_footer *currfooter = 0;//initilize currfooter variable
 	///////////////////////////////
+	sf_footer *prevfoot =(sf_footer *)(ptr-8);//previous block footer
+	size_t prevsize = (*prevfoot>>4)<<4;
+	sf_block *prevblock = ptr-prevsize;//previous block
+	///////////////////////////////
+	sf_block *nextblock = ptr+currsize;//next block
 	sf_header nextheader = (*nextblock).header;//next header
 	size_t nextsize = (nextheader>>4)<<4;//next block size
 	///////////////////////////////
+	size_t prevalloc = (((*prevblock).header) & 1);//prev alloc
+	size_t nextalloc = (((*nextblock).header) & 1);//next alloc
+	///////////////////////////////
 	sf_header prevheader = (*prevblock).header;//prev header
-	size_t prevsize = (prevheader>>4)<<4;//prev block size
+	//size_t prevsize = (prevheader>>4)<<4;//prev block size
 	sf_footer *prevfooter = (sf_footer *)(prevblock)+prevsize-sizeof(sf_footer);//prev footer pointer
 	///////////////////////////////
 	if(prevalloc && nextalloc){//case1, no coalesce, just set header and footer
