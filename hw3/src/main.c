@@ -5,10 +5,13 @@ int main(int argc, char const *argv[]) {
 
 	char *ptr1 = sf_malloc(1);
 	*(ptr1) = 'A';
-	printf("\n" );
+
+	sf_show_blocks();
+
 	char *ptr2 = sf_malloc(1);
 	*(ptr2) = 'B';
-	printf("\n" );
+
+
 
 	int *ptr3 = sf_malloc(2020 * sizeof(int));
 	*(ptr3+0)=1;

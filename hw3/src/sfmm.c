@@ -24,7 +24,12 @@ void *sf_malloc(size_t size) {
 		sf_header prolohead= 32|1;//header of prologue
 		sf_block *prolo = (sf_block *)(newmem + 8);//skip the first 8 byte of garbage data
 		prolo->header = prolohead;//set the header of prologue
-		*(sf_header *)((void *) (prolo+24)) = prolohead;//set the footer of prologue
+		*(sf_footer *)((void *) (prolo+24)) = prolohead;//set the footer of prologue
+
+		sf_header epilohead= 3;
+		sf_header *epilo = (sf_header *) (newmem+PAGE_SZ-8);
+		*epilo = epilohead;
+
 		//prologue = 32,8byte garbage
 		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next = (sf_block *)(newmem + 40);
 		//set header of new block |2 to set the prv alloca to 1
@@ -36,16 +41,13 @@ void *sf_malloc(size_t size) {
 			-40+PAGE_SZ-8-sizeof(sf_footer))
 		= ((PAGE_SZ-48) | 2);//(PAGE_SZ | 1<<1) to set the prv alloca to 1
 
-		sf_header epilohead= 3;
-		sf_header *epilo = (sf_header *) (newmem+PAGE_SZ-8);
-		*epilo = epilohead;
 		sf_block *currhead = (sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next);
 
 		//currently the wilderness block only have one block, what to set next and prev?
-		currhead->body.links.next = currhead;
-		currhead->body.links.prev = currhead;
+		currhead->body.links.next = &sf_free_list_heads[NUM_FREE_LISTS-1];
+		currhead->body.links.prev = &sf_free_list_heads[NUM_FREE_LISTS-1];
+		//sf_show_heap();
 	}
-	//sf_show_heap();
 	while(sf_errno != ENOMEM)
 	{
 		for(int i=0;i<NUM_FREE_LISTS;i++){ //search for free blocks in free_list_heads
@@ -63,6 +65,9 @@ void *sf_malloc(size_t size) {
 						(sf_free_list_heads[i].body.links.next) = (ret-8+adjsize);
 						//new header size for the allocated block
 						sf_free_list_heads[i].body.links.next->header = (fbsz | 2);
+						sf_block *currhead = (sf_free_list_heads[i].body.links.next);
+						currhead->body.links.next = &sf_free_list_heads[i];
+						currhead->body.links.prev = &sf_free_list_heads[i];
 					}
 
 /*					//set header and footer, (PAGE_SZ | 1<<1) to set the prv alloca to 1
