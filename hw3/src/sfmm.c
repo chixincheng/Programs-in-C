@@ -39,6 +39,11 @@ void *sf_malloc(size_t size) {
 		sf_header epilohead= 3;
 		sf_header *epilo = (sf_header *) (newmem+PAGE_SZ-8);
 		*epilo = epilohead;
+		sf_block *currhead = (sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next);
+
+		//currently the wilderness block only have one block, what to set next and prev?
+		currhead->body.links.next = currhead;
+		currhead->body.links.prev = currhead;
 	}
 	//sf_show_heap();
 	while(sf_errno != ENOMEM)
