@@ -25,11 +25,11 @@ void *sf_malloc(size_t size) {
 		sf_block *prolo = (sf_block *)(newmem + 8);//skip the first 8 byte of garbage data
 		prolo->header = prolohead;//set the header of prologue
 		*(sf_header *)((void *) (prolo+24)) = prolohead;//set the footer of prologue
-		//set header of new block |2 to set the prv alloca to 1,prologue = 32,8byte garbage
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next = (sf_block *)(newmem + 40);
-		//set header of new free block
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = ((PAGE_SZ-48) | 2);
 		//prologue = 32,8byte garbage
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next = (sf_block *)(newmem + 40);
+		//set header of new block |2 to set the prv alloca to 1
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = ((PAGE_SZ-48) | 2);
+		//prologue = 32 byte,8 byte garbage
 		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.prev = (sf_block *)(newmem + 40);
 		//set the footer of new free block
 		*(sf_footer *)((void *)(sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next)
@@ -37,10 +37,10 @@ void *sf_malloc(size_t size) {
 		= ((PAGE_SZ-48) | 2);//(PAGE_SZ | 1<<1) to set the prv alloca to 1
 
 		sf_header epilohead= 3;
-		sf_header *epilo = (sf_header *) (newmem+8192-8);
+		sf_header *epilo = (sf_header *) (newmem+PAGE_SZ-8);
 		*epilo = epilohead;
 	}
-	sf_show_heap();
+	//sf_show_heap();
 	while(sf_errno != ENOMEM)
 	{
 		for(int i=0;i<NUM_FREE_LISTS;i++){ //search for free blocks in free_list_heads
@@ -49,7 +49,6 @@ void *sf_malloc(size_t size) {
 			{	//when the block is not empty
 				size_t fbsz = ((sf_free_list_heads[i].body.links.next->header) >> 4) << 4;//free block size
 				if(fbsz >= adjsize){//if have enough free block
-
 					//to be returned,free block position + header size
 					void *ret = ((void *)(sf_free_list_heads[i].body.links.next)+8);
 					fbsz = fbsz-adjsize;//remainder free block size
@@ -86,6 +85,54 @@ void *sf_malloc(size_t size) {
 }
 
 void sf_free(void *pp) {
+	if(pp == NULL){//pointer is null
+		abort();
+	}
+	if((size_t)(pp) % 16 != 0){//pointer is not 16-byte aligned
+		abort();
+	}
+	sf_block *ptr = (sf_block *)(pp);
+	size_t sze = ((*ptr).header>>4)<<4;
+	if(sze % 16 != 0){//size of block is not multiple of 16
+		abort();
+	}
+	if(sze < 32){//size less than minimum block
+		abort();
+	}
+	if(((*ptr).header & 1) == 0){//allocated bit in header is 0
+		abort();
+	}
+	if((void *)(ptr+sze) > sf_mem_end()){//block ends after heap
+		abort();
+	}
+	sf_block *next = (*ptr).body.links.next;//next block
+	if((void *)(next) > sf_mem_end()){//header of next block lies outside of current heap
+		abort();
+	}
+	sf_block *prevblock = (*ptr).body.links.prev;//previous block
+	//prev_alloc bit do not match alloc bit of previous block
+	if(((*ptr).header & 2) == 0){//prev block is free
+		if((((*prevblock).header) & 1) == 0){//not allocate
+			size_t s = ((*prevblock).header>>4)<<4;
+			sf_footer *foot = (void *)(ptr)+s-sizeof(sf_footer);//pointer + size of block - size of footer
+			if(((*foot) & 1) != 0){//footer do not match header
+				abort();
+			}
+		}
+		else{//do not match
+			abort();
+		}
+	}
+	//pass all condition, valid pointer, start to free
+	sf_block *rptr= coalesce(ptr);//coalesce the free block
+	size_t list = ((*rptr).header>>4)<<4;
+	list = postosearch(list);//list to insert
+	//insert to the list
+	sf_block *currhead = sf_free_list_heads[list].body.links.next;//current head of the freelist
+	sf_free_list_heads[list].body.links.next = rptr;//insert free block to head of the freelist
+	rptr->body.links.next = currhead;//link the old head with new head
+	rptr->body.links.prev = currhead->body.links.prev;//new head->prev = old head->prev
+	currhead->body.links.prev->body.links.next = rptr;//old tail's next = new head
     return;
 }
 
