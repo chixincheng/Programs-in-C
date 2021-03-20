@@ -18,6 +18,9 @@ int postosearch(size_t size){
 		comp = comp*2;
 		pos = pos+1;
 	}
+	if(size > 1024){
+		return 6;
+	}
 	return pos;
 }
 void initfreelisthead(void* heads){
@@ -28,15 +31,15 @@ void initfreelisthead(void* heads){
 	}
 }
 sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size class
-	sf_header currheader = (*ptr).header;//current header
-	size_t currsize = (currheader>>4)<<4;//current block size
+	sf_header *currheader = (void *)(ptr);//current header
+	size_t currsize = (*currheader>>4)<<4;//current block size
 	sf_footer *currfooter = 0;//initilize currfooter variable
 	///////////////////////////////
-	sf_footer *prevfoot =(sf_footer *)(ptr-8);//previous block footer
+	sf_footer *prevfoot = (void*)(ptr)-8;//previous block footer
 	size_t prevsize = (*prevfoot>>4)<<4;
-	sf_block *prevblock = ptr-prevsize;//previous block
+	sf_block *prevblock = (void*)(ptr)-prevsize;//previous block
 	///////////////////////////////
-	sf_block *nextblock = ptr+currsize;//next block
+	sf_block *nextblock = (void*)(ptr)+currsize;//next block
 	sf_header nextheader = (*nextblock).header;//next header
 	size_t nextsize = (nextheader>>4)<<4;//next block size
 	///////////////////////////////
@@ -44,33 +47,33 @@ sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size cl
 	size_t nextalloc = (((*nextblock).header) & 1);//next alloc
 	///////////////////////////////
 	sf_header prevheader = (*prevblock).header;//prev header
-	//size_t prevsize = (prevheader>>4)<<4;//prev block size
-	sf_footer *prevfooter = (sf_footer *)(prevblock)+prevsize-sizeof(sf_footer);//prev footer pointer
 	///////////////////////////////
 	if(prevalloc && nextalloc){//case1, no coalesce, just set header and footer
-		currheader = (currheader>>1)<<1;//set alloc to 0
-		*currfooter = currheader;//set footer equal to header
+		*currheader = (*currheader>>1)<<1;//set alloc to 0
+		*currfooter = *currheader;//set footer equal to header
 		return ptr;
 	}
 	else if(prevalloc && !nextalloc){//next block is not alloc, coalesce with next block
 		currsize = (currsize + nextsize);//combine size
-		currfooter = (sf_footer *)(ptr)+currsize-sizeof(sf_footer);//new current footer pointer
-		currheader = currsize | 2;//set prev alloc
-		*currfooter = currheader;//set footer = header
+		currfooter = (void*)(ptr)+currsize-8;//new current footer pointer
+		*currheader = currsize | 2;//set prev alloc
+		*currfooter = *currheader;//set footer = header
+/*		ptr->body.links.prev->body.links.next = ptr->body.links.next;
+		ptr->body.links.next->body.links.prev = ptr->body.links.prev;*/
 		return ptr;
 	}
 	else if(!prevalloc && nextalloc){//prev block is not alloc, coalesce with prev block
 		prevsize = (prevsize + currsize);//combine size
-		prevfooter = (sf_footer *)(prevblock)+prevsize-sizeof(sf_footer);//new prev footer pointer
+		prevfoot = (void *)(prevblock)+prevsize-sizeof(sf_footer);//new prev footer pointer
 		prevheader = prevsize;//dont know if the prevblock of prev is alloc
-		*prevfooter = prevheader;//set footer = header
+		*prevfoot = prevheader;//set footer = header
 		return prevblock;
 	}
 	else{//both prev and next block is not alloc, coalesce with both block
 		prevsize = prevsize + currsize + nextsize;//combine all size
-		prevfooter = (sf_footer *)(prevblock)+prevsize-sizeof(sf_footer);//new prev footer pointer
+		prevfoot = (void *)(prevblock+prevsize-sizeof(sf_footer));//new prev footer pointer
 		prevheader = prevsize;//dont know if the prevblock of prev is alloc
-		*prevfooter = prevheader;//set footer = header
+		*prevfoot = prevheader;//set footer = header
 		return prevblock;
 	}
 }

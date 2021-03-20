@@ -8,9 +8,13 @@ int main(int argc, char const *argv[]) {
 
 	sf_free(ptr1);
 
-	char *ptr2 = sf_malloc(1);
+/*	char *ptr2 = sf_malloc(1);
 	*(ptr2) = 'B';
+
+	sf_free(ptr2);*/
+
 	sf_show_blocks();
+	sf_show_heap();
 /*	int *ptr3 = sf_malloc(2020 * sizeof(int));
 	*(ptr3+0)=1;
 	*(ptr3+1)=69;

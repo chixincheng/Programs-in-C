@@ -24,7 +24,7 @@ void *sf_malloc(size_t size) {
 		sf_header prolohead= 32|1;//header of prologue
 		sf_block *prolo = (sf_block *)(newmem + 8);//skip the first 8 byte of garbage data
 		prolo->header = prolohead;//set the header of prologue
-		*(sf_footer *)((void *) (prolo+24)) = prolohead;//set the footer of prologue
+		*((sf_footer *)(newmem + 8 + 24)) = prolohead;//set the footer of prologue
 
 		sf_header epilohead= 1;
 		sf_header *epilo = (sf_header *) (newmem+PAGE_SZ-8);
@@ -48,7 +48,7 @@ void *sf_malloc(size_t size) {
 		currhead->body.links.prev = &sf_free_list_heads[NUM_FREE_LISTS-1];
 		//sf_show_heap();
 	}
-	sf_show_blocks();
+	//sf_show_blocks();
 	while(sf_errno != ENOMEM)
 	{
 		for(int i=0;i<NUM_FREE_LISTS;i++){ //search for free blocks in free_list_heads
@@ -58,7 +58,14 @@ void *sf_malloc(size_t size) {
 				size_t fbsz = ((sf_free_list_heads[i].body.links.next->header) >> 4) << 4;//free block size
 				if(fbsz >= adjsize){//if have enough free block
 					//set header of returned block
-					sf_free_list_heads[i].body.links.next->header = adjsize | 1;
+					sf_footer *prevfoot = (sf_footer *)(sf_free_list_heads[i].body.links.next-8);
+					size_t prevalloc = *prevfoot |2;
+					if(prevalloc){
+						sf_free_list_heads[i].body.links.next->header = adjsize | 3;
+					}
+					else{
+						sf_free_list_heads[i].body.links.next->header = adjsize | 1;
+					}
 					//to be returned,free block position + header size
 					void *ret = ((void *)(sf_free_list_heads[i].body.links.next)+8);
 					fbsz = fbsz-adjsize;//remainder free block size
