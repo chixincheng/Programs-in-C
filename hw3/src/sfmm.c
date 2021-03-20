@@ -58,9 +58,9 @@ void *sf_malloc(size_t size) {
 				size_t fbsz = ((sf_free_list_heads[i].body.links.next->header) >> 4) << 4;//free block size
 				if(fbsz >= adjsize){//if have enough free block
 					//set header of returned block
-					sf_footer *prevfoot = (sf_footer *)(sf_free_list_heads[i].body.links.next-8);
-					size_t prevalloc = *prevfoot |2;
-					if(prevalloc){
+					sf_footer *prevfoot = (void *)(sf_free_list_heads[i].body.links.next)-8;
+					size_t prevalloc = *prevfoot & 1;
+					if(prevalloc == 1){
 						sf_free_list_heads[i].body.links.next->header = adjsize | 3;
 					}
 					else{
@@ -73,6 +73,7 @@ void *sf_malloc(size_t size) {
 					if(fbsz >= 32){//enough for 32 bytes
 						//new address of block
 						sf_free_list_heads[i].body.links.next = (sf_block *)(ret-8+adjsize);
+						sf_free_list_heads[i].body.links.prev = (sf_block *)(ret-8+adjsize);
 						//set header for new free block, set prev alloc
 						sf_free_list_heads[i].body.links.next->header = (fbsz | 2);
 						*((sf_footer *)((void *)(sf_free_list_heads[i].body.links.next)
@@ -82,28 +83,41 @@ void *sf_malloc(size_t size) {
 						currhead->body.links.next = &sf_free_list_heads[i];
 						currhead->body.links.prev = &sf_free_list_heads[i];
 					}
-/*					//set header and footer, (PAGE_SZ | 1<<1) to set the prv alloca to 1
-					sf_free_list_heads[freelistheadpos].header = (fbsz | 1<<1);//set header of new free block
-					//set the footer of new free block
-					*(sf_header *)((void *)(sf_free_list_heads + freelistheadpos)+sizeof(sf_block)-sizeof(sf_header))
-					= (fbsz | 1<<1);//(PAGE_SZ | 1<<1) to set the prv alloca to 1
-					//insert the remainder to the appropriate freelist
-					sf_free_list_heads[freelistheadpos].body.links.next = ret+adjsize;*/
+					else{
+						sf_free_list_heads[i].body.links.next = &sf_free_list_heads[i];
+						sf_free_list_heads[i].body.links.prev = &sf_free_list_heads[i];
+					}
 					return ret;//enough free space, return the location
 				}
 			}
 		}
 		//current free_list_heads do not have enough free space, allocate more space
+		void *headpos = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next;;//header pos
 		void *pos =sf_mem_grow();//allocate more space to heap
-		void *newend = sf_mem_end();//the new end
 
 		sf_header currheader = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header;
-		size_t newheadersize = (((currheader)>>4)<<4) + 8 +PAGE_SZ;//not sure about this math <-
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize);//increase wilderness block size,set prev alloc
-		*((sf_footer *)(newend-8-sizeof(sf_footer))) = (newheadersize);//set the new footer same as header
+		size_t newheadersize;
+		if(currheader != 0){//exist wilderness block
+			newheadersize = (((currheader)>>4)<<4)+PAGE_SZ;
+		}
+		else{//no wilderness block, make new one
+			newheadersize = PAGE_SZ;//?????????
+			headpos = pos-8;//-8 to use epilo of old heap
+		}
+		//increase wilderness block size,set prev alloc
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next = headpos;
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.prev = headpos;
+		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize);
+		*((sf_footer *)(sf_mem_end()-16)) = (newheadersize);//set the footer same as header
+
+		sf_block *currhead = (sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next);
+
+		//currently the wilderness block only have one block, what to set next and prev?
+		currhead->body.links.next = &sf_free_list_heads[NUM_FREE_LISTS-1];
+		currhead->body.links.prev = &sf_free_list_heads[NUM_FREE_LISTS-1];
 
 		sf_header epilohead= 1;//new epiloheader
-		sf_header *epilo = (sf_header *) (pos+PAGE_SZ-8);
+		sf_header *epilo = (sf_header *) (sf_mem_end())-8;
 		*epilo = epilohead;//setting new epiloheader
 	}
 	return NULL;
