@@ -14,7 +14,7 @@ void *sf_malloc(size_t size) {
 	if(size == 0){
 		return NULL;
 	}
-	size_t adjsize = size+16;//16 byte for header and footer
+	size_t adjsize = size+8;//8 byte for header
 	adjsize = roundup16(adjsize);//round to nearest multiple of 16
 	char *str = sf_mem_start();//start of heap
 	char *end = sf_mem_end();//end of heap
@@ -60,28 +60,50 @@ void *sf_malloc(size_t size) {
 					//set header of returned block
 					sf_footer *prevfoot = (void *)(sf_free_list_heads[i].body.links.next)-8;
 					size_t prevalloc = *prevfoot & 1;
-					if(prevalloc == 1){
-						sf_free_list_heads[i].body.links.next->header = adjsize | 3;
+					fbsz = fbsz-adjsize;//remainder free block size
+					if(fbsz >= 32){
+						if(prevalloc == 1){
+							sf_free_list_heads[i].body.links.next->header = adjsize | 3;
+						}
+						else{
+							sf_free_list_heads[i].body.links.next->header = adjsize | 1;
+						}
 					}
 					else{
-						sf_free_list_heads[i].body.links.next->header = adjsize | 1;
+						if(prevalloc == 1){
+							sf_free_list_heads[i].body.links.next->header = (adjsize+fbsz) | 3;
+						}
+						else{
+							sf_free_list_heads[i].body.links.next->header = (adjsize+fbsz) | 1;
+						}
 					}
 					//to be returned,free block position + header size
 					void *ret = ((void *)(sf_free_list_heads[i].body.links.next)+8);
-					fbsz = fbsz-adjsize;//remainder free block size
 
 					if(fbsz >= 32){//enough for 32 bytes
 						//new address of block
-						sf_free_list_heads[i].body.links.next = (sf_block *)(ret-8+adjsize);
-						sf_free_list_heads[i].body.links.prev = (sf_block *)(ret-8+adjsize);
+						size_t postoinsert = postosearch(fbsz);
+
+						sf_free_list_heads[postoinsert].body.links.next = (sf_block *)(ret-8+adjsize);
+						sf_free_list_heads[postoinsert].body.links.prev = (sf_block *)(ret-8+adjsize);
 						//set header for new free block, set prev alloc
-						sf_free_list_heads[i].body.links.next->header = (fbsz | 2);
-						*((sf_footer *)((void *)(sf_free_list_heads[i].body.links.next)
+						sf_free_list_heads[postoinsert].body.links.next->header = (fbsz | 2);
+						*((sf_footer *)((void *)(sf_free_list_heads[postoinsert].body.links.next)
 							+fbsz-sizeof(sf_footer))) = (fbsz | 2);
+
+						if(i != postoinsert){
+							sf_free_list_heads[i].body.links.next = &sf_free_list_heads[i];
+							sf_free_list_heads[i].body.links.prev = &sf_free_list_heads[i];
+
+							sf_block *currhead = (sf_free_list_heads[postoinsert].body.links.next);
+							currhead->body.links.next = &sf_free_list_heads[postoinsert];
+							currhead->body.links.prev = &sf_free_list_heads[postoinsert];
+						}
 
 						sf_block *currhead = (sf_free_list_heads[i].body.links.next);
 						currhead->body.links.next = &sf_free_list_heads[i];
 						currhead->body.links.prev = &sf_free_list_heads[i];
+
 					}
 					else{
 						sf_free_list_heads[i].body.links.next = &sf_free_list_heads[i];
@@ -117,7 +139,7 @@ void *sf_malloc(size_t size) {
 		currhead->body.links.prev = &sf_free_list_heads[NUM_FREE_LISTS-1];
 
 		sf_header epilohead= 1;//new epiloheader
-		sf_header *epilo = (sf_header *) (sf_mem_end())-8;
+		sf_header *epilo = (sf_header *) (sf_mem_end()-8);
 		*epilo = epilohead;//setting new epiloheader
 	}
 	return NULL;

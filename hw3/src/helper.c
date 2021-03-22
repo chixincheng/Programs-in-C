@@ -6,6 +6,9 @@ size_t roundup16(size_t toberound){
 	while(toberound % 16 != 0){
 		toberound = toberound+1;
 	}
+	if(toberound == 16){
+		return 32;
+	}
 	return toberound;
 }
 int postosearch(size_t size){
