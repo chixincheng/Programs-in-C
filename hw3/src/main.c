@@ -3,7 +3,14 @@
 
 int main(int argc, char const *argv[]) {
 
-	char *ptr1 = sf_malloc(1);
+
+	void *x = sf_malloc(524288);
+
+	if(x){
+		;
+	}
+
+/*	char *ptr1 = sf_malloc(1);
 	*(ptr1) = 'A';
 
 	char *ptr2 = sf_malloc(1);
@@ -21,7 +28,7 @@ int main(int argc, char const *argv[]) {
 
 	//sf_show_heap();
 	char *ptr4 = sf_malloc(8168);
-	*(ptr4) = 'Y';
+	*(ptr4) = 'Y';*/
 
 
 /*

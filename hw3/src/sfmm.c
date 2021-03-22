@@ -116,31 +116,32 @@ void *sf_malloc(size_t size) {
 		//current free_list_heads do not have enough free space, allocate more space
 		void *headpos = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next;;//header pos
 		void *pos =sf_mem_grow();//allocate more space to heap
+		if(pos != NULL){
+			sf_header currheader = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header;
+			size_t newheadersize;
+			if(currheader != 0){//exist wilderness block
+				newheadersize = (((currheader)>>4)<<4)+PAGE_SZ;
+			}
+			else{//no wilderness block, make new one
+				newheadersize = PAGE_SZ;//?????????
+				headpos = pos-8;//-8 to use epilo of old heap
+			}
+			//increase wilderness block size,set prev alloc
+			sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next = headpos;
+			sf_free_list_heads[NUM_FREE_LISTS-1].body.links.prev = headpos;
+			sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize);
+			*((sf_footer *)(sf_mem_end()-16)) = (newheadersize);//set the footer same as header
 
-		sf_header currheader = sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header;
-		size_t newheadersize;
-		if(currheader != 0){//exist wilderness block
-			newheadersize = (((currheader)>>4)<<4)+PAGE_SZ;
+			sf_block *currhead = (sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next);
+
+			//currently the wilderness block only have one block, what to set next and prev?
+			currhead->body.links.next = &sf_free_list_heads[NUM_FREE_LISTS-1];
+			currhead->body.links.prev = &sf_free_list_heads[NUM_FREE_LISTS-1];
+
+			sf_header epilohead= 1;//new epiloheader
+			sf_header *epilo = (sf_header *) (sf_mem_end()-8);
+			*epilo = epilohead;//setting new epiloheader
 		}
-		else{//no wilderness block, make new one
-			newheadersize = PAGE_SZ;//?????????
-			headpos = pos-8;//-8 to use epilo of old heap
-		}
-		//increase wilderness block size,set prev alloc
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next = headpos;
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.prev = headpos;
-		sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next->header = (newheadersize);
-		*((sf_footer *)(sf_mem_end()-16)) = (newheadersize);//set the footer same as header
-
-		sf_block *currhead = (sf_free_list_heads[NUM_FREE_LISTS-1].body.links.next);
-
-		//currently the wilderness block only have one block, what to set next and prev?
-		currhead->body.links.next = &sf_free_list_heads[NUM_FREE_LISTS-1];
-		currhead->body.links.prev = &sf_free_list_heads[NUM_FREE_LISTS-1];
-
-		sf_header epilohead= 1;//new epiloheader
-		sf_header *epilo = (sf_header *) (sf_mem_end()-8);
-		*epilo = epilohead;//setting new epiloheader
 	}
 	return NULL;
 }
@@ -196,9 +197,87 @@ void sf_free(void *pp) {
 	currhead->body.links.prev->body.links.next = rptr;//old tail's next = new head
     return;
 }
-
+//pp point to payload area
 void *sf_realloc(void *pp, size_t rsize) {
-    return NULL;
+	sf_block *ptr = (sf_block *)(pp-8);//pointer to header
+	if(pp == NULL){//pointer is null
+		abort();
+	}
+	if((size_t)(pp) % 16 != 0){//pointer is not 16-byte aligned
+		abort();
+	}
+	size_t sze = ((*ptr).header>>4)<<4;
+	if(sze % 16 != 0){//size of block is not multiple of 16
+		abort();
+	}
+	if(sze < 32){//size less than minimum block
+		(*ptr).header = 0;
+		return NULL;
+	}
+	if(((*ptr).header & 1) == 0){//allocated bit in header is 0
+		abort();
+	}
+	if((void *)(ptr+sze) > sf_mem_end()){//block ends after heap
+		abort();
+	}
+	sf_block *next = (*ptr).body.links.next;//next block
+	if((void *)(next) > sf_mem_end()){//header of next block lies outside of current heap
+		abort();
+	}
+	sf_block *prevblock = (*ptr).body.links.prev;//previous block
+	//prev_alloc bit do not match alloc bit of previous block
+	if(((*ptr).header & 2) == 0){//prev block is free
+		if((((*prevblock).header) & 1) == 0){//not allocate
+			size_t s = ((*prevblock).header>>4)<<4;
+			sf_footer *foot = (void *)(ptr)+s-sizeof(sf_footer);//pointer + size of block - size of footer
+			if(((*foot) & 1) != 0){//footer do not match header
+				abort();
+			}
+		}
+		else{//do not match
+			abort();
+		}
+	}
+	//pass all condition, valid pointer
+	if(rsize > sze){//realloc to larger size
+		sf_block *newptr = sf_malloc(rsize+8);
+		if(newptr == NULL){
+			return NULL;
+		}
+		else{
+			memcpy(newptr,pp,sze-8);//copy from pp to newptr of size 'sze'
+			sf_free(pp);
+			return newptr;
+		}
+	}
+	else{//realloc to smaller size
+		size_t nsze = (rsize+8);//+8 for header
+		if(nsze <= 32){
+			nsze = 32;
+		}
+		else{
+			nsze = roundup16(nsze);
+		}
+		sze = sze-nsze;//nsze = new malloc size
+		if(sze >= 32){//got enough to spilt
+			size_t preval = (*ptr).header & 2;//prev alloc or no
+			if(preval){
+				(*ptr).header = nsze | 3;//set alloc and prev alloc
+			}
+			else{
+				(*ptr).header = nsze | 1;// set alloc
+			}
+			sf_block *freeptr = (void*)(ptr)+nsze+8;//pointer to free mem
+			*(sf_header*)((void *)(freeptr)-8) = sze | 3;//prev alloc and assume alloc
+			*(sf_footer*)((void *)(freeptr)-8+sze-8) = sze |3;//set footer
+
+			sf_free(freeptr);
+			return pp;
+		}
+		else{//do not split
+			return pp;
+		}
+	}
 }
 
 void *sf_memalign(size_t size, size_t align) {
