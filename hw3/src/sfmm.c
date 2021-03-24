@@ -59,7 +59,16 @@ void *sf_malloc(size_t size) {
 				if(fbsz >= adjsize){//if have enough free block
 					//set header of returned block
 					sf_footer *prevfoot = (void *)(sf_free_list_heads[i].body.links.next)-8;
-					size_t prevalloc = *prevfoot & 1;
+					size_t prevftsz = *prevfoot;
+					sf_header *prevhead = (void *)(sf_free_list_heads[i].body.links.next)-prevftsz;
+					size_t prevhtsz = *prevhead;
+					size_t prevalloc ;
+					if(prevftsz == prevhtsz){
+						prevalloc = 0;
+					}
+					else{
+						prevalloc =1;
+					}
 					fbsz = fbsz-adjsize;//remainder free block size
 					if(fbsz >= 32){
 						if(prevalloc == 1){
@@ -164,7 +173,7 @@ void sf_free(void *pp) {
 	if(((*ptr).header & 1) == 0){//allocated bit in header is 0
 		abort();
 	}
-	if((void *)(ptr+sze) > sf_mem_end()){//block ends after heap
+	if((void *)(ptr)+sze > sf_mem_end()){//block ends after heap
 		abort();
 	}
 	sf_block *next = (*ptr).body.links.next;//next block
@@ -217,7 +226,7 @@ void *sf_realloc(void *pp, size_t rsize) {
 	if(((*ptr).header & 1) == 0){//allocated bit in header is 0
 		abort();
 	}
-	if((void *)(ptr+sze) > sf_mem_end()){//block ends after heap
+	if((void *)(ptr)+sze > sf_mem_end()){//block ends after heap
 		abort();
 	}
 	sf_block *next = (*ptr).body.links.next;//next block

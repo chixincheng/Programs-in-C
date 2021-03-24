@@ -4,9 +4,13 @@
 int main(int argc, char const *argv[]) {
 
 
-	void *x = sf_malloc(524288);
+	void *x = sf_malloc(20);
+	void *y = sf_malloc(20);
+	void *z = sf_realloc(x, 2040);
+	void *w = sf_realloc(z,1);
 
-	if(x){
+	sf_show_heap();
+	if(x || y || z ||w){
 		;
 	}
 

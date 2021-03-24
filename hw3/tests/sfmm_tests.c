@@ -161,7 +161,7 @@ Test(sfmm_basecode_suite, realloc_smaller_block_splinter, .timeout = TEST_TIMEOU
 }
 
 Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIMEOUT) {
-        size_t sz_x = 64, sz_y = 8;
+    size_t sz_x = 64, sz_y = 8;
 	void *x = sf_malloc(sz_x);
 	void *y = sf_realloc(x, sz_y);
 
@@ -180,3 +180,131 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 //STUDENT UNIT TESTS SHOULD BE WRITTEN BELOW
 //DO NOT DELETE THESE COMMENTS
 //############################################
+Test(sfmm_basecode_suite, malloc_header_bit, .timeout = TEST_TIMEOUT){
+	size_t sz_x = 1, sz_y = 1;
+
+	void *x = sf_malloc(sz_x);
+	void *y = sf_malloc(sz_y);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert_not_null(y, "x is NULL!");
+
+	// x should be allocated, and prev-alloc is set for prologue
+	cr_assert(*(size_t*)(x-8) == 35, "sf_malloc failed to give proper header for x!");
+	// y should be allocated and because x is allocated, y should be prev-allocated
+	cr_assert(*(size_t *)(y-8) == 35, "sf_malloc failed to give proper header for y!");
+
+	sf_free(x);
+	//after x is free, y should only be allocated, no prev-allocated
+	cr_assert(*(size_t*)(y-8) == 33, "sf_free failed to give proper header for y!");
+}
+Test(sfmm_basecode_suite, free_footer_bit, .timeout = TEST_TIMEOUT){
+	size_t sz_x = 24, sz_y = 24;
+
+	void *x = sf_malloc(sz_x);
+	void *y = sf_malloc(sz_y);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert_not_null(y, "x is NULL!");
+
+	sf_free(x);
+	//after x is free, x should have footer = header, 34 because prologue is allocated
+	cr_assert(*(sf_footer*)(x+16) == 34, "sf_free failed to give proper footer for x!");
+
+	sf_free(y);
+	//after y is free, x and y and rest free mem should be coalesc together
+	//this mem will be store at freelist #7
+	cr_assert(*(sf_footer*)((void*)sf_free_list_heads[6].body.links.next +8144-8) == 8146,
+		"sf_free failed to give proper footer for y!");
+}
+Test(sfmm_basecode_suite, free_block_space, .timeout = TEST_TIMEOUT){
+	size_t sz_x = 24, sz_y = 24;
+
+	void *x = sf_malloc(sz_x);
+	void *y = sf_malloc(sz_y);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert_not_null(y, "x is NULL!");
+
+	sf_free(x);
+
+	assert_free_block_count(32,1);
+
+	sf_free(y);
+	assert_free_block_count(32,0);
+	assert_free_block_count(8144,1);
+	sf_malloc(8104);//8104+8 takes up 8112 space ,left 32 byte of free space
+	assert_free_block_count(32,1);
+	sf_malloc(56);//will not have enough
+	assert_free_block_count(8128,1);
+	assert_free_block_count(32,1);
+}
+Test(sfmm_basecode_suite, ultimate_malloc_free, .timeout = TEST_TIMEOUT){
+	size_t sz_x = 24, sz_y = 24, sz_a = 120, sz_b = 248, sz_c = 360, sz_d = 1016;
+	size_t sz_e = 2040, sz_f = 2040;
+
+	void *x = sf_malloc(sz_x);
+	void *y = sf_malloc(sz_y);
+	void *a = sf_malloc(sz_a);
+	void *b = sf_malloc(sz_b);
+	void *c = sf_malloc(sz_c);
+	void *d = sf_malloc(sz_d);
+	void *e = sf_malloc(sz_e);
+	void *f = sf_malloc(sz_f);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert_not_null(y, "x is NULL!");
+	cr_assert_not_null(a, "x is NULL!");
+	cr_assert_not_null(b, "x is NULL!");
+	cr_assert_not_null(c, "x is NULL!");
+	cr_assert_not_null(d, "x is NULL!");
+	cr_assert_not_null(e, "x is NULL!");
+	cr_assert_not_null(f, "x is NULL!");
+
+	assert_free_block_count(2208,1);
+	sf_free(x);
+	assert_free_block_count(32,1);//did not coalesc
+	assert_free_block_count(2208,1);
+	sf_free(y);
+	assert_free_block_count(64,1);//coalesc x & y
+	sf_free(b);
+	assert_free_block_count(256,1);
+	sf_free(c);
+	assert_free_block_count(624,1);//coalesc b & c
+	sf_free(a);
+	assert_free_block_count(816,1);//coalesc a,x,y,b,c
+	sf_free(e);
+	assert_free_block_count(2048,1);
+	sf_free(d);
+	assert_free_block_count(3888,1);//coalesc a,x,y,b,c,e,d
+	sf_free(f);
+	assert_free_block_count(8144,1);//coalesc everything
+	assert_free_block_count(32,0);
+	assert_free_block_count(64,0);
+	assert_free_block_count(256,0);
+	assert_free_block_count(624,0);
+	assert_free_block_count(816,0);
+	assert_free_block_count(2048,0);
+	assert_free_block_count(3888,0);
+}
+Test(sfmm_basecode_suite, malloc_realloc, .timeout = TEST_TIMEOUT){
+	void *x = sf_malloc(20);
+	void *y = sf_malloc(20);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert_not_null(y, "x is NULL!");
+
+	assert_free_block_count(8080,1);
+
+	void *z = sf_realloc(x, 2040);//realloc to larger
+	cr_assert_not_null(z, "x is NULL!");
+
+	assert_free_block_count(6016,1);
+	assert_free_block_count(32,1);//ask for larger block before free the small
+
+	void *w = sf_realloc(z,1);//realloc to smaller
+	cr_assert_not_null(w, "x is NULL!");
+
+	assert_free_block_count(32,1);
+	assert_free_block_count(8048,1);//only use 32 byte, and the remainder coalesc with the free next to it
+}
