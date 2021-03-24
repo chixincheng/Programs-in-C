@@ -290,5 +290,70 @@ void *sf_realloc(void *pp, size_t rsize) {
 }
 
 void *sf_memalign(size_t size, size_t align) {
-    return NULL;
+	if(align % 2 != 0 || align < 32){//not power of 2, smaller than block size
+		sf_errno = EINVAL;
+		return NULL;
+	}
+	size_t alignsize = size+align+32+8;
+
+	sf_block *str = sf_malloc(alignsize);
+	sf_header head = *(sf_header *)((void*)(str)-8);//save header
+	size_t prevall = head & 2;
+
+	if((size_t)(str) % align != 0){// str pointer is not aligned
+		size_t count=0;
+		sf_block *initptr = str;
+		while((size_t)(str) % align != 0){//keep loop until alignment is fulfilled
+			count++;
+			str = (void*)(str)+1;
+		}
+		sf_header *allhead = (void*)(str)-8;
+		*allhead = head;
+		count = count | (prevall+1);//set to be prev alloc and +1 for alloc so can be free
+		if(count >= 32){//front of the allocated space have big enough space to free
+			sf_header *freehead = (void*)(initptr);
+			*freehead = count;
+			sf_footer *freefoot = (void*)(initptr)+count-8;
+			*freefoot = count;
+			void * forfree = (void *)(freehead)+8;//+8 to skip header
+			sf_free(forfree);
+/*			size_t list = postosearch(count);
+			sf_block * rptr = (sf_block*)(freehead);
+			sf_block *currhead = sf_free_list_heads[list].body.links.next;//current head of the freelist
+			sf_free_list_heads[list].body.links.next = rptr;//insert free block to head of the freelist
+			rptr->body.links.next = currhead;//link the old head with new head
+			rptr->body.links.prev = currhead->body.links.prev;//new head->prev = old head->prev
+			currhead->body.links.prev->body.links.next = rptr;//old tail's next = new head*/
+		}
+		//is this free space guarantee to be 16-byte aligned?
+		size_t backfreesize = alignsize-count-8-size;
+		backfreesize = backfreesize | 3;//set prevalloc and alloc
+		if(backfreesize >= 32){//back of the allocated space have big enough space to free
+			sf_header *freehead = (void*)(str)+size;
+			*freehead = backfreesize;
+			sf_footer *freefoot = (void*)(str)+backfreesize-8;
+			*freefoot = backfreesize;
+			void * forfree = (void *)(freehead)+8;//+8 to skip header
+			sf_free(forfree);
+/*
+			size_t list = postosearch(backfreesize);
+			sf_block * rptr = (sf_block*)(freehead);
+			sf_block *currhead = sf_free_list_heads[list].body.links.next;//current head of the freelist
+			sf_free_list_heads[list].body.links.next = rptr;//insert free block to head of the freelist
+			rptr->body.links.next = currhead;//link the old head with new head
+			rptr->body.links.prev = currhead->body.links.prev;//new head->prev = old head->prev
+			currhead->body.links.prev->body.links.next = rptr;//old tail's next = new head*/
+		}
+		return str;
+	}
+	else{//str pointer is aligned
+		sf_header * freehead = (void*)(str)+size;//header of block to free
+		*freehead = (align+32+8) | 3;//set prevalloc and alloc
+		sf_footer *freefoot = (void*)(freehead)+align+32;//didnt add the 8 for footer
+		*freefoot = (align+32+8) | 3;//set prevalloc and alloc
+
+		void * forfree = (void *)(freehead)+8;//+8 to skip header
+		sf_free(forfree);
+		return str;
+	}
 }
