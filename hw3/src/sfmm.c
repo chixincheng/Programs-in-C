@@ -294,7 +294,9 @@ void *sf_memalign(size_t size, size_t align) {
 		sf_errno = EINVAL;
 		return NULL;
 	}
+	size = roundup16(size);
 	size_t alignsize = size+align+32+8;
+	alignsize = roundup16(alignsize);
 
 	sf_block *str = sf_malloc(alignsize);
 	sf_header head = *(sf_header *)((void*)(str)-8);//save header
@@ -309,13 +311,14 @@ void *sf_memalign(size_t size, size_t align) {
 		}
 		sf_header *allhead = (void*)(str)-8;
 		*allhead = head;
-		count = count | (prevall+1);//set to be prev alloc and +1 for alloc so can be free
 		if(count >= 32){//front of the allocated space have big enough space to free
-			sf_header *freehead = (void*)(initptr);
+			size_t consz = numfreeblock(count);
+			count =  consz | (prevall+1);//set to be prev alloc and +1 for alloc so can be free
+			sf_header *freehead = (void*)(initptr);//get to payload area
 			*freehead = count;
 			sf_footer *freefoot = (void*)(initptr)+count-8;
 			*freefoot = count;
-			void * forfree = (void *)(freehead)+8;//+8 to skip header
+			void * forfree = (void *)(freehead);
 			sf_free(forfree);
 /*			size_t list = postosearch(count);
 			sf_block * rptr = (sf_block*)(freehead);
@@ -327,13 +330,14 @@ void *sf_memalign(size_t size, size_t align) {
 		}
 		//is this free space guarantee to be 16-byte aligned?
 		size_t backfreesize = alignsize-count-8-size;
+		backfreesize = numfreeblock(backfreesize);
 		backfreesize = backfreesize | 3;//set prevalloc and alloc
 		if(backfreesize >= 32){//back of the allocated space have big enough space to free
-			sf_header *freehead = (void*)(str)+size;
+			sf_header *freehead = (void*)(str)+size-8;//str is payload area + size goes to next payload
 			*freehead = backfreesize;
-			sf_footer *freefoot = (void*)(str)+backfreesize-8;
+			sf_footer *freefoot = (void*)(str)+size+backfreesize-16;
 			*freefoot = backfreesize;
-			void * forfree = (void *)(freehead)+8;//+8 to skip header
+			void * forfree = (void *)(freehead)+8;
 			sf_free(forfree);
 /*
 			size_t list = postosearch(backfreesize);
@@ -344,6 +348,7 @@ void *sf_memalign(size_t size, size_t align) {
 			rptr->body.links.prev = currhead->body.links.prev;//new head->prev = old head->prev
 			currhead->body.links.prev->body.links.next = rptr;//old tail's next = new head*/
 		}
+		sf_show_heap();
 		return str;
 	}
 	else{//str pointer is aligned

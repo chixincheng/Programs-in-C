@@ -26,6 +26,14 @@ int postosearch(size_t size){
 	}
 	return pos;
 }
+size_t numfreeblock(size_t num){
+	size_t count =0;
+	while(num >= 32){
+		num = num-32;
+		count++;
+	}
+	return count*32;
+}
 void initfreelisthead(void* heads){
 	for (int i = 0; i < NUM_FREE_LISTS; ++i)
 	{
@@ -78,10 +86,11 @@ sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size cl
 	sf_block *remove;
 	sf_block *remove2 = NULL;
 	///////////////////////////////
-	if(prevalloc && nextalloc && nextalloc != -1 && prevalloc != -1){//case1, no coalesce, just set header and footer
-		*currheader = (*currheader>>1)<<1;//set alloc to 0
-		*currfooter = *currheader;//set footer equal to header
-		if(nextblock != NULL){
+	if((prevalloc && nextalloc && nextalloc != -1 && prevalloc != -1)
+		|| (prevalloc && nextsize == 0) ){//case1, no coalesce, just set header and footer
+		*currheader = currsize|2;//set alloc to 0
+		*currfooter = currsize|2;//set footer equal to header
+		if(nextblock != NULL && nextsize != 0){
 			(*nextblock).header = nextsize | 1;//remove prevalloc of next header
 			*nextfoot = nextsize | 1;//remove prevalloc of next footer
 		}
@@ -96,7 +105,7 @@ sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size cl
 		ptr = ptr;
 		remove = nextblock;
 
-		if(nnhead != NULL){
+		if(nnhead != NULL && nnsze != 0){
 			*nnhead = nnsze |1;
 			*nnfoot = nnsze |1;
 		}
@@ -107,7 +116,7 @@ sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size cl
 		prevfoot = (void *)(prevblock)+prevsize-sizeof(sf_footer);//new prev footer pointer
 		*prevheader = prevsize;//dont know if the prevblock of prev is alloc
 		*prevfoot = *prevheader;//set footer = header
-		if(nextblock != NULL){
+		if(nextblock != NULL && nextsize != 0){
 			(*nextblock).header = nextsize | 1;//remove prevalloc of next header
 			*nextfoot = nextsize | 1;//remove prevalloc of next header
 		}
@@ -123,7 +132,7 @@ sf_block *coalesce(sf_block *ptr){//return size to determine appropriate size cl
 		remove2 = nextblock;
 		ptr = prevblock;
 
-		if(nnhead != NULL){
+		if(nnhead != NULL && nnsze != 0){
 			*nnhead = nnsze |1;
 			*nnfoot = nnsze |1;
 		}
