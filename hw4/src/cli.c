@@ -11,9 +11,29 @@
 #include "conversions.h"
 #include "sf_readline.h"
 
+
+int first = 1;
+char *filetype;
+char *printername;
+
+
+const char s[2] = "-";//what should this token be
+
 int run_cli(FILE *in, FILE *out)
 {
     // TO BE IMPLEMENTED
-    fprintf(stderr, "You have to implement run_cli() before the application will function.\n");
-    abort();
+    if(out != stdout){
+    	;
+    }
+    if(in == NULL || in == stdin){
+    	return -1;
+    }
+
+    //cmd =
+
+
+    if(first){//first time enter
+    	first = -1;
+    }
+
 }
