@@ -16,8 +16,36 @@ int first = 1;
 char *filetype;
 char *printername;
 
+typedef struct printer {
+  char *name;       /* Printername extension for this type. */
+  int id;        /* printer id number */
+  FILE_TYPE type;   //type of this printer
+  PRINTER_STATUS status;//printer status
+} PRINTER;
 
-const char s[2] = " ";//what should this token be
+typedef struct job{
+	int id;//job id
+	JOB_STATUS status;//job status
+	FILE_TYPE type;   //type of this printer
+	char *filename; //file name
+	char *eligi[];//eligible printer list pos
+}JOB;
+
+
+int jobcount=0;//from 0 to 63
+int id=0; //from 0 to 31
+
+
+JOB jobarray[MAX_JOBS];
+PRINTER parray[MAX_PRINTERS];
+
+//define the new printer and put it into printer array
+PRINTER define_printer(char *name, FILE_TYPE type){
+	PRINTER newp = {name,id,type,PRINTER_DISABLED};
+	parray[id] = newp;
+	id++;
+	return parray[id-1];
+}
 
 int run_cli(FILE *in, FILE *out)
 {
@@ -30,7 +58,7 @@ int run_cli(FILE *in, FILE *out)
     while(strcmp(red,"") == 0){
     		red = sf_readline(prom);
     }
-    char *cmd = strtok(red,s);
+    char *cmd = strtok(red," ");
 
     if((in == NULL || in == stdin) && *red == EOF){
     	return -1;
@@ -43,25 +71,114 @@ int run_cli(FILE *in, FILE *out)
     		sf_cmd_ok();
     	}
     	else if(strcmp(cmd,"type") == 0){
-    		cmd = strtok(NULL,s);
+    		cmd = strtok(NULL," ");
     		define_type(cmd);
-    		sf_printer_defined("TYPE",cmd);
     		sf_cmd_ok();
     	}
-    	else if(strcmp(cmd,"priter") == 0){
-
+    	else if(strcmp(cmd,"printer") == 0){
+    		cmd = strtok(NULL," ");
+    		char *name = cmd;//name
+    		cmd = strtok(NULL," ");//printer type
+    		if(find_type(cmd) != NULL){//type exist
+    			PRINTER p = define_printer(name,*find_type(cmd));
+    			sf_printer_defined(name,cmd);
+    			printf("%s%i%s%s%s%s%s\n", "Printer: id=",p.id," name=",name," type=",cmd," Status=disable");
+    			sf_cmd_ok();
+    		}
+    		else{//type do not exist
+    			printf("%s%s\n", "Unknown file type :",cmd);
+    			sf_cmd_error("printer");
+    		}
     	}
     	else if(strcmp(cmd,"conversion") == 0){
-
+    		cmd = strtok(NULL," ");//type from
+    		char *fname = cmd;
+    		FILE_TYPE *f = find_type(cmd);
+    		if(f != NULL){
+    			cmd = strtok(NULL," ");//type to
+    			char *tname = cmd;
+    			FILE_TYPE *t = find_type(cmd);
+    			if(t != NULL){//both type exist
+    				cmd = strtok(NULL,"");//args for conversion program and program name
+    				if(cmd != NULL){
+    					define_conversion(fname,tname,&cmd);
+    				//how to parse this cmd to only show conversion program name
+    				}
+    				else{
+    					sf_cmd_error("NOT ENOUGH ARGUMENT");
+    				}
+    			}
+    			else{//type dont exist
+    				printf("%s%s\n", "Undeclared type:",cmd);
+    				sf_cmd_error("conversion");
+    			}
+    		}
+    		else{//type dont exist
+    			printf("%s%s\n", "Undeclared type:",cmd);
+    			sf_cmd_error("conversion");
+    		}
     	}
     	else if(strcmp(cmd,"printers") == 0){
+    		int count = 0;
 
+    		while(parray[count].name != NULL){//exist a printer
+    			char *sta = "notset";
+    			if(parray[count].status == PRINTER_DISABLED){
+    				sta="disable";
+    			}
+    			else if(PRINTER_DISABLED == PRINTER_IDLE){
+    				sta="idle";
+    			}
+    			else{
+    				sta="busy";
+    			}
+    			printf("%s%i%s%s%s%s%s%s\n", "Printer: id=",parray[count].id," name=",parray[count].name," type=", parray[count].type.name ," Status=", sta);
+    			count++;
+    		}
+    		sf_cmd_ok();
     	}
     	else if(strcmp(cmd,"jobs") == 0){
-
+    		for(int i=0;i<MAX_JOBS;i++){
+    			if(jobarray[i].filename != NULL){
+	    			printf("%s%i%s%s%s%s%s%i\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",jobarray[i].status);
+	    		}
+    		}
+    		sf_cmd_ok();
     	}
     	else if(strcmp(cmd,"print") == 0){
+    		cmd = strtok(NULL," ");//file name
+    		JOB creaj;
 
+    		int printernum =0;//counter for eligible printer
+    		creaj.filename=cmd;//file name
+    		cmd = strtok(NULL," ");//printer name
+    		while(cmd != NULL){
+    			*((creaj.eligi)+printernum) = cmd;//store the eligible printer to a list
+    			printernum++;
+    			cmd = strtok(NULL," ");//printer name
+    		}
+
+    		char *token = creaj.filename;
+    		strtok(token,".");
+    		creaj.type.name = (strtok(NULL,""));//file type
+    		creaj.status = JOB_CREATED;//status
+
+    		if(jobcount<64){
+	    		for(int i=0;i<MAX_JOBS;i++){//search for first avilable space
+	    			if(jobarray[i].filename == NULL){
+	    				creaj.id=i;
+	    				jobarray[i] = creaj;
+	    				i=64;//exit forloop
+	    			}
+	    		}
+	    		jobcount++;
+	    	}
+	    	else{
+	    		sf_cmd_error("Max JOB REACHED");
+	    	}
+	    	sf_job_created(creaj.id,creaj.filename,creaj.type.name);
+	    	printf("%s%i%s%s%s%s%s\n", "JOB[",creaj.id,"] :type=",creaj.type.name," filename=",creaj.filename," status=created");
+    		sf_cmd_ok();
     	}
     	else if(strcmp(cmd,"cancel") == 0){
 
@@ -82,7 +199,7 @@ int run_cli(FILE *in, FILE *out)
     	while(strcmp(red,"") == 0){
     		red = sf_readline(prom);
     	}
-    	cmd = strtok(red,s);
+    	cmd = strtok(red," ");
     }
 
     if(first){//first time enter
