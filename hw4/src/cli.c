@@ -53,16 +53,33 @@ int run_cli(FILE *in, FILE *out)
     if(out != stdout){
     	;
     }
-    char *prom = "imp>";
-    char *red = sf_readline(prom);
-    while(strcmp(red,"") == 0){
-    		red = sf_readline(prom);
+    size_t size = 999;
+    char *linebuf = malloc(size);
+    char *red = malloc(size);
+    char *cmd;
+    size_t character = 0;
+    if(in != stdin){//in batch mode
+    	character = getline(&linebuf,&size,in);
+    	strcpy(red,linebuf);
     }
-    char *cmd = strtok(red," ");
 
-    if((in == NULL || in == stdin) && *red == EOF){
-    	return -1;
-    }
+    char *prom = "imp>";
+    if(character == -1 || character == 0){//not in batch mode
+    	red = sf_readline(prom);
+	    while(strcmp(red,"") == 0){
+	    		red = sf_readline(prom);
+	    }
+
+        if((in == NULL || in == stdin) && *red == EOF){
+    		return -1;
+    	}
+	}
+	if(in == stdin){
+		cmd = strtok(red," ");
+	}
+	else{
+		cmd = strtok(red,"\n");
+	}
 
     while (strcmp(cmd,"quit") != 0){
 
@@ -195,15 +212,28 @@ int run_cli(FILE *in, FILE *out)
     	else if(strcmp(cmd,"enable") == 0){
 
     	}
-    	red = sf_readline(prom);
-    	while(strcmp(red,"") == 0){
-    		red = sf_readline(prom);
-    	}
-    	cmd = strtok(red," ");
+    	if(in == stdin){
+	    	red = sf_readline(prom);
+	    	while(strcmp(red,"") == 0){
+	    		red = sf_readline(prom);
+	    	}
+	    }
+	    else{
+	    	getline(&linebuf,&size,in);
+	    	strcpy(red,linebuf);
+	    }
+		if(in == stdin){
+			cmd = strtok(red," ");
+		}
+		else{
+			cmd = strtok(red,"\n");
+		}
     }
 
     if(first){//first time enter
     	first = -1;
     }
+    free(linebuf);
+    free(red);
     return 1;
 }
