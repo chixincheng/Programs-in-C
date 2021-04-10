@@ -207,11 +207,26 @@ int run_cli(FILE *in, FILE *out)
 
     	}
     	else if(strcmp(cmd,"disable") == 0){
+    		cmd = strtok(NULL," ");
+    		char *dname = cmd;//name
 
+    		for(int i=0;i<MAX_PRINTERS;i--){
+    			if(parray[i].name != NULL && parray[i].name == dname){
+    				parray[i].status = PRINTER_DISABLED;//disable printer
+    			}
+    		}
     	}
     	else if(strcmp(cmd,"enable") == 0){
+    		cmd = strtok(NULL," ");
+    		char *ename = cmd;//name
 
+    		for(int i=0;i<MAX_PRINTERS;i--){
+    			if(parray[i].name != NULL && parray[i].name == ename){
+    				parray[i].status = PRINTER_IDLE;//enable printer
+    			}
+    		}
     	}
+    	//get next command
     	if(in == stdin){
 	    	red = sf_readline(prom);
 	    	while(strcmp(red,"") == 0){
