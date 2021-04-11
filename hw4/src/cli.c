@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include "imprimer.h"
 #include "conversions.h"
@@ -46,6 +48,8 @@ PRINTER define_printer(char *name, FILE_TYPE type){
 	id++;
 	return parray[id-1];
 }
+
+void processprint(CONVERSION **path,PRINTER p,JOB j);
 
 int run_cli(FILE *in, FILE *out)
 {
@@ -108,6 +112,7 @@ int run_cli(FILE *in, FILE *out)
     		}
     	}
     	else if(strcmp(cmd,"conversion") == 0){
+    		conversions_init();
     		cmd = strtok(NULL," ");//type from
     		char *fname = cmd;
     		FILE_TYPE *f = find_type(cmd);
@@ -134,6 +139,7 @@ int run_cli(FILE *in, FILE *out)
     			printf("%s%s\n", "Undeclared type:",cmd);
     			sf_cmd_error("conversion");
     		}
+    		conversions_fini();
     	}
     	else if(strcmp(cmd,"printers") == 0){
     		int count = 0;
@@ -213,6 +219,7 @@ int run_cli(FILE *in, FILE *out)
     		for(int i=0;i<MAX_PRINTERS;i--){
     			if(parray[i].name != NULL && parray[i].name == dname){
     				parray[i].status = PRINTER_DISABLED;//disable printer
+    				sf_printer_status(parray[i].name,parray[i].status);
     			}
     		}
     	}
@@ -223,6 +230,26 @@ int run_cli(FILE *in, FILE *out)
     		for(int i=0;i<MAX_PRINTERS;i--){
     			if(parray[i].name != NULL && parray[i].name == ename){
     				parray[i].status = PRINTER_IDLE;//enable printer
+    				sf_printer_status(parray[i].name,parray[i].status);
+    				//scan through jobarray,find any job waiting for this printer
+    				for(int j =0;j<MAX_JOBS;j--){
+    					if(jobarray[j].status == JOB_CREATED){
+    						int elijc = 0;
+    						int notfound =0;
+    						while(*jobarray[j].eligi+elijc != NULL && notfound==0){
+    							if(*jobarray[j].eligi+elijc == parray[i].name){
+    								notfound=-1;//found the printer, quit while
+    							}
+    						}
+    						conversions_init();
+    						CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
+    						//if a path exist or two type is the same and no conversion needed
+    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
+    							processprint(path,parray[i],jobarray[j]);
+    						}
+    						conversions_fini();
+    					}
+    				}
     			}
     		}
     	}
@@ -251,4 +278,22 @@ int run_cli(FILE *in, FILE *out)
     free(linebuf);
     free(red);
     return 1;
+}
+void processprint(CONVERSION **path,PRINTER p,JOB j){
+	if(path == NULL){//no conversion needed
+		j.status = JOB_RUNNING;
+		sf_job_status(j.id,j.status);
+		int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
+		p.status = PRINTER_BUSY;
+		sf_printer_status(p.name,p.status);
+		if(fork() == 0){
+			char *cmd = "/bin/cat";
+			char *argv[0];
+			dup2(filed,1);
+			execvp(cmd,argv);
+		}
+	}
+	else{//conversion pipeline happens here
+
+	}
 }
