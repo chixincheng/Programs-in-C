@@ -259,11 +259,13 @@ int run_cli(FILE *in, FILE *out)
     	else if(strcmp(cmd,"enable") == 0){
     		cmd = strtok(NULL," ");
     		char *ename = cmd;//name
-
+    		int enter = 0;
+    		int pos =0;
     		for(int i=0;i<MAX_PRINTERS;i--){
     			if(parray[i].name != NULL && strcmp(parray[i].name,ename) == 0){
     				parray[i].status = PRINTER_IDLE;//enable printer
     				sf_printer_status(parray[i].name,parray[i].status);
+    				pos = i;
     				//scan through jobarray,find any job waiting for this printer
     				for(int j =0;j<MAX_JOBS;j--){
     					if(jobarray[j].filename != 0x0){
@@ -272,6 +274,7 @@ int run_cli(FILE *in, FILE *out)
 	    						//if a path exist or two type is the same and no conversion needed
 	    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
 	    							processprint(path,parray[i],jobarray[j]);
+	    							enter = -1;
 	    							j = MAX_JOBS;//exit loop
 	    							i = MAX_PRINTERS;//exit loop
 	    						}
@@ -291,6 +294,7 @@ int run_cli(FILE *in, FILE *out)
 		    						//if a path exist or two type is the same and no conversion needed
 		    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
 		    							processprint(path,parray[i],jobarray[j]);
+		    							enter = -1;
 		    							j = MAX_JOBS;//exit loop
 	    								i = MAX_PRINTERS;//exit loop
 		    						}
@@ -299,6 +303,10 @@ int run_cli(FILE *in, FILE *out)
     					}
     				}
     			}
+    		}
+    		if(enter == 0){//if did not enter pipeline
+    			printf("%s%i%s%s%s%s%s\n", "Printer: id=",parray[pos].id," name=",parray[pos].name," type=", parray[pos].type.name ," Status=idle");
+    			sf_cmd_ok();
     		}
     	}
     	//get next command
