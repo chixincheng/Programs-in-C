@@ -37,10 +37,11 @@ typedef struct job{
 
 int jobcount=0;//from 0 to 63
 int id=0; //from 0 to 31
-
+int mpidcount =0;
 
 JOB jobarray[MAX_JOBS];
 PRINTER parray[MAX_PRINTERS];
+int mpid[MAX_JOBS];
 
 //define the new printer and put it into printer array
 PRINTER define_printer(char *name, FILE_TYPE type){
@@ -50,7 +51,7 @@ PRINTER define_printer(char *name, FILE_TYPE type){
 	return parray[id-1];
 }
 
-void processprint(CONVERSION **path,PRINTER p,JOB j);
+int processprint(CONVERSION **path,PRINTER p,JOB j);
 
 int run_cli(FILE *in, FILE *out)
 {
@@ -199,8 +200,41 @@ int run_cli(FILE *in, FILE *out)
 	    		sf_cmd_error("Max JOB REACHED");
 	    	}
 	    	sf_job_created(creaj.id,creaj.filename,creaj.type.name);
-	    	printf("%s%i%s%s%s%s%s\n", "JOB[",creaj.id,"] :type=",creaj.type.name," filename=",creaj.filename," status=created");
-    		sf_cmd_ok();
+	    	if(creaj.eligi == NULL){//all printer can be used
+	    		for(int i=0;i<MAX_PRINTERS;i++){
+	    			if(parray[i].status == PRINTER_IDLE){
+	    				CONVERSION **path = find_conversion_path(creaj.type.name,parray[i].type.name);
+	    				//if a path exist or two type is the same and no conversion needed
+						if(path != NULL || creaj.type.name == parray[i].type.name){
+							processprint(path,parray[i],creaj);
+							i = MAX_PRINTERS;//exit the loop
+						}
+	    			}
+	    		}
+	    	}
+	    	else{//have a set if eligible printer
+	    		for(int i=0;i<MAX_PRINTERS;i++){
+	    			if(parray[i].status == PRINTER_IDLE){//if a idle printer is ready to be used
+	    				int elic = 0;
+						int notfound=0;
+						//try to match the current printer with the eliglible printer of jobs
+						while(*((creaj.eligi)+elic) != NULL && notfound == 0){
+							if(*((creaj.eligi)+elic) == parray[i].name){
+								notfound = -1;//found the eligible printer
+							}
+						}
+						//printer match
+						if(notfound == -1){
+							CONVERSION **path = find_conversion_path(creaj.type.name,parray[i].type.name);
+    						//if a path exist or two type is the same and no conversion needed
+    						if(path != NULL || creaj.type.name == parray[i].type.name){
+    							processprint(path,parray[i],creaj);
+    							i = MAX_PRINTERS;//exit the loop
+    						}
+						}
+	    			}
+	    		}
+	    	}
     	}
     	else if(strcmp(cmd,"cancel") == 0){
 
@@ -233,18 +267,35 @@ int run_cli(FILE *in, FILE *out)
     				//scan through jobarray,find any job waiting for this printer
     				for(int j =0;j<MAX_JOBS;j--){
     					if(jobarray[j].filename != 0x0){
-    						int elijc = 0;
-    						int notfound =0;
-    						while(*jobarray[j].eligi+elijc != NULL && notfound==0){
-    							if(*jobarray[j].eligi+elijc == parray[i].name){
-    								notfound=-1;//found the printer, quit while
-    							}
-    						}
-    						CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
-    						//if a path exist or two type is the same and no conversion needed
-    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
-    							processprint(path,parray[i],jobarray[j]);
-    						}
+    						if(jobarray[j].eligi == NULL){//no eliglible printer, any printer can be use
+	    						CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
+	    						//if a path exist or two type is the same and no conversion needed
+	    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
+	    							processprint(path,parray[i],jobarray[j]);
+	    							j = MAX_JOBS;//exit loop
+	    							i = MAX_PRINTERS;//exit loop
+	    						}
+	    					}
+	    					else{//eliglible printer exist
+	    						int elic = 0;
+	    						int notfound=0;
+	    						//try to match the current printer with the eliglible printer of jobs
+	    						while(*((jobarray[j].eligi)+elic) != NULL && notfound == 0){
+	    							if(*((jobarray[j].eligi)+elic) == ename){
+	    								notfound = -1;//found the eligible printer
+	    							}
+	    						}
+	    						//printer match
+	    						if(notfound == -1){
+	    							CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
+		    						//if a path exist or two type is the same and no conversion needed
+		    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
+		    							processprint(path,parray[i],jobarray[j]);
+		    							j = MAX_JOBS;//exit loop
+	    								i = MAX_PRINTERS;//exit loop
+		    						}
+	    						}
+	    					}
     					}
     				}
     			}
@@ -277,71 +328,164 @@ int run_cli(FILE *in, FILE *out)
     conversions_fini();
     return 1;
 }
-void processprint(CONVERSION **path,PRINTER p,JOB j){
+int processprint(CONVERSION **path,PRINTER p,JOB j){
+	int exitnum = 0;//change to -1 with failed operation
 	char *filen = j.filename;
 	int initfild = open(filen, O_RDONLY);
+	int empfiled = open("empty.txt", O_RDWR);
 	dup2(initfild,0);//change stdin of first process to be the file to be printed
 	if(path == NULL){//no conversion needed
+		pid_t pid = fork();//master process
 		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
-		if(fork() == 0){
-			char *cmd = "bin/cat";
-			char *argv[0];
-			dup2(filed,1);//change stdout of last process
-			execvp(cmd,argv);
-		}
-	}
-	else{//conversion pipeline happens here
-		pid_t pid = fork();
-		if(pid == 0){//master process
+		sf_job_started(j.id,p.name,pid,(char**)path);
+		if(pid == 0){
 			setpgid(pid,pid);//set pgid to be pid
-
-			int pathcount = 0;
-			while(*(*(path+pathcount))->cmd_and_args != 0x0){//while exist more conversion
-				fork();
-
-				pathcount++;
-				if(*(*(path+pathcount))->cmd_and_args != 0x0){//not last process
-					char *scmd = *(*(path+pathcount))->cmd_and_args;
-					char *cmd = malloc(999);
-					strcpy(cmd,scmd);//make a copy of command, store to cmd
-					char *argm = strtok(cmd," ");//first arg for execvp
-					char *ptr = malloc(999);
-					char *argv[99];
-					int count =0;
-					while(cmd != NULL){
-						argv[count] = strtok(NULL," ");
-						count++;
-					}
-					execvp(argm,argv);
-					free(ptr);
-					free(cmd);
+			pid_t cp = fork();
+			if(cp == 0){
+				char *cmd = "/bin/cat";
+				char *argv[0];
+				dup2(filed,1);//change stdout of last process
+				int err= execvp(cmd,argv);
+				if(err == -1){
+					sf_cmd_error("execvp return -1 error");
 				}
-				else{//last process
-					char *scmd = *(*(path+pathcount))->cmd_and_args;
-					char *cmd = malloc(999);
-					strcpy(cmd,scmd);//make a copy of command, store to cmd
-					char *argm = strtok(cmd," ");//first arg for execvp
-					char *ptr = malloc(999);
-					char *argv[99];
-					int count =0;
-					while(cmd != NULL){
-						argv[count] = strtok(NULL," ");
-						count++;
+				else{
+					printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
+					sf_cmd_ok();
+				}
+			}
+			else{//waitpid
+				int chils;
+				waitpid(cp,&chils,0);
+				if(WIFSIGNALED(chils)){//terminated by signal
+					exitnum = -1;
+				}
+				if(WIFEXITED(chils)){
+					int s = WEXITSTATUS(chils);
+					if(s != 0){//Exit status is nonzero
+						exitnum = -1;
 					}
-					int fild = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
-					dup2(fild,1);//change stdout of last process
-					execvp(argm,argv);
-					free(ptr);
-					free(cmd);
+				}
+				if(exitnum == -1){//set job to aborted state
+					j.status = JOB_ABORTED;
+				}
+				else{
+					j.status =JOB_FINISHED;
 				}
 			}
 		}
-		else{//parent do
+	}
+	else{//conversion pipeline happens here
+		pid_t pid = fork();//master process
+		j.status = JOB_RUNNING;
+		sf_job_status(j.id,j.status);
+		p.status = PRINTER_BUSY;
+		sf_printer_status(p.name,p.status);
+		sf_job_started(j.id,p.name,pid,(char**)path);
+		if(pid == 0){//master process
+			setpgid(pid,pid);//set pgid to be pid
+			mpid[mpidcount] = pid;
+			mpidcount++;
 
+			void *cpidadr = malloc(99*sizeof(pid_t));
+			pid_t cpid[99];
+			int cc=0;
+
+			int pathcount = 0;
+			while(*(*(path+pathcount))->cmd_and_args != 0x0){//while exist more conversion
+				cpid[cc] =fork();
+
+				if(cpid[cc] ==0){
+					pathcount++;
+					if(*(*(path+pathcount))->cmd_and_args != 0x0){//not last process
+						char *scmd = *(*(path+pathcount))->cmd_and_args;
+						char *cmd = malloc(999);
+						strcpy(cmd,scmd);//make a copy of command, store to cmd
+						char *argm = strtok(cmd," ");//first arg for execvp
+						char *ptr = malloc(999);
+						char *argv[99];
+						int count =0;
+						while(cmd != NULL){
+							argv[count] = strtok(NULL," ");
+							count++;
+						}
+						execvp(argm,argv);
+						free(ptr);
+						free(cmd);
+						if(STDOUT_FILENO == 1){
+							dup2(STDOUT_FILENO,STDIN_FILENO);//stdout become next stdin
+							dup2(empfiled,STDOUT_FILENO);//file descriptor 3 become next stdout
+						}
+						else{
+							dup2(STDOUT_FILENO,STDIN_FILENO);//stdout become next stdin
+							dup2(1,STDOUT_FILENO);//file descriptor 1 become next stdout
+						}
+					}
+					else{//last process
+						char *scmd = *(*(path+pathcount))->cmd_and_args;
+						char *cmd = malloc(999);
+						strcpy(cmd,scmd);//make a copy of command, store to cmd
+						char *argm = strtok(cmd," ");//first arg for execvp
+						char *ptr = malloc(999);
+						char *argv[99];
+						int count =0;
+						while(cmd != NULL){
+							argv[count] = strtok(NULL," ");
+							count++;
+						}
+						int fild = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
+						dup2(fild,1);//change stdout of last process
+						execvp(argm,argv);
+						free(ptr);
+						free(cmd);
+					}
+					cc++;
+				}
+				else{//master process use waitpid here
+					for(int i=0;i<cc;i++){
+						int chils;
+						waitpid(cpid[i],&chils,0);
+						if(WIFSIGNALED(chils)){//terminated by signal
+							exitnum = -1;
+						}
+						if(WIFEXITED(chils)){
+							int s = WEXITSTATUS(chils);
+							if(s != 0){//Exit status is nonzero
+								exitnum = -1;
+							}
+						}
+					}
+					printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
+					if(exitnum == -1){//set job to aborted state
+						j.status = JOB_ABORTED;
+						sf_cmd_error("error");
+					}
+					else{
+						j.status =JOB_FINISHED;
+						sf_cmd_ok();
+					}
+
+					free(cpidadr);
+				}
+			}
+		}
+		else{//parent do waitpid to reap the master process
+			int chils;
+			waitpid(pid,&chils,0);
+			if(WIFSIGNALED(chils)){//terminated by signal
+				exitnum = -1;
+			}
+			if(WIFEXITED(chils)){
+				int s = WEXITSTATUS(chils);
+				if(s != 0){//Exit status is nonzero
+					exitnum = -1;
+				}
+			}
 		}
 	}
+	return exitnum;
 }
