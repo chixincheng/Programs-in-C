@@ -72,6 +72,9 @@ int run_cli(FILE *in, FILE *out)
     char *prom = "imp>";
     if(character == -1 || character == 0){//not in batch mode
     	red = sf_readline(prom);
+    	if(red <= 0){
+    		return -1;//invalid file
+    	}
 	    while(strcmp(red,"") == 0){
 	    		red = sf_readline(prom);
 	    }
@@ -86,11 +89,10 @@ int run_cli(FILE *in, FILE *out)
 	else{
 		cmd = strtok(red,"\n");
 	}
-    conversions_init();
     while (strcmp(cmd,"quit") != 0){
 
     	if(strcmp(cmd,"help") == 0){
-    		printf("%s\n","The available commands are: \nhelp, quit, type(file_type), printer(printer_name, file_type)\nconversion(file_type1,file_type2,conversion_program[arg1 arg2...]), printers\njobs, print(file_name,[printer1,printer2,...]), cancel(job_number)\npause(job_number), resume(job_number), disable(job_number), enable(job_number)");
+    		fprintf(out,"%s\n","The available commands are: \nhelp, quit, type(file_type), printer(printer_name, file_type)\nconversion(file_type1,file_type2,conversion_program[arg1 arg2...]), printers\njobs, print(file_name,[printer1,printer2,...]), cancel(job_number)\npause(job_number), resume(job_number), disable(job_number), enable(job_number)");
     		sf_cmd_ok();
     	}
     	else if(strcmp(cmd,"type") == 0){
@@ -122,9 +124,18 @@ int run_cli(FILE *in, FILE *out)
     			char *tname = cmd;
     			FILE_TYPE *t = find_type(cmd);
     			if(t != NULL){//both type exist
-    				cmd = strtok(NULL,"");//args for conversion program and program name
-    				if(cmd != NULL){
-    					define_conversion(fname,tname,&cmd);
+    				char *cd[99];
+    				*cd = strtok(NULL," ");//args for conversion program and program name
+    				int count =1;
+    				char *temp = strtok(NULL," ");
+    				while(temp != NULL){
+    					*(cd+count) = temp;
+    					temp = strtok(NULL," ");
+    					count++;
+    				}
+    				cd[count] = '\0';
+    				if(cd != NULL){
+    					define_conversion(fname,tname,cd);
     				//how to parse this cmd to only show conversion program name
     				}
     				else{
@@ -163,7 +174,26 @@ int run_cli(FILE *in, FILE *out)
     	else if(strcmp(cmd,"jobs") == 0){
     		for(int i=0;i<MAX_JOBS;i++){
     			if(jobarray[i].filename != NULL){
-	    			printf("%s%i%s%s%s%s%s%i\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",jobarray[i].status);
+    				char *status;
+    				if(jobarray[i].status == JOB_CREATED){
+    					status = "JOB_CREATED";
+    				}
+    				else if(jobarray[i].status == JOB_RUNNING){
+    					status = "JOB_RUNNING";
+    				}
+    				else if(jobarray[i].status == JOB_PAUSED){
+    					status = "JOB_PAUSED";
+    				}
+    				else if(jobarray[i].status == JOB_FINISHED){
+    					status = "JOB_FINISHED";
+    				}
+    				else if(jobarray[i].status == JOB_ABORTED){
+    					status = "JOB_ABORTED";
+    				}
+    				else{
+    					status = "JOB_DELETED";
+    				}
+	    			printf("%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
 	    		}
     		}
     		sf_cmd_ok();
@@ -212,7 +242,7 @@ int run_cli(FILE *in, FILE *out)
 	    			}
 	    		}
 	    	}
-	    	else{//have a set if eligible printer
+	    	else{//have a set of eligible printer
 	    		for(int i=0;i<MAX_PRINTERS;i++){
 	    			if(parray[i].status == PRINTER_IDLE){//if a idle printer is ready to be used
 	    				int elic = 0;
@@ -249,7 +279,7 @@ int run_cli(FILE *in, FILE *out)
     		cmd = strtok(NULL," ");
     		char *dname = cmd;//name
 
-    		for(int i=0;i<MAX_PRINTERS;i--){
+    		for(int i=0;i<MAX_PRINTERS;i++){
     			if(parray[i].name != NULL && strcmp(parray[i].name,dname) == 0){
     				parray[i].status = PRINTER_DISABLED;//disable printer
     				sf_printer_status(parray[i].name,parray[i].status);
@@ -261,13 +291,13 @@ int run_cli(FILE *in, FILE *out)
     		char *ename = cmd;//name
     		int enter = 0;
     		int pos =0;
-    		for(int i=0;i<MAX_PRINTERS;i--){
+    		for(int i=0;i<MAX_PRINTERS;i++){
     			if(parray[i].name != NULL && strcmp(parray[i].name,ename) == 0){
     				parray[i].status = PRINTER_IDLE;//enable printer
     				sf_printer_status(parray[i].name,parray[i].status);
     				pos = i;
     				//scan through jobarray,find any job waiting for this printer
-    				for(int j =0;j<MAX_JOBS;j--){
+    				for(int j =0;j<MAX_JOBS;j++){
     					if(jobarray[j].filename != 0x0){
     						if(jobarray[j].eligi == NULL){//no eliglible printer, any printer can be use
 	    						CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
@@ -333,7 +363,6 @@ int run_cli(FILE *in, FILE *out)
     }
     free(linebuf);
     free(red);
-    conversions_fini();
     return 1;
 }
 int processprint(CONVERSION **path,PRINTER p,JOB j){
@@ -396,7 +425,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 		sf_job_started(j.id,p.name,pid,(char**)path);
 		if(pid == 0){//master process
 			setpgid(pid,pid);//set pgid to be pid
-			mpid[mpidcount] = pid;
+			mpid[mpidcount] = pid;//store the pipeline process id into array
 			mpidcount++;
 
 			void *cpidadr = malloc(99*sizeof(pid_t));
