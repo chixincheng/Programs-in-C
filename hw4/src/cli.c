@@ -30,6 +30,7 @@ typedef struct job{
 	int id;//job id
 	JOB_STATUS status;//job status
 	FILE_TYPE type;   //type of this printer
+	int gid;
 	char *filename; //file name
 	char *eligi[];//eligible printer list pos
 }JOB;
@@ -267,13 +268,76 @@ int run_cli(FILE *in, FILE *out)
 	    	}
     	}
     	else if(strcmp(cmd,"cancel") == 0){
-
+    		cmd = strtok(NULL," ");//job number
+    		int pos = strtol(cmd,NULL,10);
+    		JOB j = jobarray[pos];
+    		if(j.filename != NULL){
+    			int s;
+    			if(j.status == JOB_RUNNING){//currently being processed
+    				s = killpg(j.gid,SIGTERM);
+	    			if(s == 0){
+    					j.status = JOB_DELETED;
+	    				sf_job_status(j.id,j.status);
+	    				sf_cmd_ok();
+	    			}
+	    			else{
+	    				sf_cmd_error("killpg return -1, cancel failed");
+	    			}
+	    		}
+	    		else{//job is paused
+	    			s = killpg(j.gid,SIGTERM);
+	    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
+	    			if(s == 0 && r == 0){
+	    				j.status = JOB_DELETED;
+	    				sf_job_status(j.id,j.status);
+	    				sf_cmd_ok();
+	    			}
+	    			else{
+	    				sf_cmd_error("killpg return -1, cancel failed");
+	    			}
+	    		}
+    		}
+    		else{
+    			sf_cmd_error("job not found");
+    		}
     	}
     	else if(strcmp(cmd,"pause") == 0){
-
+    		cmd = strtok(NULL," ");//job number
+    		int pos = strtol(cmd,NULL,10);
+    		JOB j = jobarray[pos];
+    		if(j.filename != NULL){
+    			int s =killpg(j.gid,SIGSTOP);//pause job
+    			if(s == 0){
+    				j.status = JOB_PAUSED;
+    				sf_job_status(j.id,j.status);
+    				sf_cmd_ok();
+    			}
+    			else{
+    				sf_cmd_error("killpg return -1, pause failed");
+    			}
+    		}
+    		else{
+    			sf_cmd_error("job not found");
+    		}
     	}
     	else if(strcmp(cmd,"resume") == 0){
-
+    		cmd = strtok(NULL," ");//job number
+    		int pos = strtol(cmd,NULL,10);
+    		JOB j = jobarray[pos];
+    		if(j.filename != NULL){
+    			int s =killpg(j.gid,SIGCONT);//resume job
+    			if(s == 0){
+	    			j.status = JOB_RUNNING;
+    				sf_job_status(j.id,j.status);
+    				sf_cmd_ok();
+    			}
+    			else{
+    				sf_cmd_error("killpg return -1, resume failed");
+    			}
+    		}
+    		else{
+    			sf_cmd_error("job not found");
+    		}
     	}
     	else if(strcmp(cmd,"disable") == 0){
     		cmd = strtok(NULL," ");
@@ -381,6 +445,10 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 		sf_job_started(j.id,p.name,pid,(char**)path);
 		if(pid == 0){
 			setpgid(pid,pid);//set pgid to be pid
+			mpid[mpidcount] = pid;//store the pipeline process id into array
+			j.gid = mpidcount;
+			mpidcount++;
+
 			pid_t cp = fork();
 			if(cp == 0){
 				char *cmd = "/bin/cat";
@@ -426,6 +494,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 		if(pid == 0){//master process
 			setpgid(pid,pid);//set pgid to be pid
 			mpid[mpidcount] = pid;//store the pipeline process id into array
+			j.gid = mpidcount;
 			mpidcount++;
 
 			void *cpidadr = malloc(99*sizeof(pid_t));
