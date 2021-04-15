@@ -167,12 +167,12 @@ int run_cli(FILE *in, FILE *out)
     			}
     			else{//type dont exist
     				printf("%s%s\n", "Undeclared type:",cmd);
-    				sf_cmd_error("conversion");
+    				sf_cmd_error("type do not exist error");
     			}
     		}
     		else{//type dont exist
     			printf("%s%s\n", "Undeclared type:",cmd);
-    			sf_cmd_error("conversion");
+    			sf_cmd_error("type do not exist error");
     		}
     	}
     	else if(strcmp(cmd,"printers") == 0){
@@ -293,77 +293,80 @@ int run_cli(FILE *in, FILE *out)
     		cmd = strtok(NULL," ");//job number
     		int pos = strtol(cmd,NULL,10);
     		JOB j = jobarray[pos];
-    		if(j.filename != NULL){
-    			int s;
-    			if(j.status == JOB_RUNNING){//currently being processed
-    				s = killpg(j.gid,SIGTERM);
-	    			if(s == 0){
-    					j.status = JOB_DELETED;
-	    				sf_job_status(j.id,j.status);
-	    				sf_cmd_ok();
-	    				jobarray[pos].filename = NULL;
-	    				jobcount--;
-	    			}
-	    			else{
-	    				sf_cmd_error("killpg return -1, cancel failed");
-	    			}
+    		if(pos < MAX_JOBS && pos >=0){
+	    		if(j.filename != NULL){
+	    			int s;
+	    			if(j.status == JOB_RUNNING){//currently being processed
+	    				s = killpg(j.gid,SIGTERM);
+		    			if(s == 0){
+	    					j.status = JOB_DELETED;
+		    				sf_job_status(j.id,j.status);
+		    				sf_cmd_ok();
+		    				jobarray[pos].filename = NULL;
+		    				jobcount--;
+		    			}
+		    		}
+		    		else{//job is paused
+		    			s = killpg(j.gid,SIGTERM);
+		    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
+		    			if(s == 0 && r == 0){
+		    				j.status = JOB_DELETED;
+		    				sf_job_status(j.id,j.status);
+		    				sf_cmd_ok();
+		    				jobarray[pos].filename = NULL;
+		    				jobcount--;
+		    			}
+		    		}
 	    		}
-	    		else{//job is paused
-	    			s = killpg(j.gid,SIGTERM);
-	    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
-	    			if(s == 0 && r == 0){
-	    				j.status = JOB_DELETED;
-	    				sf_job_status(j.id,j.status);
-	    				sf_cmd_ok();
-	    				jobarray[pos].filename = NULL;
-	    				jobcount--;
-	    			}
-	    			else{
-	    				sf_cmd_error("killpg return -1, cancel failed");
-	    			}
+	    		else{
+	    			sf_cmd_error("job not found");
 	    		}
-    		}
-    		else{
-    			sf_cmd_error("job not found");
-    		}
+	    	}
+	    	else{
+	    		sf_cmd_error("invalid job number");
+	    	}
     	}
     	else if(strcmp(cmd,"pause") == 0){
     		cmd = strtok(NULL," ");//job number
     		int pos = strtol(cmd,NULL,10);
     		JOB j = jobarray[pos];
-    		if(j.filename != NULL){
-    			int s =killpg(j.gid,SIGSTOP);//pause job
-    			if(s == 0){
-    				j.status = JOB_PAUSED;
-    				sf_job_status(j.id,j.status);
-    				sf_cmd_ok();
-    			}
-    			else{
-    				sf_cmd_error("killpg return -1, pause failed");
-    			}
-    		}
-    		else{
-    			sf_cmd_error("job not found");
-    		}
+    		if(pos < MAX_JOBS && pos >=0){
+	    		if(j.filename != NULL){
+	    			int s =killpg(j.gid,SIGSTOP);//pause job
+	    			if(s == 0){
+	    				j.status = JOB_PAUSED;
+	    				sf_job_status(j.id,j.status);
+	    				sf_cmd_ok();
+	    			}
+	    		}
+	    		else{
+	    			sf_cmd_error("job not found");
+	    		}
+	    	}
+	    	else{
+	    		sf_cmd_error("invalid job number");
+	    	}
     	}
     	else if(strcmp(cmd,"resume") == 0){
     		cmd = strtok(NULL," ");//job number
     		int pos = strtol(cmd,NULL,10);
     		JOB j = jobarray[pos];
-    		if(j.filename != NULL){
-    			int s =killpg(j.gid,SIGCONT);//resume job
-    			if(s == 0){
-	    			j.status = JOB_RUNNING;
-    				sf_job_status(j.id,j.status);
-    				sf_cmd_ok();
-    			}
-    			else{
-    				sf_cmd_error("killpg return -1, resume failed");
-    			}
-    		}
-    		else{
-    			sf_cmd_error("job not found");
-    		}
+    		if(pos < MAX_JOBS && pos >=0){
+	    		if(j.filename != NULL){
+	    			int s =killpg(j.gid,SIGCONT);//resume job
+	    			if(s == 0){
+		    			j.status = JOB_RUNNING;
+	    				sf_job_status(j.id,j.status);
+	    				sf_cmd_ok();
+	    			}
+	    		}
+	    		else{
+	    			sf_cmd_error("job not found");
+	    		}
+	    	}
+	    	else{
+	    		sf_cmd_error("invalid job number");
+	    	}
     	}
     	else if(strcmp(cmd,"disable") == 0){
     		cmd = strtok(NULL," ");
@@ -436,10 +439,7 @@ int run_cli(FILE *in, FILE *out)
     			if(mpid[sid] == flag){//job found
     				jobarray[i].status = schan;
     				char *status;
-    				if(jobarray[i].status == JOB_CREATED){
-    					status = "JOB_CREATED";
-    				}
-    				else if(jobarray[i].status == JOB_RUNNING){
+					if(jobarray[i].status == JOB_RUNNING){
     					status = "JOB_RUNNING";
     				}
     				else if(jobarray[i].status == JOB_PAUSED){
@@ -447,20 +447,18 @@ int run_cli(FILE *in, FILE *out)
     				}
     				else if(jobarray[i].status == JOB_FINISHED){
     					status = "JOB_FINISHED";
+    					sf_job_finished(jobarray[i].id,jobarray[i].status);
     				}
     				else if(jobarray[i].status == JOB_ABORTED){
     					status = "JOB_ABORTED";
-    				}
-    				else{
-    					status = "JOB_DELETED";
+    					sf_job_aborted(jobarray[i].id,jobarray[i].status);
     				}
 	    			printf("%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
-    				if(jobarray[i].status == JOB_ABORTED){
-    					sf_cmd_error("job aborted error");
+    				if(jobarray[i].status == JOB_ABORTED || jobarray[i].status == JOB_FINISHED){
+    					sf_job_deleted(jobarray[i].id);
+    					jobarray[i].filename = NULL;
     				}
-    				else{
-    					sf_cmd_ok();
-    				}
+					sf_cmd_ok();
     			}
     		}
     		flag = -5;
@@ -498,6 +496,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 	int initfild = open(filen, O_RDONLY);
 	int empfiled = open("empty.txt", O_RDWR);
 	dup2(initfild,0);//change stdin of first process to be the file to be printed
+
+
 	pid_t pid = fork();//master process
 	if(path == NULL && pid == 0){//no conversion needed
 		j.status = JOB_RUNNING;
@@ -512,21 +512,17 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 			j.gid = mpidcount;
 			mpidcount++;
 
-			pid_t cp = fork();
+			pid_t cp = fork();//child of master process
 			if(cp == 0){
 				char *cmd = "/bin/cat";
-				char *argv[0];
+				char *argv[99];
+				strcpy(*argv,j.filename);
 				dup2(filed,1);//change stdout of last process
-				int err= execvp(cmd,argv);
-				if(err == -1){
-					sf_cmd_error("execvp return -1 error");
-				}
-				else{
-					printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
-					sf_cmd_ok();
-				}
+				execvp(cmd,argv);
+				printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
+				sf_cmd_ok();
 			}
-			else{//waitpid
+			else{//waitpid to kill child of master process
 				int chils;
 				waitpid(cp,&chils,0);
 				if(WIFSIGNALED(chils)){//terminated by signal
@@ -537,18 +533,6 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 					if(s != 0){//Exit status is nonzero
 						exitnum = -1;
 					}
-				}
-				if(exitnum == -1){//set job to aborted state
-					j.status = JOB_ABORTED;
-					sf_cmd_error("error");
-					j.filename = NULL;
-    				jobcount--;
-				}
-				else{
-					j.status =JOB_FINISHED;
-					sf_cmd_ok();
-					j.filename = NULL;
-    				jobcount--;
 				}
 			}
 		}
@@ -638,19 +622,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 			}
 		}
 	}
+	p.status = PRINTER_IDLE;
+	sf_printer_status(p.name,p.status);
 	return exitnum;
 }
-/*
-printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
-if(exitnum == -1){//set job to aborted state
-	j.status = JOB_ABORTED;
-	sf_cmd_error("error");
-	j.filename = NULL;
-	jobcount--;
-}
-else{
-	j.status =JOB_FINISHED;
-	sf_cmd_ok();
-	j.filename = NULL;
-	jobcount--;
-}*/
