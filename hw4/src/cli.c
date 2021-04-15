@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "imprimer.h"
 #include "conversions.h"
@@ -54,12 +55,33 @@ PRINTER define_printer(char *name, FILE_TYPE type){
 
 int processprint(CONVERSION **path,PRINTER p,JOB j);
 
+volatile sig_atomic_t flag = -5;//process id will be stored
+volatile JOB_STATUS schan = -5;//job status will be stored
+
+void sighandler(){
+	int chils;
+	flag = waitpid(-1,&chils,0);
+	if(WIFEXITED(chils)){//exit normally
+		schan = JOB_FINISHED;
+	}
+	else{//crash
+		schan =JOB_ABORTED;
+	}
+	if(WIFCONTINUED(chils)){//process continued
+		schan = JOB_RUNNING;
+	}
+	if(WIFSTOPPED(chils)){//process stopped
+		schan = JOB_PAUSED;
+	}
+}
+
 int run_cli(FILE *in, FILE *out)
 {
     // TO BE IMPLEMENTED
     if(out != stdout){
     	;
     }
+    signal(SIGCHLD,sighandler);
     size_t size = 999;
     char *linebuf = malloc(size);
     char *red = malloc(size);
@@ -279,6 +301,8 @@ int run_cli(FILE *in, FILE *out)
     					j.status = JOB_DELETED;
 	    				sf_job_status(j.id,j.status);
 	    				sf_cmd_ok();
+	    				jobarray[pos].filename = NULL;
+	    				jobcount--;
 	    			}
 	    			else{
 	    				sf_cmd_error("killpg return -1, cancel failed");
@@ -291,6 +315,8 @@ int run_cli(FILE *in, FILE *out)
 	    				j.status = JOB_DELETED;
 	    				sf_job_status(j.id,j.status);
 	    				sf_cmd_ok();
+	    				jobarray[pos].filename = NULL;
+	    				jobcount--;
 	    			}
 	    			else{
 	    				sf_cmd_error("killpg return -1, cancel failed");
@@ -391,6 +417,7 @@ int run_cli(FILE *in, FILE *out)
 		    							enter = -1;
 		    							j = MAX_JOBS;//exit loop
 	    								i = MAX_PRINTERS;//exit loop
+
 		    						}
 	    						}
 	    					}
@@ -402,6 +429,42 @@ int run_cli(FILE *in, FILE *out)
     			printf("%s%i%s%s%s%s%s\n", "Printer: id=",parray[pos].id," name=",parray[pos].name," type=", parray[pos].type.name ," Status=idle");
     			sf_cmd_ok();
     		}
+    	}
+    	if(flag != -5){//flag got changed
+    		for(int i =0;i<MAX_JOBS;i++){
+    			int sid =jobarray[i].gid;
+    			if(mpid[sid] == flag){//job found
+    				jobarray[i].status = schan;
+    				char *status;
+    				if(jobarray[i].status == JOB_CREATED){
+    					status = "JOB_CREATED";
+    				}
+    				else if(jobarray[i].status == JOB_RUNNING){
+    					status = "JOB_RUNNING";
+    				}
+    				else if(jobarray[i].status == JOB_PAUSED){
+    					status = "JOB_PAUSED";
+    				}
+    				else if(jobarray[i].status == JOB_FINISHED){
+    					status = "JOB_FINISHED";
+    				}
+    				else if(jobarray[i].status == JOB_ABORTED){
+    					status = "JOB_ABORTED";
+    				}
+    				else{
+    					status = "JOB_DELETED";
+    				}
+	    			printf("%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
+    				if(jobarray[i].status == JOB_ABORTED){
+    					sf_cmd_error("job aborted error");
+    				}
+    				else{
+    					sf_cmd_ok();
+    				}
+    			}
+    		}
+    		flag = -5;
+    		schan = -5;
     	}
     	//get next command
     	if(in == stdin){
@@ -435,8 +498,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 	int initfild = open(filen, O_RDONLY);
 	int empfiled = open("empty.txt", O_RDWR);
 	dup2(initfild,0);//change stdin of first process to be the file to be printed
-	if(path == NULL){//no conversion needed
-		pid_t pid = fork();//master process
+	pid_t pid = fork();//master process
+	if(path == NULL && pid == 0){//no conversion needed
 		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
@@ -477,15 +540,20 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 				}
 				if(exitnum == -1){//set job to aborted state
 					j.status = JOB_ABORTED;
+					sf_cmd_error("error");
+					j.filename = NULL;
+    				jobcount--;
 				}
 				else{
 					j.status =JOB_FINISHED;
+					sf_cmd_ok();
+					j.filename = NULL;
+    				jobcount--;
 				}
 			}
 		}
 	}
 	else{//conversion pipeline happens here
-		pid_t pid = fork();//master process
 		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		p.status = PRINTER_BUSY;
@@ -551,7 +619,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 					}
 					cc++;
 				}
-				else{//master process use waitpid here
+				else{//master process use waitpid here to reap child process
 					for(int i=0;i<cc;i++){
 						int chils;
 						waitpid(cpid[i],&chils,0);
@@ -565,33 +633,24 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 							}
 						}
 					}
-					printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
-					if(exitnum == -1){//set job to aborted state
-						j.status = JOB_ABORTED;
-						sf_cmd_error("error");
-					}
-					else{
-						j.status =JOB_FINISHED;
-						sf_cmd_ok();
-					}
-
 					free(cpidadr);
-				}
-			}
-		}
-		else{//parent do waitpid to reap the master process
-			int chils;
-			waitpid(pid,&chils,0);
-			if(WIFSIGNALED(chils)){//terminated by signal
-				exitnum = -1;
-			}
-			if(WIFEXITED(chils)){
-				int s = WEXITSTATUS(chils);
-				if(s != 0){//Exit status is nonzero
-					exitnum = -1;
 				}
 			}
 		}
 	}
 	return exitnum;
 }
+/*
+printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
+if(exitnum == -1){//set job to aborted state
+	j.status = JOB_ABORTED;
+	sf_cmd_error("error");
+	j.filename = NULL;
+	jobcount--;
+}
+else{
+	j.status =JOB_FINISHED;
+	sf_cmd_ok();
+	j.filename = NULL;
+	jobcount--;
+}*/
