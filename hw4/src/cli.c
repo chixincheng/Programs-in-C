@@ -53,7 +53,7 @@ PRINTER define_printer(char *name, FILE_TYPE type){
 	return parray[id-1];
 }
 
-int processprint(CONVERSION **path,PRINTER p,JOB j);
+int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out);
 
 volatile sig_atomic_t flag = -5;//process id will be stored
 volatile JOB_STATUS schan = -5;//job status will be stored
@@ -130,11 +130,11 @@ int run_cli(FILE *in, FILE *out)
     		if(find_type(cmd) != NULL){//type exist
     			PRINTER p = define_printer(name,*find_type(cmd));
     			sf_printer_defined(name,cmd);
-    			printf("%s%i%s%s%s%s%s\n", "Printer: id=",p.id," name=",name," type=",cmd," Status=disable");
+    			fprintf(out,"%s%i%s%s%s%s%s\n", "Printer: id=",p.id," name=",name," type=",cmd," Status=disable");
     			sf_cmd_ok();
     		}
     		else{//type do not exist
-    			printf("%s%s\n", "Unknown file type :",cmd);
+    			fprintf(out,"%s%s\n", "Unknown file type :",cmd);
     			sf_cmd_error("printer");
     		}
     	}
@@ -166,12 +166,12 @@ int run_cli(FILE *in, FILE *out)
     				}
     			}
     			else{//type dont exist
-    				printf("%s%s\n", "Undeclared type:",cmd);
+    				fprintf(out,"%s%s\n", "Undeclared type:",cmd);
     				sf_cmd_error("type do not exist error");
     			}
     		}
     		else{//type dont exist
-    			printf("%s%s\n", "Undeclared type:",cmd);
+    			fprintf(out,"%s%s\n", "Undeclared type:",cmd);
     			sf_cmd_error("type do not exist error");
     		}
     	}
@@ -189,7 +189,7 @@ int run_cli(FILE *in, FILE *out)
     			else{
     				sta="busy";
     			}
-    			printf("%s%i%s%s%s%s%s%s\n", "Printer: id=",parray[count].id," name=",parray[count].name," type=", parray[count].type.name ," Status=", sta);
+    			fprintf(out,"%s%i%s%s%s%s%s%s\n", "Printer: id=",parray[count].id," name=",parray[count].name," type=", parray[count].type.name ," Status=", sta);
     			count++;
     		}
     		sf_cmd_ok();
@@ -216,7 +216,7 @@ int run_cli(FILE *in, FILE *out)
     				else{
     					status = "JOB_DELETED";
     				}
-	    			printf("%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
+	    			fprintf(out,"%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
 	    		}
     		}
     		sf_cmd_ok();
@@ -253,13 +253,13 @@ int run_cli(FILE *in, FILE *out)
 	    		sf_cmd_error("Max JOB REACHED");
 	    	}
 	    	sf_job_created(creaj.id,creaj.filename,creaj.type.name);
-	    	if(creaj.eligi == NULL){//all printer can be used
+	    	if(*creaj.eligi == 0x0){//all printer can be used
 	    		for(int i=0;i<MAX_PRINTERS;i++){
 	    			if(parray[i].status == PRINTER_IDLE){
 	    				CONVERSION **path = find_conversion_path(creaj.type.name,parray[i].type.name);
 	    				//if a path exist or two type is the same and no conversion needed
 						if(path != NULL || creaj.type.name == parray[i].type.name){
-							processprint(path,parray[i],creaj);
+							processprint(path,parray[i],creaj,out);
 							i = MAX_PRINTERS;//exit the loop
 						}
 	    			}
@@ -281,7 +281,7 @@ int run_cli(FILE *in, FILE *out)
 							CONVERSION **path = find_conversion_path(creaj.type.name,parray[i].type.name);
     						//if a path exist or two type is the same and no conversion needed
     						if(path != NULL || creaj.type.name == parray[i].type.name){
-    							processprint(path,parray[i],creaj);
+    							processprint(path,parray[i],creaj,out);
     							i = MAX_PRINTERS;//exit the loop
     						}
 						}
@@ -392,11 +392,11 @@ int run_cli(FILE *in, FILE *out)
     				//scan through jobarray,find any job waiting for this printer
     				for(int j =0;j<MAX_JOBS;j++){
     					if(jobarray[j].filename != 0x0){
-    						if(jobarray[j].eligi == NULL){//no eliglible printer, any printer can be use
+    						if(*jobarray[j].eligi == 0x0){//no eliglible printer, any printer can be use
 	    						CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
 	    						//if a path exist or two type is the same and no conversion needed
 	    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
-	    							processprint(path,parray[i],jobarray[j]);
+	    							processprint(path,parray[i],jobarray[j],out);
 	    							enter = -1;
 	    							j = MAX_JOBS;//exit loop
 	    							i = MAX_PRINTERS;//exit loop
@@ -416,7 +416,7 @@ int run_cli(FILE *in, FILE *out)
 	    							CONVERSION **path = find_conversion_path(jobarray[j].type.name,parray[i].type.name);
 		    						//if a path exist or two type is the same and no conversion needed
 		    						if(path != NULL || jobarray[j].type.name == parray[i].type.name){
-		    							processprint(path,parray[i],jobarray[j]);
+		    							processprint(path,parray[i],jobarray[j],out);
 		    							enter = -1;
 		    							j = MAX_JOBS;//exit loop
 	    								i = MAX_PRINTERS;//exit loop
@@ -429,7 +429,7 @@ int run_cli(FILE *in, FILE *out)
     			}
     		}
     		if(enter == 0){//if did not enter pipeline
-    			printf("%s%i%s%s%s%s%s\n", "Printer: id=",parray[pos].id," name=",parray[pos].name," type=", parray[pos].type.name ," Status=idle");
+    			fprintf(out,"%s%i%s%s%s%s%s\n", "Printer: id=",parray[pos].id," name=",parray[pos].name," type=", parray[pos].type.name ," Status=idle");
     			sf_cmd_ok();
     		}
     	}
@@ -453,7 +453,7 @@ int run_cli(FILE *in, FILE *out)
     					status = "JOB_ABORTED";
     					sf_job_aborted(jobarray[i].id,jobarray[i].status);
     				}
-	    			printf("%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
+	    			fprintf(out,"%s%i%s%s%s%s%s%s\n", "JOB[",jobarray[i].id,"] :type=",jobarray[i].type.name," filename=",jobarray[i].filename," status=",status);
     				if(jobarray[i].status == JOB_ABORTED || jobarray[i].status == JOB_FINISHED){
     					sf_job_deleted(jobarray[i].id);
     					jobarray[i].filename = NULL;
@@ -490,7 +490,7 @@ int run_cli(FILE *in, FILE *out)
     free(red);
     return 1;
 }
-int processprint(CONVERSION **path,PRINTER p,JOB j){
+int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	int exitnum = 0;//change to -1 with failed operation
 	char *filen = j.filename;
 	int initfild = open(filen, O_RDONLY);
@@ -519,7 +519,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 				strcpy(*argv,j.filename);
 				dup2(filed,1);//change stdout of last process
 				execvp(cmd,argv);
-				printf("%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
+				fprintf(out,"%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
 				sf_cmd_ok();
 			}
 			else{//waitpid to kill child of master process
@@ -617,9 +617,9 @@ int processprint(CONVERSION **path,PRINTER p,JOB j){
 							}
 						}
 					}
-					free(cpidadr);
 				}
 			}
+			free(cpidadr);
 		}
 	}
 	p.status = PRINTER_IDLE;
