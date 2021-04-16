@@ -310,9 +310,10 @@ int run_cli(FILE *in, FILE *out)
     		while(cmd != NULL){
     			int s = 0;
     			for(int i=0;i<MAX_PRINTERS;i++){
-    				if(parray[i].name == cmd){
+    				if(strcmp(parray[i].name,cmd) == 0){
     					*((creaj.eligi)+printernum) = cmd;//store the eligible printer to a list
     					s = -1;
+    					i = MAX_PRINTERS;
     				}
     			}
     			if(s == 0){
@@ -554,37 +555,36 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	char *filen = j.filename;
 	int initfild = open(filen, O_RDONLY);
 	int empfiled = open("empty.txt", O_RDWR);
-	dup2(initfild,0);//change stdin of first process to be the file to be printed
-
-
+	dup2(initfild,STDIN_FILENO);//change stdin of first process to be the file to be printed
 	pid_t pid = fork();//master process
-	if(path == NULL && pid == 0){//no conversion needed,master process enter
+	if(*path == NULL && pid == 0){//no conversion needed,master process enter
 		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
 		if(pid == 0){
-			setpgid(pid,pid);//set pgid to be pid
-			mpid[mpidcount] = pid;//store the pipeline process id into array
+			setpgid(getpid(),getpid());//set pgid to be pid
+			mpid[mpidcount] = getpid();//store the pipeline process id into array
 			j.gid = mpidcount;
 			mpidcount++;
 
 			pid_t cp = fork();//child of master process
-			if(cp == pid){
+			if(cp == 0){
 				char *cmd = "/bin/cat";
 				char *argv[2] ={"/bin/cat",NULL};
-				sf_job_started(cp,p.name,pid,(char**)path);
+				sf_job_started(cp,p.name,getpid(),(char**)path);
 				int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
-				dup2(filed,1);//change stdout of last process
+				dup2(initfild,STDIN_FILENO);
+				dup2(filed,STDOUT_FILENO);//change stdout of last process
 				execvp(cmd,argv);
 				fprintf(out,"%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
-				fflush(out);
-				fclose(out);
+				close(initfild);
+				close(filed);
 				sf_cmd_ok();
 			}
 			else{//waitpid to kill child of master process
 				int chils;
-				waitpid(cp,&chils,0);
+				int e = waitpid(cp,&chils,0);
 				if(WIFSIGNALED(chils)){//terminated by signal
 					exitnum = -1;
 				}
@@ -594,6 +594,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						exitnum = -1;
 					}
 				}
+				exit(e);
 			}
 		}
 	}
