@@ -505,7 +505,6 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 		int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
-		sf_job_started(j.id,p.name,pid,(char**)path);
 		if(pid == 0){
 			setpgid(pid,pid);//set pgid to be pid
 			mpid[mpidcount] = pid;//store the pipeline process id into array
@@ -513,9 +512,10 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			mpidcount++;
 
 			pid_t cp = fork();//child of master process
-			if(cp == 0){
+			if(cp == pid){
 				char *cmd = "/bin/cat";
 				char *argv[2] ={"/bin/cat",NULL};
+				sf_job_started(cp,p.name,pid,(char**)path);
 				dup2(filed,1);//change stdout of last process
 				execvp(cmd,argv);
 				fprintf(out,"%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
