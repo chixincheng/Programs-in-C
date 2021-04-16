@@ -588,23 +588,24 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 					}
 					cc++;
 				}
-				else{//master process use waitpid here to reap child process
-					for(int i=0;i<cc;i++){
-						int chils;
-						waitpid(cpid[i],&chils,0);
-						if(WIFSIGNALED(chils)){//terminated by signal
+			}
+			//master process use waitpid here to reap child process
+			if(pid == 0){
+				for(int i=0;i<cc;i++){
+					int chils;
+					waitpid(cpid[i],&chils,0);
+					if(WIFSIGNALED(chils)){//terminated by signal
+						exitnum = -1;
+					}
+					if(WIFEXITED(chils)){
+						int s = WEXITSTATUS(chils);
+						if(s != 0){//Exit status is nonzero
 							exitnum = -1;
-						}
-						if(WIFEXITED(chils)){
-							int s = WEXITSTATUS(chils);
-							if(s != 0){//Exit status is nonzero
-								exitnum = -1;
-							}
 						}
 					}
 				}
+				free(cpidadr);
 			}
-			free(cpidadr);
 		}
 	}
 	p.status = PRINTER_IDLE;
