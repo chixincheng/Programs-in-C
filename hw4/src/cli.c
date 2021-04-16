@@ -499,7 +499,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 
 
 	pid_t pid = fork();//master process
-	if(path == NULL && pid == 0){//no conversion needed
+	if(path == NULL && pid == 0){//no conversion needed,master process enter
 		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
@@ -515,8 +515,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			pid_t cp = fork();//child of master process
 			if(cp == 0){
 				char *cmd = "/bin/cat";
-				char *argv[99];
-				strcpy(*argv,j.filename);
+				char *argv[2] ={"/bin/cat",NULL};
 				dup2(filed,1);//change stdout of last process
 				execvp(cmd,argv);
 				fprintf(out,"%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
@@ -537,13 +536,13 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			}
 		}
 	}
-	else{//conversion pipeline happens here
+	else if(pid == 0){//conversion pipeline happens here, master process enter
 		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
 		sf_job_started(j.id,p.name,pid,(char**)path);
-		if(pid == 0){//master process
+		if(pid == 0){//master process enter
 			setpgid(pid,pid);//set pgid to be pid
 			mpid[mpidcount] = pid;//store the pipeline process id into array
 			j.gid = mpidcount;
@@ -555,25 +554,18 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 
 			int pathcount = 0;
 			while(*(*(path+pathcount))->cmd_and_args != 0x0){//while exist more conversion
-				cpid[cc] =fork();
+				cpid[cc] = fork();//child of master process
 
-				if(cpid[cc] ==0){
+				if(cpid[cc] == 0){
 					pathcount++;
 					if(*(*(path+pathcount))->cmd_and_args != 0x0){//not last process
 						char *scmd = *(*(path+pathcount))->cmd_and_args;
-						char *cmd = malloc(999);
-						strcpy(cmd,scmd);//make a copy of command, store to cmd
-						char *argm = strtok(cmd," ");//first arg for execvp
-						char *ptr = malloc(999);
-						char *argv[99];
-						int count =0;
-						while(cmd != NULL){
-							argv[count] = strtok(NULL," ");
-							count++;
-						}
+						char *temp = malloc(999);
+						strcpy(temp,scmd);
+						char *argm = strtok(temp," ");//first arg for execvp
+						char *argv[3] = {argm,(*(path+pathcount))->from->name,(*(path+pathcount))->to->name};
 						execvp(argm,argv);
-						free(ptr);
-						free(cmd);
+						free(temp);
 						if(STDOUT_FILENO == 1){
 							dup2(STDOUT_FILENO,STDIN_FILENO);//stdout become next stdin
 							dup2(empfiled,STDOUT_FILENO);//file descriptor 3 become next stdout
@@ -585,21 +577,14 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 					}
 					else{//last process
 						char *scmd = *(*(path+pathcount))->cmd_and_args;
-						char *cmd = malloc(999);
-						strcpy(cmd,scmd);//make a copy of command, store to cmd
-						char *argm = strtok(cmd," ");//first arg for execvp
-						char *ptr = malloc(999);
-						char *argv[99];
-						int count =0;
-						while(cmd != NULL){
-							argv[count] = strtok(NULL," ");
-							count++;
-						}
+						char *temp = malloc(999);
+						strcpy(temp,scmd);
+						char *argm = strtok(temp," ");//first arg for execvp
 						int fild = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
 						dup2(fild,1);//change stdout of last process
+						char *argv[3] = {argm,(*(path+pathcount))->from->name,(*(path+pathcount))->to->name};
 						execvp(argm,argv);
-						free(ptr);
-						free(cmd);
+						free(temp);
 					}
 					cc++;
 				}
