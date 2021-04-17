@@ -397,15 +397,24 @@ int run_cli(FILE *in, FILE *out)
 		    			}
 		    		}
 		    		else{//job is paused
-		    			s = killpg(j.gid,SIGTERM);
-		    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
-		    			if(s == 0 && r == 0){
-		    				j.status = JOB_DELETED;
-		    				sf_job_status(j.id,j.status);
-		    				sf_cmd_ok();
-		    				jobarray[pos].filename = NULL;
-		    				jobcount--;
-		    			}
+		    			if(j.gid >= 0){
+			    			s = killpg(j.gid,SIGTERM);
+			    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
+			    			if(s == 0 && r == 0){
+			    				j.status = JOB_DELETED;
+			    				sf_job_status(j.id,j.status);
+			    				sf_cmd_ok();
+			    				jobarray[pos].filename = NULL;
+			    				jobcount--;
+			    			}
+			    		}
+			    		else{
+			    			j.status = JOB_ABORTED;
+			    			sf_job_status(j.id,j.status);
+			    			j.filename = NULL;
+			    			jobcount--;
+			    			sf_cmd_ok();
+			    		}
 		    		}
 	    		}
 	    		else{
@@ -422,12 +431,17 @@ int run_cli(FILE *in, FILE *out)
     		JOB j = jobarray[pos];
     		if(pos < MAX_JOBS && pos >=0){
 	    		if(j.filename != NULL){
-	    			int s =killpg(j.gid,SIGSTOP);//pause job
-	    			if(s == 0){
-	    				j.status = JOB_PAUSED;
-	    				sf_job_status(j.id,j.status);
-	    				sf_cmd_ok();
-	    			}
+	    			if(j.gid >= 0){
+		    			int s =killpg(j.gid,SIGSTOP);//pause job
+		    			if(s == 0){
+		    				j.status = JOB_PAUSED;
+		    				sf_job_status(j.id,j.status);
+		    				sf_cmd_ok();
+		    			}
+		    		}
+		    		else{
+		    			sf_cmd_error("pause error");
+		    		}
 	    		}
 	    		else{
 	    			sf_cmd_error("job not found");
@@ -443,12 +457,17 @@ int run_cli(FILE *in, FILE *out)
     		JOB j = jobarray[pos];
     		if(pos < MAX_JOBS && pos >=0){
 	    		if(j.filename != NULL){
-	    			int s =killpg(j.gid,SIGCONT);//resume job
-	    			if(s == 0){
-		    			j.status = JOB_RUNNING;
-	    				sf_job_status(j.id,j.status);
-	    				sf_cmd_ok();
-	    			}
+	    			if(j.gid >= 0){
+		    			int s =killpg(j.gid,SIGCONT);//resume job
+		    			if(s == 0){
+			    			j.status = JOB_RUNNING;
+		    				sf_job_status(j.id,j.status);
+		    				sf_cmd_ok();
+		    			}
+		    		}
+		    		else{
+		    			sf_cmd_error("resume error");
+		    		}
 	    		}
 	    		else{
 	    			sf_cmd_error("job not found");
