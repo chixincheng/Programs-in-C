@@ -163,14 +163,16 @@ int run_cli(FILE *in, FILE *out)
     char *red = malloc(size);
     char *s = red;
     char *cmd;
-    size_t character = 0;
-    if(in != STDIN_FILENO){//in batch mode
-    	character = getline(&linebuf,&size,in);
-    	strcpy(red,linebuf);
-    }
-
     char *prom = "imp>";
-    if(character == -1 || character == 0){//not in batch mode
+
+    fseek(in,0,SEEK_END);
+    int fe = ftell(in);
+    if(fe > 0){
+    	rewind(in);
+	    getline(&linebuf,&size,in);
+		strcpy(red,linebuf);
+    }
+    else{//use sfreadline
     	red = sf_readline(prom);
     	if(red <= 0){
     		return -1;//invalid file
@@ -182,7 +184,8 @@ int run_cli(FILE *in, FILE *out)
         if((in == NULL || in == stdin) && *red == EOF){
     		return -1;
     	}
-	}
+    }
+
 	int le = strlen(red);
 	if(strcmp(&red[le-1],"\n")== 0 ){
 		red[le-1] = '\0';
@@ -394,15 +397,24 @@ int run_cli(FILE *in, FILE *out)
 		    			}
 		    		}
 		    		else{//job is paused
-		    			s = killpg(j.gid,SIGTERM);
-		    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
-		    			if(s == 0 && r == 0){
-		    				j.status = JOB_DELETED;
-		    				sf_job_status(j.id,j.status);
-		    				sf_cmd_ok();
-		    				jobarray[pos].filename = NULL;
-		    				jobcount--;
-		    			}
+		    			if(j.gid >= 0){
+			    			s = killpg(j.gid,SIGTERM);
+			    			int r = killpg(j.gid,SIGCONT);//allow process to continue and respond to SIGTERM
+			    			if(s == 0 && r == 0){
+			    				j.status = JOB_DELETED;
+			    				sf_job_status(j.id,j.status);
+			    				sf_cmd_ok();
+			    				jobarray[pos].filename = NULL;
+			    				jobcount--;
+			    			}
+			    		}
+			    		else{
+			    			j.status = JOB_ABORTED;
+			    			sf_job_status(j.id,j.status);
+			    			j.filename = NULL;
+			    			jobcount--;
+			    			sf_cmd_ok();
+			    		}
 		    		}
 	    		}
 	    		else{
@@ -419,12 +431,17 @@ int run_cli(FILE *in, FILE *out)
     		JOB j = jobarray[pos];
     		if(pos < MAX_JOBS && pos >=0){
 	    		if(j.filename != NULL){
-	    			int s =killpg(j.gid,SIGSTOP);//pause job
-	    			if(s == 0){
-	    				j.status = JOB_PAUSED;
-	    				sf_job_status(j.id,j.status);
-	    				sf_cmd_ok();
-	    			}
+	    			if(j.gid >= 0){
+		    			int s =killpg(j.gid,SIGSTOP);//pause job
+		    			if(s == 0){
+		    				j.status = JOB_PAUSED;
+		    				sf_job_status(j.id,j.status);
+		    				sf_cmd_ok();
+		    			}
+		    		}
+		    		else{
+		    			sf_cmd_error("pause error");
+		    		}
 	    		}
 	    		else{
 	    			sf_cmd_error("job not found");
@@ -440,12 +457,17 @@ int run_cli(FILE *in, FILE *out)
     		JOB j = jobarray[pos];
     		if(pos < MAX_JOBS && pos >=0){
 	    		if(j.filename != NULL){
-	    			int s =killpg(j.gid,SIGCONT);//resume job
-	    			if(s == 0){
-		    			j.status = JOB_RUNNING;
-	    				sf_job_status(j.id,j.status);
-	    				sf_cmd_ok();
-	    			}
+	    			if(j.gid >= 0){
+		    			int s =killpg(j.gid,SIGCONT);//resume job
+		    			if(s == 0){
+			    			j.status = JOB_RUNNING;
+		    				sf_job_status(j.id,j.status);
+		    				sf_cmd_ok();
+		    			}
+		    		}
+		    		else{
+		    			sf_cmd_error("resume error");
+		    		}
 	    		}
 	    		else{
 	    			sf_cmd_error("job not found");
@@ -522,16 +544,16 @@ int run_cli(FILE *in, FILE *out)
     		}
     	}
     	//get next command
-    	if(in == STDIN_FILENO){
+    	if(fe > 0){
+	    	red = red+le;
+	    	getline(&linebuf,&size,in);
+	    	strcpy(red,linebuf);
+	    }
+	    else{
 	    	red = sf_readline(prom);
 	    	while(strcmp(red,"") == 0){
 	    		red = sf_readline(prom);
 	    	}
-	    }
-	    else{
-	    	red = red+le;
-	    	getline(&linebuf,&size,in);
-	    	strcpy(red,linebuf);
 	    }
 	    le = strlen(red);
     	if(strcmp(&red[le-1],"\n")== 0 ){
@@ -553,9 +575,9 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 		sf_cmd_error("Unable to open file");
 		return -1;
 	}
+	j.status = JOB_RUNNING;
 	pid_t pid = fork();//master process
 	if(*path == NULL && pid == 0){//no conversion needed,master process enter
-		j.status = JOB_RUNNING;
 		sf_job_status(j.id,j.status);
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
@@ -565,8 +587,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			j.gid = mpidcount;
 			mpidcount++;
 
-			pid_t cp = fork();//child of master process
-			if(cp == 0){
+			pid_t cp;//child of master process
+			if( (cp=fork()) == 0){
 				char *argv[2];
 				argv[0] = "/bin/cat";
 				argv[1] = NULL;
@@ -617,8 +639,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			int enter = 0;
 			while(*(path+pathcount) != 0x0){//while exist more conversion
 				pathcount++;
-				cpid[cc] = fork();//child of master process
-				if(cpid[cc] == 0){
+				if( (cpid[cc] = fork()) == 0){
 					if(*(path+pathcount) != 0x0){//not last process
 						char *scmd = *(*(path+pathcount-1))->cmd_and_args;
 						char *argv[3];
@@ -657,24 +678,38 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						sf_job_started(cpid[cc],p.name,getpid(),(*(path+pathcount-1))->cmd_and_args);
 						execvp(scmd,argv);
 					}
+				}
+				else{
 					cc++;
-				}
-			}
-			//master process use waitpid here to reap child process
-			for(int i=0;i<cc;i++){
-				int chils;
-				waitpid(cpid[i],&chils,0);
-				if(WIFSIGNALED(chils)){//terminated by signal
-					exitnum = -1;
-				}
-				if(WIFEXITED(chils)){
-					int s = WEXITSTATUS(chils);
-					if(s != 0){//Exit status is nonzero
-						exitnum = -1;
+					//master process use waitpid here to reap child process
+					for(int i=0;i<cc;i++){
+						int chils;
+						waitpid(cpid[i],&chils,0);
+						if(WIFSIGNALED(chils)){//terminated by signal
+							exitnum = -1;
+						}
+						if(WIFEXITED(chils)){
+							int s = WEXITSTATUS(chils);
+							if(s != 0){//Exit status is nonzero
+								exitnum = -1;
+							}
+						}
 					}
 				}
 			}
 			free(cpidadr);
+		}
+		exit(0);
+	}
+	int chils;
+	waitpid(pid,&chils,0);
+	if(WIFSIGNALED(chils)){//terminated by signal
+		exitnum = -1;
+	}
+	if(WIFEXITED(chils)){
+		int s = WEXITSTATUS(chils);
+		if(s != 0){//Exit status is nonzero
+			exitnum = -1;
 		}
 	}
 	p.status = PRINTER_IDLE;
