@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <signal.h>
+#include <errno.h>
 
 #include "imprimer.h"
 #include "conversions.h"
@@ -202,19 +203,24 @@ int run_cli(FILE *in, FILE *out)
     		sf_cmd_ok();
     	}
     	else if(strcmp(cmd,"printer") == 0){
-    		cmd = strtok(NULL," ");
-    		char *name = cmd;//name
-    		cmd = strtok(NULL," ");//printer type
-    		if(find_type(cmd) != NULL){//type exist
-    			PRINTER p = define_printer(name,*find_type(cmd));
-    			sf_printer_defined(name,cmd);
-    			fprintf(out,"%s%i%s%s%s%s%s\n", "Printer: id=",p.id," name=",name," type=",cmd," Status=disable");
-    			sf_cmd_ok();
-    		}
-    		else{//type do not exist
-    			fprintf(out,"%s%s\n", "Unknown file type :",cmd);
-    			sf_cmd_error("printer");
-    		}
+    		if(id <= 31){
+	    		cmd = strtok(NULL," ");
+	    		char *name = cmd;//name
+	    		cmd = strtok(NULL," ");//printer type
+	    		if(find_type(cmd) != NULL){//type exist
+	    			PRINTER p = define_printer(name,*find_type(cmd));
+	    			sf_printer_defined(name,cmd);
+	    			fprintf(out,"%s%i%s%s%s%s%s\n", "Printer: id=",p.id," name=",name," type=",cmd," Status=disable");
+	    			sf_cmd_ok();
+	    		}
+	    		else{//type do not exist
+	    			fprintf(out,"%s%s\n", "Unknown file type :",cmd);
+	    			sf_cmd_error("printer");
+	    		}
+	    	}
+	    	else{
+	    		sf_cmd_error("Max printer reached");
+	    	}
     	}
     	else if(strcmp(cmd,"conversion") == 0){
     		cmd = strtok(NULL," ");//type from
@@ -546,8 +552,12 @@ int run_cli(FILE *in, FILE *out)
     	//get next command
     	if(fe > 0){
 	    	red = red+le;
-	    	getline(&linebuf,&size,in);
-	    	strcpy(red,linebuf);
+	    	if(getline(&linebuf,&size,in) != -1){
+    			strcpy(red,linebuf);
+	    	}
+	    	else{
+	    		red = "quit";
+	    	}
 	    }
 	    else{
 	    	red = sf_readline(prom);
@@ -556,7 +566,7 @@ int run_cli(FILE *in, FILE *out)
 	    	}
 	    }
 	    le = strlen(red);
-    	if(strcmp(&red[le-1],"\n")== 0 ){
+    	if(strcmp(&red[le-1],"\n") == 0 ){
 			red[le-1] = '\0';
     	}
 		cmd = strtok(red," ");
