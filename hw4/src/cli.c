@@ -15,8 +15,6 @@
 #include "conversions.h"
 #include "sf_readline.h"
 
-
-int first = 1;
 char *filetype;
 char *printername;
 
@@ -541,10 +539,6 @@ int run_cli(FILE *in, FILE *out)
     	}
 		cmd = strtok(red," ");
     }
-
-    if(first){//first time enter
-    	first = -1;
-    }
     free(linebuf);
     red = s;
     free(red);
@@ -553,7 +547,7 @@ int run_cli(FILE *in, FILE *out)
 int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	int exitnum = 0;//change to -1 with failed operation
 	char *filen = j.filename;
-	int filed;
+	int filed = 0;
 	int initfild = open(filen, O_RDONLY);
 	if(initfild == -1){
 		sf_cmd_error("Unable to open file");
@@ -581,12 +575,11 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 				dup2(initfild,STDIN_FILENO);
 				dup2(filed,STDOUT_FILENO);//change stdout of last process
 				execvp("/bin/cat",argv);
-				exit(0);
 				sf_cmd_ok();
 			}
 			else{//waitpid to kill child of master process
 				int chils;
-				int e = waitpid(cp,&chils,0);
+				waitpid(cp,&chils,0);
 				if(WIFSIGNALED(chils)){//terminated by signal
 					exitnum = -1;
 				}
@@ -596,7 +589,6 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						exitnum = -1;
 					}
 				}
-				exit(e);
 			}
 
 		}
@@ -606,7 +598,6 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 		sf_job_status(j.id,j.status);
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
-		sf_job_started(j.id,p.name,pid,(char**)path);
 		int piperw[2];
 		if(pipe(piperw) == -1){
 			sf_cmd_error("pipe failed");
@@ -625,16 +616,15 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			int pathcount = 0;
 			int enter = 0;
 			while(*(path+pathcount) != 0x0){//while exist more conversion
+				pathcount++;
 				cpid[cc] = fork();//child of master process
-
 				if(cpid[cc] == 0){
-					pathcount++;
 					if(*(path+pathcount) != 0x0){//not last process
-						char *scmd = *(*(path+pathcount))->cmd_and_args;
+						char *scmd = *(*(path+pathcount-1))->cmd_and_args;
 						char *argv[3];
 						argv[0] = scmd;
-						argv[1] = (*(*(path+pathcount))->from).name;
-						argv[2] = (*(*(path+pathcount))->to).name;
+						argv[1] = (*(*(path+pathcount-1))->from).name;
+						argv[2] = (*(*(path+pathcount-1))->to).name;
 						if(enter == 0){
 							dup2(initfild,STDIN_FILENO);
 							dup2(piperw[1],STDOUT_FILENO);
@@ -644,39 +634,47 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 							dup2(piperw[0],STDIN_FILENO);//stdout become next stdin
 							dup2(piperw[1],STDOUT_FILENO);
 						}
+						sf_job_started(j.id,p.name,pid,(*(path+pathcount-1))->cmd_and_args);
 						execvp(scmd,argv);
 					}
 					else{//last process
-						char *scmd = *(*(path+pathcount))->cmd_and_args;
+						char *scmd = *(*(path+pathcount-1))->cmd_and_args;
 						char *argv[3];
 						argv[0] = scmd;
-						argv[1] = (*(*(path+pathcount))->from).name;
-						argv[2] = (*(*(path+pathcount))->to).name;
+						argv[1] = (*(*(path+pathcount-1))->from).name;
+						argv[2] = (*(*(path+pathcount-1))->to).name;
 						filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
-						dup2(piperw[0],STDIN_FILENO);
+						if(filed == -1){
+							sf_cmd_error("derrdd");
+						}
+						if(enter == -1){
+							dup2(piperw[0],STDIN_FILENO);
+						}
+						else{
+							dup2(initfild,STDIN_FILENO);
+						}
 						dup2(filed,STDOUT_FILENO);//change stdout of last process
+						sf_job_started(cpid[cc],p.name,getpid(),(*(path+pathcount-1))->cmd_and_args);
 						execvp(scmd,argv);
 					}
 					cc++;
 				}
 			}
 			//master process use waitpid here to reap child process
-			if(pid == 0){
-				for(int i=0;i<cc;i++){
-					int chils;
-					waitpid(cpid[i],&chils,0);
-					if(WIFSIGNALED(chils)){//terminated by signal
+			for(int i=0;i<cc;i++){
+				int chils;
+				waitpid(cpid[i],&chils,0);
+				if(WIFSIGNALED(chils)){//terminated by signal
+					exitnum = -1;
+				}
+				if(WIFEXITED(chils)){
+					int s = WEXITSTATUS(chils);
+					if(s != 0){//Exit status is nonzero
 						exitnum = -1;
 					}
-					if(WIFEXITED(chils)){
-						int s = WEXITSTATUS(chils);
-						if(s != 0){//Exit status is nonzero
-							exitnum = -1;
-						}
-					}
 				}
-				free(cpidadr);
 			}
+			free(cpidadr);
 		}
 	}
 	p.status = PRINTER_IDLE;
