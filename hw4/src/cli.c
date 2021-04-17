@@ -559,7 +559,6 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 		sf_cmd_error("Unable to open file");
 		return -1;
 	}
-	dup2(initfild,STDIN_FILENO);//change stdin of first process to be the file to be printed
 	pid_t pid = fork();//master process
 	if(*path == NULL && pid == 0){//no conversion needed,master process enter
 		j.status = JOB_RUNNING;
@@ -625,16 +624,17 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 
 			int pathcount = 0;
 			int enter = 0;
-			while(*(*(path+pathcount))->cmd_and_args != 0x0){//while exist more conversion
+			while(*(path+pathcount) != 0x0){//while exist more conversion
 				cpid[cc] = fork();//child of master process
 
 				if(cpid[cc] == 0){
 					pathcount++;
-					if(*(*(path+pathcount))->cmd_and_args != 0x0){//not last process
+					if(*(path+pathcount) != 0x0){//not last process
 						char *scmd = *(*(path+pathcount))->cmd_and_args;
-						char *temp = malloc(999);
-						strcpy(temp,scmd);
-						char *argm = strtok(temp," ");//first arg for execvp
+						char *argv[3];
+						argv[0] = scmd;
+						argv[1] = (*(*(path+pathcount))->from).name;
+						argv[2] = (*(*(path+pathcount))->to).name;
 						if(enter == 0){
 							dup2(initfild,STDIN_FILENO);
 							dup2(piperw[1],STDOUT_FILENO);
@@ -644,18 +644,18 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 							dup2(piperw[0],STDIN_FILENO);//stdout become next stdin
 							dup2(piperw[1],STDOUT_FILENO);
 						}
-						execvp(argm,(*(path+pathcount))->cmd_and_args);
-						free(temp);
+						execvp(scmd,argv);
 					}
 					else{//last process
 						char *scmd = *(*(path+pathcount))->cmd_and_args;
-						char *temp = malloc(999);
-						strcpy(temp,scmd);
-						char *argm = strtok(temp," ");//first arg for execvp
+						char *argv[3];
+						argv[0] = scmd;
+						argv[1] = (*(*(path+pathcount))->from).name;
+						argv[2] = (*(*(path+pathcount))->to).name;
 						filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
+						dup2(piperw[0],STDIN_FILENO);
 						dup2(filed,STDOUT_FILENO);//change stdout of last process
-						execvp(argm,(*(path+pathcount))->cmd_and_args);
-						free(temp);
+						execvp(scmd,argv);
 					}
 					cc++;
 				}
