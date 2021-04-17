@@ -60,6 +60,7 @@ volatile JOB_STATUS schan = -5;//job status will be stored
 volatile int exitsign = 0;
 
 void sighandler(){
+	sf_cmd_error("enter");
 	int chils;
 	flag = waitpid(-1,&chils,0);
 	if(WIFEXITED(chils)){//exit normally
