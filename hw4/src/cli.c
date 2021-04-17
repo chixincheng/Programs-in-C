@@ -163,9 +163,10 @@ int run_cli(FILE *in, FILE *out)
     size_t size = 999;
     char *linebuf = malloc(size);
     char *red = malloc(size);
+    char *s = red;
     char *cmd;
     size_t character = 0;
-    if(in != stdin){//in batch mode
+    if(in != STDIN_FILENO){//in batch mode
     	character = getline(&linebuf,&size,in);
     	strcpy(red,linebuf);
     }
@@ -184,14 +185,12 @@ int run_cli(FILE *in, FILE *out)
     		return -1;
     	}
 	}
-	if(in == stdin){
-		cmd = strtok(red," ");
+	int le = strlen(red);
+	if(strcmp(&red[le-1],"\n")== 0 ){
+		red[le-1] = '\0';
 	}
-	else{
-		cmd = strtok(red,"\n");
-	}
+	cmd = strtok(red," ");
     while (strcmp(cmd,"quit") != 0){
-
     	if(strcmp(cmd,"help") == 0){
     		fprintf(out,"%s\n","The available commands are: \nhelp, quit, type(file_type), printer(printer_name, file_type)\nconversion(file_type1,file_type2,conversion_program[arg1 arg2...]), printers\njobs, print(file_name,[printer1,printer2,...]), cancel(job_number)\npause(job_number), resume(job_number), disable(job_number), enable(job_number)");
     		sf_cmd_ok();
@@ -325,8 +324,7 @@ int run_cli(FILE *in, FILE *out)
     		}
     		if(err == 0){//no error
 	    		char *token = creaj.filename;
-	    		strtok(token,".");
-	    		creaj.type.name = (strtok(NULL,""));//file type
+	    		creaj.type = *infer_file_type(token);//file type
 	    		creaj.status = JOB_CREATED;//status
 
 	    		if(jobcount<64){
@@ -467,6 +465,7 @@ int run_cli(FILE *in, FILE *out)
     			if(parray[i].name != NULL && strcmp(parray[i].name,dname) == 0){
     				parray[i].status = PRINTER_DISABLED;//disable printer
     				sf_printer_status(parray[i].name,parray[i].status);
+    				i =MAX_PRINTERS;
     			}
     		}
     	}
@@ -525,35 +524,40 @@ int run_cli(FILE *in, FILE *out)
     		}
     	}
     	//get next command
-    	if(in == stdin){
+    	if(in == STDIN_FILENO){
 	    	red = sf_readline(prom);
 	    	while(strcmp(red,"") == 0){
 	    		red = sf_readline(prom);
 	    	}
 	    }
 	    else{
+	    	red = red+le;
 	    	getline(&linebuf,&size,in);
 	    	strcpy(red,linebuf);
 	    }
-		if(in == stdin){
-			cmd = strtok(red," ");
-		}
-		else{
-			cmd = strtok(red,"\n");
-		}
+	    le = strlen(red);
+    	if(strcmp(&red[le-1],"\n")== 0 ){
+			red[le-1] = '\0';
+    	}
+		cmd = strtok(red," ");
     }
 
     if(first){//first time enter
     	first = -1;
     }
     free(linebuf);
+    red = s;
     free(red);
     return 1;
 }
 int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	int exitnum = 0;//change to -1 with failed operation
 	char *filen = j.filename;
+	int filed;
 	int initfild = open(filen, O_RDONLY);
+	if(initfild == -1){
+		sf_cmd_error("Unable to open file");
+	}
 	int empfiled = open("empty.txt", O_RDWR);
 	dup2(initfild,STDIN_FILENO);//change stdin of first process to be the file to be printed
 	pid_t pid = fork();//master process
@@ -570,16 +574,15 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 
 			pid_t cp = fork();//child of master process
 			if(cp == 0){
-				char *cmd = "/bin/cat";
-				char *argv[2] ={"/bin/cat",NULL};
+				char *argv[2];
+				argv[0] = "/bin/cat";
+				argv[1] = NULL;
 				sf_job_started(cp,p.name,getpid(),(char**)path);
-				int filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
+				filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
 				dup2(initfild,STDIN_FILENO);
 				dup2(filed,STDOUT_FILENO);//change stdout of last process
-				execvp(cmd,argv);
-				fprintf(out,"%s%i%s%s%s%s%s\n", "JOB[",j.id,"] :type=",j.type.name," filename=",j.filename," status=running");
-				close(initfild);
-				close(filed);
+				execvp("/bin/cat",argv);
+				exit(0);
 				sf_cmd_ok();
 			}
 			else{//waitpid to kill child of master process
@@ -596,6 +599,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 				}
 				exit(e);
 			}
+
 		}
 	}
 	else if(pid == 0){//conversion pipeline happens here, master process enter
@@ -642,8 +646,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						char *temp = malloc(999);
 						strcpy(temp,scmd);
 						char *argm = strtok(temp," ");//first arg for execvp
-						int fild = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
-						dup2(fild,1);//change stdout of last process
+						filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
+						dup2(filed,1);//change stdout of last process
 						char *argv[3] = {argm,(*(path+pathcount))->from->name,(*(path+pathcount))->to->name};
 						execvp(argm,argv);
 						free(temp);
@@ -672,5 +676,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	}
 	p.status = PRINTER_IDLE;
 	sf_printer_status(p.name,p.status);
+	close(filed);
+	close(initfild);
+	close(empfiled);
 	return exitnum;
 }
