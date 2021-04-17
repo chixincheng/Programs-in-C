@@ -634,7 +634,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 							dup2(piperw[0],STDIN_FILENO);//stdout become next stdin
 							dup2(piperw[1],STDOUT_FILENO);
 						}
-						sf_job_started(j.id,p.name,pid,(*(path+pathcount-1))->cmd_and_args);
+						sf_job_started(cpid[cc],p.name,getpid(),(*(path+pathcount-1))->cmd_and_args);
 						execvp(scmd,argv);
 					}
 					else{//last process
@@ -645,7 +645,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						argv[2] = (*(*(path+pathcount-1))->to).name;
 						filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
 						if(filed == -1){
-							sf_cmd_error("derrdd");
+							sf_cmd_error("unable to open file error");
 						}
 						if(enter == -1){
 							dup2(piperw[0],STDIN_FILENO);
