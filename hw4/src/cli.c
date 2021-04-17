@@ -557,8 +557,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	int initfild = open(filen, O_RDONLY);
 	if(initfild == -1){
 		sf_cmd_error("Unable to open file");
+		return -1;
 	}
-	int empfiled = open("empty.txt", O_RDWR);
 	dup2(initfild,STDIN_FILENO);//change stdin of first process to be the file to be printed
 	pid_t pid = fork();//master process
 	if(*path == NULL && pid == 0){//no conversion needed,master process enter
@@ -608,8 +608,13 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 		p.status = PRINTER_BUSY;
 		sf_printer_status(p.name,p.status);
 		sf_job_started(j.id,p.name,pid,(char**)path);
+		int piperw[2];
+		if(pipe(piperw) == -1){
+			sf_cmd_error("pipe failed");
+			return -1;
+		}
 		if(pid == 0){//master process enter
-			setpgid(pid,pid);//set pgid to be pid
+			setpgid(getpid(),getpid());//set pgid to be pid
 			mpid[mpidcount] = pid;//store the pipeline process id into array
 			j.gid = mpidcount;
 			mpidcount++;
@@ -619,6 +624,7 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 			int cc=0;
 
 			int pathcount = 0;
+			int enter = 0;
 			while(*(*(path+pathcount))->cmd_and_args != 0x0){//while exist more conversion
 				cpid[cc] = fork();//child of master process
 
@@ -629,17 +635,17 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						char *temp = malloc(999);
 						strcpy(temp,scmd);
 						char *argm = strtok(temp," ");//first arg for execvp
-						char *argv[3] = {argm,(*(path+pathcount))->from->name,(*(path+pathcount))->to->name};
-						execvp(argm,argv);
-						free(temp);
-						if(STDOUT_FILENO == 1){
-							dup2(STDOUT_FILENO,STDIN_FILENO);//stdout become next stdin
-							dup2(empfiled,STDOUT_FILENO);//file descriptor 3 become next stdout
+						if(enter == 0){
+							dup2(initfild,STDIN_FILENO);
+							dup2(piperw[1],STDOUT_FILENO);
+							enter = -1;
 						}
 						else{
-							dup2(STDOUT_FILENO,STDIN_FILENO);//stdout become next stdin
-							dup2(1,STDOUT_FILENO);//file descriptor 1 become next stdout
+							dup2(piperw[0],STDIN_FILENO);//stdout become next stdin
+							dup2(piperw[1],STDOUT_FILENO);
 						}
+						execvp(argm,(*(path+pathcount))->cmd_and_args);
+						free(temp);
 					}
 					else{//last process
 						char *scmd = *(*(path+pathcount))->cmd_and_args;
@@ -647,9 +653,8 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 						strcpy(temp,scmd);
 						char *argm = strtok(temp," ");//first arg for execvp
 						filed = imp_connect_to_printer(p.name,p.type.name,PRINTER_NORMAL);
-						dup2(filed,1);//change stdout of last process
-						char *argv[3] = {argm,(*(path+pathcount))->from->name,(*(path+pathcount))->to->name};
-						execvp(argm,argv);
+						dup2(filed,STDOUT_FILENO);//change stdout of last process
+						execvp(argm,(*(path+pathcount))->cmd_and_args);
 						free(temp);
 					}
 					cc++;
@@ -678,6 +683,5 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out){
 	sf_printer_status(p.name,p.status);
 	close(filed);
 	close(initfild);
-	close(empfiled);
 	return exitnum;
 }
