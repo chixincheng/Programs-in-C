@@ -10,7 +10,6 @@
 #include <sys/wait.h>
 #include <fcntl.h>
 #include <signal.h>
-#include <errno.h>
 
 #include "imprimer.h"
 #include "conversions.h"
@@ -556,7 +555,12 @@ int run_cli(FILE *in, FILE *out)
     			strcpy(red,linebuf);
 	    	}
 	    	else{
-	    		red = "quit";
+	    		fe = -1;
+	    		dup2(1,STDIN_FILENO);
+	    		red = sf_readline(prom);
+	    		while(strcmp(red,"") == 0){
+	    			red = sf_readline(prom);
+	    		}
 	    	}
 	    }
 	    else{
