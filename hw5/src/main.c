@@ -12,8 +12,15 @@
 #include "debug.h"
 #include "server.h"
 #include "globals.h"
+#include "csapp.h"
 
 static void terminate(int);
+void *thread(void *conn);
+
+volatile int exitsign = 0;
+void sighubhandler(){
+    exitsign = -1;//detect the sign, exit the loop
+}
 
 /*
  * "Charla" chat server.
@@ -35,9 +42,32 @@ int main(int argc, char* argv[]){
     // run function charla_client_service().  In addition, you should install
     // a SIGHUP handler, so that receipt of SIGHUP will perform a clean
     // shutdown of the server.
+    char *port;
+    if(argc >= 3){
+        if(strcmp(*(argv+1),"-p") == 0){//-p exist
+            port = *(argv+2);
+        }
+    }
+    int liserver = open_listenfd(port); //return the listenint socket on port.
 
-    fprintf(stderr, "You have to finish implementing main() "
-	    "before the server will function.\n");
+    struct sigaction sac;
+    sac.sa_handler = &sighubhandler;
+    if(sigaction(SIGHUP, &sac,NULL) == -1){
+        terminate(0);//clean termination
+    }
+
+    socklen_t clientlen;
+    struct sockaddr_storage clientaddr;
+    pthread_t tid;
+    while(exitsign == 0){//while sighup is not received
+        clientlen = sizeof(struct sockaddr_storage);
+        int *connfd = malloc(sizeof(int));
+        *connfd = Accept(liserver, (SA *)&clientaddr,&clientlen);
+        if(*connfd >= 0){//on success, return a nonnegative interger
+            Pthread_create(&tid,NULL,thread,connfd);
+        }
+    }
+    Pthread_exit(NULL);//wait for all thread to finish and exit
 
     terminate(EXIT_FAILURE);
 }
@@ -56,4 +86,11 @@ static void terminate(int status) {
 
     debug("%ld: Server terminating", pthread_self());
     exit(status);
+}
+void *thread (void *conn){
+    int confd = *((int*)conn);
+    chla_client_service(conn);
+    free(conn);
+    Close(confd);
+    return NULL;
 }
