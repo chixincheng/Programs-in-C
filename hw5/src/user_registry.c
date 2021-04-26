@@ -1,11 +1,27 @@
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <semaphore.h>
+#include <string.h>
 
 
 
 #include "user_registry.h"
+#include "user.h"
+#include "csapp.h"
 
 
-
+/*
+ * The USER_REGISTRY type is a structure type that defines the state
+ * of a user registry.  You will have to give a complete structure
+ * definition in user_registry.c. The precise contents are up to
+ * you.  Be sure that all the operations that might be called
+ * concurrently are thread-safe.
+ */
+typedef struct user_registry{
+	int count;
+	sem_t mutex;
+	USER *userlist[100];
+}USER_REGISTRY;
 
 
 /*
@@ -15,7 +31,11 @@
  * fails.
  */
 USER_REGISTRY *ureg_init(void){
-
+	USER_REGISTRY *newur = malloc(sizeof(USER_REGISTRY));
+	USER_REGISTRY nur = {.count=0};
+	sem_init(&nur.mutex,0,1);//init mutex to be 1
+	*newur = nur;
+	return newur;
 }
 
 /*
@@ -25,7 +45,14 @@ USER_REGISTRY *ureg_init(void){
  * be referenced again.
  */
 void ureg_fini(USER_REGISTRY *ureg){
-
+	P(&((*ureg).mutex));
+	for(int i=0;i<100;i++){
+		if((*ureg).userlist[i] != NULL){
+			free((*ureg).userlist[i]);//free all user
+		}
+	}
+	free(ureg);//free the user registry
+	V(&((*ureg).mutex));
 }
 
 /*
@@ -44,7 +71,31 @@ void ureg_fini(USER_REGISTRY *ureg){
  *
  */
 USER *ureg_register(USER_REGISTRY *ureg, char *handle){
-
+	P(&((*ureg).mutex));//lock the array while searching
+	for(int i=0;i<100;i++){
+		if((*ureg).userlist[i] != NULL){//if a user exist
+			if(strcmp(user_get_handle((*ureg).userlist[i]),handle) == 0){//handle exist
+				return (*ureg).userlist[i];
+			}
+		}
+	}
+	int ct = (*ureg).count;
+	USER *ret;
+	if(ct < 99){
+		for(int i=0;i<100;i++){
+			if((*ureg).userlist[i] == NULL){
+				ret = user_create(handle);//this use malloc, free in ureg_fini
+				(*ureg).userlist[i] = ret;
+				(*ureg).count++;
+				user_ref(ret,"user registry held one pointer");//increase ref count;
+			}
+		}
+	}
+	else{
+		return NULL;//full register, cap of 100
+	}
+	V(&((*ureg).mutex));//unlock mutex
+	return ret;
 }
 
 /*
@@ -57,5 +108,15 @@ USER *ureg_register(USER_REGISTRY *ureg, char *handle){
  * @param handle  The user's handle.
  */
 void ureg_unregister(USER_REGISTRY *ureg, char *handle){
-
+	P(&((*ureg).mutex));//lock the array while searching
+	for(int i=0;i<100;i++){
+		if((*ureg).userlist[i] != NULL){//if a user exist
+			if(strcmp(user_get_handle((*ureg).userlist[i]),handle) == 0){//handle exist
+				user_unref((*ureg).userlist[i],"user registry's pointer is deleted");//increase ref count;
+				(*ureg).userlist[i] = NULL;//remove the user with the associate handle
+				(*ureg).count--;
+			}
+		}
+	}
+	V(&((*ureg).mutex));//unlock mutex
 }
