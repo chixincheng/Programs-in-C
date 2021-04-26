@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <semaphore.h>
 
 #include "user.h"
-
+#include "csapp.h"
 
 
 typedef struct user{
 	char *handle;
 	int refc;
+	sem_t mutex;
 }USER;
 
 /*
@@ -25,8 +27,9 @@ USER *user_create(char *handle){
 	if(hsz == 0 ){
 		return NULL;
 	}
-	USER *ret = malloc(hsz+sizeof(int));//allocate space for new user
+	USER *ret = malloc(hsz+sizeof(int)+sizeof(sem_t));//allocate space for new user
 	USER newu = {handle,1};//create new user
+	sem_init(&newu.mutex,0,1);//init mutex to be 1
 	*ret = newu;
 	return ret;
 }
@@ -41,7 +44,10 @@ USER *user_create(char *handle){
  * @return  The same USER object that was passed as a parameter.
  */
 USER *user_ref(USER *user, char *why){
-
+	P(&((*user).mutex));
+	(*user).refc++;//increment ref count
+	V(&((*user).mutex));
+	return user;
 }
 /*
  * Decrease the reference count on a USER by one.
@@ -55,7 +61,12 @@ USER *user_ref(USER *user, char *why){
  *
  */
 void user_unref(USER *user, char *why){
-
+	P(&((*user).mutex));
+	(*user).refc--;//decrement ref count
+	V(&((*user).mutex));
+	if((*user).refc == 0){//ref count reach 0
+		free(user);//free the user
+	}
 }
 /*
  * Get the handle of a user.
@@ -64,5 +75,5 @@ void user_unref(USER *user, char *why){
  * @return the handle of the user.
  */
 char *user_get_handle(USER *user){
-
+	return (*user).handle;
 }
