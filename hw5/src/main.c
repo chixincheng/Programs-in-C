@@ -87,6 +87,7 @@ static void terminate(int status) {
     debug("%ld: Server terminating", pthread_self());
     exit(status);
 }
+//thread will run this
 void *thread (void *conn){
     int confd = *((int*)conn);
     chla_client_service(conn);
