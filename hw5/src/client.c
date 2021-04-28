@@ -5,11 +5,14 @@
 #include "client_registry.h"
 #include "client.h"
 #include "csapp.h"
-
+#include "globals.h"
 
 typedef struct client{
 	int fd;
 	int refc;
+	int log;//0 means logged in, -1 means logged out, start from -1
+	USER * user;
+	MAILBOX *mail;
 	sem_t mutex;
 }CLIENT;
 
@@ -26,8 +29,11 @@ typedef struct client{
  * otherwise NULL.
  */
 CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
-	int pos = (*creg).count;
-
+	CLIENT *newcl = malloc(sizeof(CLIENT));
+	CLIENT temcl = {.fd = fd,.refc = 1,.log=-1};
+	sem_init(&temcl.mutex,0,1);//init mutex to be 1
+	*newcl = temcl;
+	return newcl;
 }
 
 /*
@@ -40,7 +46,10 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
  * @return  The same CLIENT that was passed as a parameter.
  */
 CLIENT *client_ref(CLIENT *client, char *why){
-
+	P(&((*client).mutex));
+	(*client).refc++;//increment ref count
+	V(&((*client).mutex));
+	return client;
 }
 
 /*
@@ -54,7 +63,12 @@ CLIENT *client_ref(CLIENT *client, char *why){
  * the reference counting.
  */
 void client_unref(CLIENT *client, char *why){
-
+	P(&((*client).mutex));
+	(*client).refc--;//decrement ref count
+	V(&((*client).mutex));
+	if((*client).refc == 0){//ref count reach 0
+		free(client);//free the client
+	}
 }
 
 /*
@@ -71,7 +85,11 @@ void client_unref(CLIENT *client, char *why){
  * @return 0 if the login operation is successful, otherwise -1.
  */
 int client_login(CLIENT *client, char *handle){
-
+	if((*client).log == 0){
+		return -1;//already logged in
+	}
+	CLIENT ** connlist = creg_all_clients()
+	USER *newu = ureg_register(user_registry,handle);
 }
 
 /*
@@ -131,7 +149,7 @@ MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
  * @return the file descriptor.
  */
 int client_get_fd(CLIENT *client){
-
+	return (*client).fd;
 }
 
 /*

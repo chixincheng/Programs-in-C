@@ -3,6 +3,7 @@
 #include <semaphore.h>
 
 #include "client_registry.h"
+#include "client.h"
 #include "csapp.h"
 
 
@@ -50,7 +51,18 @@ void creg_fini(CLIENT_REGISTRY *cr){
  * is successful, otherwise NULL.
  */
 CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
-	return NULL;
+	CLIENT *newcl = client_create(cr,fd);//refc =1
+	P(&((*cr).mutex));
+	if((*cr).count < 64){
+		(*cr).clientlist[(*cr).count] = newcl;
+		(*cr).count++;
+	}
+	else{
+		return NULL;//max client
+	}
+	client_ref(newcl,"one pointer retain by registry, one is returned");//increase count, refc=2
+	V(&((*cr).mutex));//unlock
+	return newcl;
 }
 
 /*

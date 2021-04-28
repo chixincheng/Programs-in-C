@@ -4,8 +4,7 @@
 #include <string.h>
 
 
-
-#include "user_registry.h"
+#include "globals.h"
 #include "user.h"
 #include "csapp.h"
 
@@ -75,13 +74,14 @@ USER *ureg_register(USER_REGISTRY *ureg, char *handle){
 	for(int i=0;i<100;i++){
 		if((*ureg).userlist[i] != NULL){//if a user exist
 			if(strcmp(user_get_handle((*ureg).userlist[i]),handle) == 0){//handle exist
+				user_ref((*ureg).userlist[i],"user registry held one pointer");//increase ref count;
 				return (*ureg).userlist[i];
 			}
 		}
 	}
 	int ct = (*ureg).count;
 	USER *ret;
-	if(ct < 99){
+	if(ct < 100){
 		for(int i=0;i<100;i++){
 			if((*ureg).userlist[i] == NULL){
 				ret = user_create(handle);//this use malloc, free in ureg_fini
