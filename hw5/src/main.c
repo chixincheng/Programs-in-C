@@ -19,6 +19,7 @@ void *thread(void *conn);
 
 volatile int exitsign = 0;
 void sighubhandler(){
+    printf("%s\n", "enter handler");
     exitsign = -1;//detect the sign, exit the loop
 }
 
@@ -50,7 +51,7 @@ int main(int argc, char* argv[]){
     }
     int liserver = open_listenfd(port); //return the listenint socket on port.
 
-    struct sigaction sac;
+    struct sigaction sac = {0};
     sac.sa_handler = &sighubhandler;
     if(sigaction(SIGHUP, &sac,NULL) == -1){
         terminate(0);//clean termination
@@ -62,12 +63,13 @@ int main(int argc, char* argv[]){
     while(exitsign == 0){//while sighup is not received
         clientlen = sizeof(struct sockaddr_storage);
         int *connfd = malloc(sizeof(int));
-        *connfd = Accept(liserver, (SA *)&clientaddr,&clientlen);
+        *connfd = accept(liserver, (SA *)&clientaddr,&clientlen);
         if(*connfd >= 0){//on success, return a nonnegative interger
-            Pthread_create(&tid,NULL,thread,connfd);
+            Pthread_create(&tid,NULL,chla_client_service,connfd);
         }
     }
-    Pthread_exit(NULL);//wait for all thread to finish and exit
+    printf("%s\n", "exit while");
+    //Pthread_exit(NULL);//wait for all thread to finish and exit
 
     terminate(EXIT_FAILURE);
 }
@@ -86,12 +88,4 @@ static void terminate(int status) {
 
     debug("%ld: Server terminating", pthread_self());
     exit(status);
-}
-//thread will run this
-void *thread (void *conn){
-    int confd = *((int*)conn);
-    chla_client_service(conn);
-    free(conn);
-    Close(confd);
-    return NULL;
 }

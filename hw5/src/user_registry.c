@@ -51,7 +51,7 @@ void ureg_fini(USER_REGISTRY *ureg){
 		}
 	}
 	free(ureg);//free the user registry
-	V(&((*ureg).mutex));
+	//V(&((*ureg).mutex));
 }
 
 /*

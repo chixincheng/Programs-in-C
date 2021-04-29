@@ -42,7 +42,7 @@ void creg_fini(CLIENT_REGISTRY *cr){
 		}
 	}
 	free(cr);//free the client registry
-	V(&((*cr).mutex));
+	//V(&((*cr).mutex));
 }
 
 /*
