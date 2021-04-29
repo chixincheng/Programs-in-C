@@ -127,8 +127,8 @@ int client_logout(CLIENT *client){
 
 	(*client).user = NULL;//discard user
 	mb_unref((*client).mail,"discard mailbox from client");
+	mb_shutdown((*client).mail);
 
-	//do we need to check for refc = 0 and free?
 
 	(*client).mail = NULL;//discard mailbox
 	(*client).log = -1;//logged out

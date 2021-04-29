@@ -147,5 +147,13 @@ CLIENT **creg_all_clients(CLIENT_REGISTRY *cr){
  * @param cr  The client registry.
  */
 void creg_shutdown_all(CLIENT_REGISTRY *cr){
-
+	P(&((*cr).mutex));
+	for(int i=0;i<(*cr).count;i++){
+		if((*cr).clientlist[i] != NULL){
+			int fd = client_get_fd((*cr).clientlist[i]);
+			shutdown(fd,SHUT_RDWR);//shut down,disable reception and transmission
+			(*cr).count--;
+		}
+	}
+	V(&((*cr).mutex));
 }
