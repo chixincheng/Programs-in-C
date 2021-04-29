@@ -6,12 +6,6 @@
 #include "csapp.h"
 
 
-
-
-
-
-
-
 int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 	//convert to network byte order
 	(*hdr).payload_length = htonl((*hdr).payload_length);

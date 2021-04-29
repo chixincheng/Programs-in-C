@@ -35,7 +35,14 @@ CLIENT_REGISTRY *creg_init(){
  * be referenced again.
  */
 void creg_fini(CLIENT_REGISTRY *cr){
-
+	P(&((*cr).mutex));
+	for(int i=0;i<(*cr).count;i++){
+		if((*cr).clientlist[i] != NULL){
+			free((*cr).clientlist[i]);//free all client
+		}
+	}
+	free(cr);//free the client registry
+	V(&((*cr).mutex));
 }
 
 /*
@@ -54,8 +61,12 @@ CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
 	CLIENT *newcl = client_create(cr,fd);//refc =1
 	P(&((*cr).mutex));
 	if((*cr).count < 64){
-		(*cr).clientlist[(*cr).count] = newcl;
-		(*cr).count++;
+		for(int i=0;i<MAX_CLIENTS;i++){
+			if((*cr).clientlist[i] == NULL){//search for first open place
+				(*cr).clientlist[i] = newcl;
+				(*cr).count++;
+			}
+		}
 	}
 	else{
 		return NULL;//max client
@@ -82,7 +93,19 @@ CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
  * @return 0  if unregistration succeeds, otherwise -1.
  */
 int creg_unregister(CLIENT_REGISTRY *cr, CLIENT *client){
-	return -1;
+	P(&((*cr).mutex));
+	int ret=-1;
+	for(int i=0;i<(*cr).count;i++){
+		if((*cr).clientlist[i] == client){//client found on given client registry
+			(*cr).clientlist[i] = NULL;
+			client_unref(client,"pointer from client_registry is deleted");
+			ret =0;
+			(*cr).count--;
+		}
+	}
+	V(&((*cr).mutex));
+	return ret;
+	//fd is not close here
 }
 
 /*
@@ -99,7 +122,16 @@ int creg_unregister(CLIENT_REGISTRY *cr, CLIENT *client){
  * @return the list of clients as a NULL-terminated array.
  */
 CLIENT **creg_all_clients(CLIENT_REGISTRY *cr){
-	return NULL;
+	P(&((*cr).mutex));
+	CLIENT **retlist = malloc(sizeof(CLIENT*)*(((*cr).count)+1));//malloc space for array
+	retlist[(*cr).count] = NULL;//null pointer
+	for(int i=0;i<(*cr).count;i++){
+		retlist[i] = (*cr).clientlist[i];
+		client_ref((*cr).clientlist[i],"pointer added to the returned array");
+	}
+	V(&((*cr).mutex));
+	return retlist;
+	//caller have to free the array, and decrease the reference count
 }
 
 /*

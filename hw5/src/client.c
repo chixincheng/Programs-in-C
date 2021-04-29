@@ -11,7 +11,7 @@ typedef struct client{
 	int fd;
 	int refc;
 	int log;//0 means logged in, -1 means logged out, start from -1
-	USER * user;
+	USER *user;
 	MAILBOX *mail;
 	sem_t mutex;
 }CLIENT;
@@ -88,8 +88,23 @@ int client_login(CLIENT *client, char *handle){
 	if((*client).log == 0){
 		return -1;//already logged in
 	}
-	CLIENT ** connlist = creg_all_clients()
+	CLIENT ** connlist = creg_all_clients(client_registry);//return all connected client
+	int cont =0;
+	while(connlist[cont] != NULL){
+		USER *u = (*connlist[cont]).user;//get user from client
+		char *h = user_get_handle(u);//get handle from user
+		if(strcmp(handle,h) == 0){//if handles exist in connected client
+			return -1;
+		}
+		client_unref(connlist[cont],"pointer from allclient is deleted");
+		connlist[cont] = NULL;//delete pointer
+		cont++;
+	}
+	free(connlist);//free the malloc array
 	USER *newu = ureg_register(user_registry,handle);
+	(*client).user = newu;//add to client
+	(*client).mail = mb_init(handle);//create the mailbox
+	return 0;//success
 }
 
 /*
@@ -102,7 +117,21 @@ int client_login(CLIENT *client, char *handle){
  * logged out, otherwise -1.
  */
 int client_logout(CLIENT *client){
+	if((*client).log == -1){//not logged in
+		return -1;
+	}
+	user_unref((*client).user,"discard user from client");
 
+	//do we need to check for refc = 0 and free?
+
+	(*client).user = NULL;//discard user
+	mb_unref((*client).mail,"discard mailbox from client");
+
+	//do we need to check for refc = 0 and free?
+
+	(*client).mail = NULL;//discard mailbox
+	(*client).log = -1;//logged out
+	return 0;
 }
 
 /*
@@ -118,7 +147,13 @@ int client_logout(CLIENT *client){
  * when finished with the USER object.
  */
 USER *client_get_user(CLIENT *client, int no_ref){
-
+	if(no_ref != 0){//ref count do not increase
+		return (*client).user;
+	}
+	else{//ref count increase, caller need to decrease
+		user_ref((*client).user,"increase count for returning pointer to user");
+		return (*client).user;
+	}
 }
 
 /*
@@ -136,7 +171,13 @@ USER *client_get_user(CLIENT *client, int no_ref){
  * otherwise NULL if the client is not currently logged in.
  */
 MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
-
+	if(no_ref != 0){//ref count do not increase
+		return (*client).mail;
+	}
+	else{//ref count increase, caller need to decrease
+		mb_ref((*client).mail,"increase count for returning pointer to mailbox");
+		return (*client).mail;
+	}
 }
 
 /*
