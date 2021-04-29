@@ -6,6 +6,7 @@
 #include "client.h"
 #include "csapp.h"
 #include "globals.h"
+#include "protocol.h"
 
 typedef struct client{
 	int fd;
@@ -205,8 +206,10 @@ int client_get_fd(CLIENT *client){
  * @param data  Data payload to be sent, or NULL if none.
  * @return 0 if transmission succeeds, -1 otherwise.
  */
-int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
-
+int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
+	int fd =(*client).fd;
+	int ret = proto_send_packet(fd,pkt,data);
+	return ret;
 }
 
 /*
@@ -221,7 +224,14 @@ int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
-
+	int fd =(*client).fd;
+	CHLA_PACKET_TYPE pkty= CHLA_ACK_PKT;
+	CHLA_PACKET_HEADER *head = malloc(sizeof(CHLA_PACKET_HEADER));
+	CHLA_PACKET_HEADER temp ={.type=pkty,.payload_length=datalen,.msgid=msgid};
+	*head = temp;
+	int ret = proto_send_packet(fd,head,data);
+	free(head);
+	return ret;
 }
 
 /*
@@ -233,5 +243,12 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_nack(CLIENT *client, uint32_t msgid){
-
+	int fd =(*client).fd;
+	CHLA_PACKET_TYPE pkty= CHLA_NACK_PKT;
+	CHLA_PACKET_HEADER *head = malloc(sizeof(CHLA_PACKET_HEADER));
+	CHLA_PACKET_HEADER temp ={.type=pkty,.payload_length=0,.msgid=msgid};
+	*head = temp;
+	int ret = proto_send_packet(fd,head,NULL);
+	free(head);
+	return ret;
 }
