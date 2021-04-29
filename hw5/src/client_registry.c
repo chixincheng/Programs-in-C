@@ -42,7 +42,6 @@ void creg_fini(CLIENT_REGISTRY *cr){
 		}
 	}
 	free(cr);//free the client registry
-	//V(&((*cr).mutex));
 }
 
 /*
@@ -97,7 +96,7 @@ int creg_unregister(CLIENT_REGISTRY *cr, CLIENT *client){
 	int ret=-1;
 	for(int i=0;i<(*cr).count;i++){
 		if((*cr).clientlist[i] == client){//client found on given client registry
-			(*cr).clientlist[i] = NULL;
+			(*cr).clientlist[i] = NULL;//remove pointer
 			client_unref(client,"pointer from client_registry is deleted");
 			ret =0;
 			(*cr).count--;

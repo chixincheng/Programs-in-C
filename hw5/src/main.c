@@ -69,9 +69,7 @@ int main(int argc, char* argv[]){
         }
     }
     printf("%s\n", "exit while");
-    //Pthread_exit(NULL);//wait for all thread to finish and exit
-
-    terminate(EXIT_FAILURE);
+    terminate(EXIT_SUCCESS);
 }
 
 /*

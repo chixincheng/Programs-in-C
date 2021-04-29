@@ -66,9 +66,11 @@ CLIENT *client_ref(CLIENT *client, char *why){
 void client_unref(CLIENT *client, char *why){
 	P(&((*client).mutex));
 	(*client).refc--;//decrement ref count
-	V(&((*client).mutex));
-	if((*client).refc == 0){//ref count reach 0
-		free(client);//free the client
+	if(((*client).refc) == 0){//check this
+		free(client);
+	}
+	else{
+		V(&((*client).mutex));
 	}
 }
 
@@ -128,8 +130,6 @@ int client_logout(CLIENT *client){
 	(*client).user = NULL;//discard user
 	mb_unref((*client).mail,"discard mailbox from client");
 	mb_shutdown((*client).mail);
-
-
 	(*client).mail = NULL;//discard mailbox
 	(*client).log = -1;//logged out
 	return 0;
