@@ -30,10 +30,9 @@ typedef struct user_registry{
  * fails.
  */
 USER_REGISTRY *ureg_init(void){
-	USER_REGISTRY *newur = malloc(sizeof(USER_REGISTRY));
-	USER_REGISTRY nur = {.count=0};
-	sem_init(&nur.mutex,0,1);//init mutex to be 1
-	*newur = nur;
+	USER_REGISTRY *newur = (USER_REGISTRY*)malloc(sizeof(USER_REGISTRY));
+	newur->count =0;
+	sem_init(&(newur->mutex),0,1);//init mutex to be 1
 	return newur;
 }
 

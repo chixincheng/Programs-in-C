@@ -30,10 +30,11 @@ typedef struct client{
  * otherwise NULL.
  */
 CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
-	CLIENT *newcl = malloc(sizeof(CLIENT));
-	CLIENT temcl = {.fd = fd,.refc = 1,.log=-1};
-	sem_init(&temcl.mutex,0,1);//init mutex to be 1
-	*newcl = temcl;
+	CLIENT *newcl = (CLIENT *)malloc(sizeof(CLIENT));
+	newcl->fd = fd;
+	newcl->refc = 1;
+	newcl->log = -1;
+	sem_init(&(newcl->mutex),0,1);//init mutex to be 1
 	return newcl;
 }
 
@@ -66,11 +67,9 @@ CLIENT *client_ref(CLIENT *client, char *why){
 void client_unref(CLIENT *client, char *why){
 	P(&((*client).mutex));
 	(*client).refc--;//decrement ref count
+	V(&((*client).mutex));
 	if(((*client).refc) == 0){//check this
 		free(client);
-	}
-	else{
-		V(&((*client).mutex));
 	}
 }
 

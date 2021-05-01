@@ -27,10 +27,10 @@ USER *user_create(char *handle){
 	if(hsz == 0 ){
 		return NULL;
 	}
-	USER *ret = malloc(hsz+sizeof(int)+sizeof(sem_t));//allocate space for new user
-	USER newu = {handle,1};//create new user
-	sem_init(&newu.mutex,0,1);//init mutex to be 1
-	*ret = newu;
+	USER *ret = (USER*)malloc(hsz+sizeof(int)+sizeof(sem_t));//allocate space for new user
+	ret->handle = handle;
+	ret->refc = 1;
+	sem_init(&(ret->mutex),0,1);//init mutex to be 1
 	return ret;
 }
 

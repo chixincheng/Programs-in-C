@@ -21,10 +21,9 @@ typedef struct client_registry{
  * fails.
  */
 CLIENT_REGISTRY *creg_init(){
-	CLIENT_REGISTRY *newcr = malloc(sizeof(CLIENT_REGISTRY));
-	CLIENT_REGISTRY tcr = {.count=0};
-	sem_init(&tcr.mutex,0,1);//init mutex to be 1
-	*newcr = tcr;
+	CLIENT_REGISTRY *newcr = (CLIENT_REGISTRY*)malloc(sizeof(CLIENT_REGISTRY));
+	newcr->count = 0;
+	sem_init(&(newcr->mutex),0,1);//init mutex to be 1
 	return newcr;
 }
 
