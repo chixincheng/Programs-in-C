@@ -18,11 +18,8 @@
  */
 int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 	//convert to network byte order
-	(*hdr).payload_length = htonl((*hdr).payload_length);
-	(*hdr).msgid = htonl((*hdr).msgid);
-	(*hdr).timestamp_sec = htonl((*hdr).timestamp_sec);
-	(*hdr).timestamp_nsec = htonl((*hdr).timestamp_nsec);
-	int ret = rio_writen(fd,hdr,sizeof(hdr));
+
+	int ret = rio_writen(fd,hdr,sizeof(CHLA_PACKET_HEADER));
 	if(ret == -1){//error in writing
 		errno = EIO;
 		return -1;
@@ -53,10 +50,9 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
  */
 int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	//header is in network byte order, caller should call ntohl to convert to host byte order
-	int ret;
-	while((ret=rio_readn(fd,hdr,sizeof(hdr))) < 0){//read a packet header store into hdr.
-		;
-	}
+	printf("%s\n", "enter rece pack");
+	int ret=rio_readn(fd,hdr,sizeof(CHLA_PACKET_HEADER));//read a packet header store into hdr.
+	printf("%s\n", "received packet");
 	if(ret == -1){//error in reading
 		errno = EIO;
 		return -1;
@@ -64,8 +60,9 @@ int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	if(ret == 0){//EOF
 		return -1;
 	}
-	int sz = ntohl(hdr->payload_length);
+	uint32_t sz = ntohl(hdr->payload_length);
 	if(sz > 0){//non zero payload length
+		*payload = malloc(sz);
 		ret = rio_readn(fd,*payload,sz);
 	}
 	if(ret == -1){//error in reading

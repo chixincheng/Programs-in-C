@@ -27,7 +27,7 @@ USER *user_create(char *handle){
 	if(hsz == 0 ){
 		return NULL;
 	}
-	USER *ret = (USER*)malloc(hsz+sizeof(int)+sizeof(sem_t));//allocate space for new user
+	USER *ret = (USER*)malloc(sizeof(USER));//allocate space for new user
 	ret->handle = handle;
 	ret->refc = 1;
 	sem_init(&(ret->mutex),0,1);//init mutex to be 1
@@ -75,5 +75,8 @@ void user_unref(USER *user, char *why){
  * @return the handle of the user.
  */
 char *user_get_handle(USER *user){
-	return (*user).handle;
+	if(user != NULL){
+		return (*user).handle;
+	}
+	return NULL;
 }

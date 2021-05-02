@@ -44,7 +44,7 @@ USER_REGISTRY *ureg_init(void){
  */
 void ureg_fini(USER_REGISTRY *ureg){
 	P(&((*ureg).mutex));
-	for(int i=0;i<100;i++){
+	for(int i=0;i<(*ureg).count;i++){
 		if((*ureg).userlist[i] != NULL){
 			free((*ureg).userlist[i]);//free all user
 		}

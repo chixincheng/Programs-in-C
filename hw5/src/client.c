@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <semaphore.h>
+#include <time.h>
 
 #include "client_registry.h"
 #include "client.h"
@@ -11,9 +12,10 @@
 typedef struct client{
 	int fd;
 	int refc;
-	int log;//0 means logged in, -1 means logged out, start from -1
-	USER *user;
+	volatile int log;//0 means logged in, -1 means logged out, start from -1
+	USER *user;//freed in user_registry fini
 	MAILBOX *mail;
+	struct timespec time;
 	sem_t mutex;
 }CLIENT;
 
@@ -34,6 +36,7 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
 	newcl->fd = fd;
 	newcl->refc = 1;
 	newcl->log = -1;
+	clock_gettime(CLOCK_REALTIME, &(newcl->time));
 	sem_init(&(newcl->mutex),0,1);//init mutex to be 1
 	return newcl;
 }
@@ -94,18 +97,21 @@ int client_login(CLIENT *client, char *handle){
 	int cont =0;
 	while(connlist[cont] != NULL){
 		USER *u = (*connlist[cont]).user;//get user from client
-		char *h = user_get_handle(u);//get handle from user
-		if(strcmp(handle,h) == 0){//if handles exist in connected client
-			return -1;
+		if(u != NULL){
+			char *h = user_get_handle(u);//get handle from user
+			if(strcmp(handle,h) == 0){//if handles exist in connected client
+				return -1;
+			}
+			client_unref(connlist[cont],"pointer from allclient is deleted");
+			connlist[cont] = NULL;//delete pointer
 		}
-		client_unref(connlist[cont],"pointer from allclient is deleted");
-		connlist[cont] = NULL;//delete pointer
 		cont++;
 	}
 	free(connlist);//free the malloc array
 	USER *newu = ureg_register(user_registry,handle);
 	(*client).user = newu;//add to client
 	(*client).mail = mb_init(handle);//create the mailbox
+	(*client).log = 0;//login
 	return 0;//success
 }
 
@@ -128,9 +134,11 @@ int client_logout(CLIENT *client){
 
 	(*client).user = NULL;//discard user
 	mb_unref((*client).mail,"discard mailbox from client");
+	printf("%s\n", "mailbox enter shutdown");
 	mb_shutdown((*client).mail);
 	(*client).mail = NULL;//discard mailbox
 	(*client).log = -1;//logged out
+	printf("%s\n", "mailbox shutdown complete");
 	return 0;
 }
 
@@ -190,7 +198,11 @@ MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
  * @return the file descriptor.
  */
 int client_get_fd(CLIENT *client){
-	return (*client).fd;
+	if(client != NULL){
+		return (*client).fd;
+	}
+	printf("%s\n", "client is null");
+	return -1;
 }
 
 /*
@@ -206,6 +218,12 @@ int client_get_fd(CLIENT *client){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
+	(*pkt).payload_length = htonl((*pkt).payload_length);
+	(*pkt).msgid = htonl((*pkt).msgid);
+	struct timespec s;
+	clock_gettime(CLOCK_REALTIME, &s);
+	pkt->timestamp_sec = htonl(s.tv_sec - (client->time).tv_sec);//execution time
+	pkt->timestamp_nsec = htonl(s.tv_nsec - (client->time).tv_nsec);//execution time
 	int fd =(*client).fd;
 	int ret = proto_send_packet(fd,pkt,data);
 	return ret;
@@ -223,13 +241,12 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
-	int fd =(*client).fd;
 	CHLA_PACKET_TYPE pkty= CHLA_ACK_PKT;
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	head->type = pkty;
 	head->payload_length = datalen;
 	head->msgid = msgid;
-	int ret = proto_send_packet(fd,head,data);
+	int ret = client_send_packet(client,head,data);
 	free(head);
 	return ret;
 }
@@ -243,13 +260,12 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_nack(CLIENT *client, uint32_t msgid){
-	int fd =(*client).fd;
 	CHLA_PACKET_TYPE pkty= CHLA_NACK_PKT;
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	head->type = pkty;
 	head->payload_length = 0;
 	head->msgid = msgid;
-	int ret = proto_send_packet(fd,head,NULL);
+	int ret = client_send_packet(client,head,NULL);
 	free(head);
 	return ret;
 }

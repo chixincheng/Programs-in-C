@@ -33,10 +33,11 @@ CLIENT_REGISTRY *creg_init(){
  * @param cr  The client registry to be finalized, which must not
  * be referenced again.
  */
-void creg_fini(CLIENT_REGISTRY *cr){//need to free the user and the mailbox
+void creg_fini(CLIENT_REGISTRY *cr){
 	P(&((*cr).mutex));
 	for(int i=0;i<(*cr).count;i++){
 		if((*cr).clientlist[i] != NULL){
+
 			free((*cr).clientlist[i]);//free all client
 		}
 	}
@@ -57,12 +58,13 @@ void creg_fini(CLIENT_REGISTRY *cr){//need to free the user and the mailbox
  */
 CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
 	CLIENT *newcl = client_create(cr,fd);//refc =1
-	P(&((*cr).mutex));
+	//P(&((*cr).mutex));
 	if((*cr).count < 64){
 		for(int i=0;i<MAX_CLIENTS;i++){
 			if((*cr).clientlist[i] == NULL){//search for first open place
 				(*cr).clientlist[i] = newcl;
 				(*cr).count++;
+				i = MAX_CLIENTS;//exit loop
 			}
 		}
 	}
@@ -70,7 +72,7 @@ CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
 		return NULL;//max client
 	}
 	client_ref(newcl,"one pointer retain by registry, one is returned");//increase count, refc=2
-	V(&((*cr).mutex));//unlock
+	//V(&((*cr).mutex));//unlock
 	return newcl;
 }
 
