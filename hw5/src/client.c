@@ -36,6 +36,8 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
 	newcl->fd = fd;
 	newcl->refc = 1;
 	newcl->log = -1;
+	newcl->user =NULL;
+	newcl->mail = NULL;
 	clock_gettime(CLOCK_REALTIME, &(newcl->time));
 	sem_init(&(newcl->mutex),0,1);//init mutex to be 1
 	return newcl;

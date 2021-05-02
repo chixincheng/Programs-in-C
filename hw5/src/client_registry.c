@@ -3,7 +3,6 @@
 #include <semaphore.h>
 
 #include "client_registry.h"
-#include "client.h"
 #include "csapp.h"
 
 
@@ -23,6 +22,9 @@ typedef struct client_registry{
 CLIENT_REGISTRY *creg_init(){
 	CLIENT_REGISTRY *newcr = (CLIENT_REGISTRY*)malloc(sizeof(CLIENT_REGISTRY));
 	newcr->count = 0;
+	for(int i=0;i<MAX_CLIENTS;i++){
+		(*newcr).clientlist[i] = NULL;
+	}
 	sem_init(&(newcr->mutex),0,1);//init mutex to be 1
 	return newcr;
 }
@@ -57,11 +59,12 @@ void creg_fini(CLIENT_REGISTRY *cr){
  * is successful, otherwise NULL.
  */
 CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
-	CLIENT *newcl = client_create(cr,fd);//refc =1
-	//P(&((*cr).mutex));
+	CLIENT *newcl;
+	P(&((*cr).mutex));
 	if((*cr).count < 64){
 		for(int i=0;i<MAX_CLIENTS;i++){
 			if((*cr).clientlist[i] == NULL){//search for first open place
+				newcl = client_create(cr,fd);//refc =1
 				(*cr).clientlist[i] = newcl;
 				(*cr).count++;
 				i = MAX_CLIENTS;//exit loop
@@ -72,7 +75,7 @@ CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
 		return NULL;//max client
 	}
 	client_ref(newcl,"one pointer retain by registry, one is returned");//increase count, refc=2
-	//V(&((*cr).mutex));//unlock
+	V(&((*cr).mutex));//unlock
 	return newcl;
 }
 
