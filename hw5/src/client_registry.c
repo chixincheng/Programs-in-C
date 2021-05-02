@@ -33,7 +33,7 @@ CLIENT_REGISTRY *creg_init(){
  * @param cr  The client registry to be finalized, which must not
  * be referenced again.
  */
-void creg_fini(CLIENT_REGISTRY *cr){
+void creg_fini(CLIENT_REGISTRY *cr){//need to free the user and the mailbox
 	P(&((*cr).mutex));
 	for(int i=0;i<(*cr).count;i++){
 		if((*cr).clientlist[i] != NULL){

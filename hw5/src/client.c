@@ -225,9 +225,10 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 	int fd =(*client).fd;
 	CHLA_PACKET_TYPE pkty= CHLA_ACK_PKT;
-	CHLA_PACKET_HEADER *head = malloc(sizeof(CHLA_PACKET_HEADER));
-	CHLA_PACKET_HEADER temp ={.type=pkty,.payload_length=datalen,.msgid=msgid};
-	*head = temp;
+	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
+	head->type = pkty;
+	head->payload_length = datalen;
+	head->msgid = msgid;
 	int ret = proto_send_packet(fd,head,data);
 	free(head);
 	return ret;
@@ -244,9 +245,10 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 int client_send_nack(CLIENT *client, uint32_t msgid){
 	int fd =(*client).fd;
 	CHLA_PACKET_TYPE pkty= CHLA_NACK_PKT;
-	CHLA_PACKET_HEADER *head = malloc(sizeof(CHLA_PACKET_HEADER));
-	CHLA_PACKET_HEADER temp ={.type=pkty,.payload_length=0,.msgid=msgid};
-	*head = temp;
+	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
+	head->type = pkty;
+	head->payload_length = 0;
+	head->msgid = msgid;
 	int ret = proto_send_packet(fd,head,NULL);
 	free(head);
 	return ret;

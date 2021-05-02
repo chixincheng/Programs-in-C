@@ -53,7 +53,10 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
  */
 int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	//header is in network byte order, caller should call ntohl to convert to host byte order
-	int ret = rio_readn(fd,hdr,sizeof(hdr));//read a packet header store into hdr.
+	int ret;
+	while((ret=rio_readn(fd,hdr,sizeof(hdr))) < 0){//read a packet header store into hdr.
+		;
+	}
 	if(ret == -1){//error in reading
 		errno = EIO;
 		return -1;
@@ -61,8 +64,9 @@ int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	if(ret == 0){//EOF
 		return -1;
 	}
-	if(ntohl((*hdr).payload_length) > 0){//non zero payload length
-		ret = rio_readn(fd,payload,ntohl((*hdr).payload_length));
+	int sz = ntohl(hdr->payload_length);
+	if(sz > 0){//non zero payload length
+		ret = rio_readn(fd,*payload,sz);
 	}
 	if(ret == -1){//error in reading
 		errno = EIO;

@@ -44,9 +44,18 @@ int main(int argc, char* argv[]){
     // a SIGHUP handler, so that receipt of SIGHUP will perform a clean
     // shutdown of the server.
     char *port;
-    if(argc >= 3){
-        if(strcmp(*(argv+1),"-p") == 0){//-p exist
-            port = *(argv+2);
+    int tem = argc;
+    while(tem >= 3){
+        tem--;
+        int ct = 1;
+        if(strcmp(*(argv+ct),"-p") == 0){//-p exist
+            ct = ct+1;
+            port = *(argv+ct);
+            tem =0;
+        }
+        else{
+            ct = ct+1;
+            tem--;
         }
     }
     int liserver = open_listenfd(port); //return the listenint socket on port.
@@ -59,8 +68,8 @@ int main(int argc, char* argv[]){
 
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
-    pthread_t tid;
     while(exitsign == 0){//while sighup is not received
+        pthread_t tid;
         clientlen = sizeof(struct sockaddr_storage);
         int *connfd = malloc(sizeof(int));
         *connfd = accept(liserver, (SA *)&clientaddr,&clientlen);
