@@ -220,6 +220,7 @@ int client_get_fd(CLIENT *client){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
+	P(&((*client).mutex));
 	(*pkt).payload_length = htonl((*pkt).payload_length);
 	(*pkt).msgid = htonl((*pkt).msgid);
 	struct timespec s;
@@ -228,6 +229,7 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
 	pkt->timestamp_nsec = htonl(s.tv_nsec - (client->time).tv_nsec);//execution time
 	int fd =(*client).fd;
 	int ret = proto_send_packet(fd,pkt,data);
+	V(&((*client).mutex));
 	return ret;
 }
 
@@ -243,9 +245,8 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
  * @return 0 if transmission succeeds, -1 otherwise.
  */
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
-	CHLA_PACKET_TYPE pkty= CHLA_ACK_PKT;
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
-	head->type = pkty;
+	head->type = CHLA_ACK_PKT;
 	head->payload_length = datalen;
 	head->msgid = msgid;
 	int ret = client_send_packet(client,head,data);

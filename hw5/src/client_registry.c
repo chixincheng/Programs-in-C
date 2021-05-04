@@ -72,6 +72,7 @@ CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
 		}
 	}
 	else{
+		V(&((*cr).mutex));//unlock
 		return NULL;//max client
 	}
 	client_ref(newcl,"one pointer retain by registry, one is returned");//increase count, refc=2

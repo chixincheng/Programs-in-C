@@ -77,6 +77,7 @@ USER *ureg_register(USER_REGISTRY *ureg, char *handle){
 		if((*ureg).userlist[i] != NULL){//if a user exist
 			if(strcmp(user_get_handle((*ureg).userlist[i]),handle) == 0){//handle exist
 				user_ref((*ureg).userlist[i],"user registry held one pointer");//increase ref count;
+				V(&((*ureg).mutex));//unlock mutex
 				return (*ureg).userlist[i];
 			}
 		}
@@ -90,10 +91,12 @@ USER *ureg_register(USER_REGISTRY *ureg, char *handle){
 				(*ureg).userlist[i] = ret;
 				(*ureg).count++;
 				user_ref(ret,"user registry held one pointer");//increase ref count;
+				i = 100;//exit loop
 			}
 		}
 	}
 	else{
+		V(&((*ureg).mutex));//unlock mutex
 		return NULL;//full register, cap of 100
 	}
 	V(&((*ureg).mutex));//unlock mutex
