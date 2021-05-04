@@ -221,12 +221,14 @@ int client_get_fd(CLIENT *client){
  */
 int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
 	P(&((*client).mutex));
-	(*pkt).payload_length = htonl((*pkt).payload_length);
-	(*pkt).msgid = htonl((*pkt).msgid);
 	struct timespec s;
 	clock_gettime(CLOCK_REALTIME, &s);
 	pkt->timestamp_sec = htonl(s.tv_sec - (client->time).tv_sec);//execution time
 	pkt->timestamp_nsec = htonl(s.tv_nsec - (client->time).tv_nsec);//execution time
+	if(pkt->timestamp_nsec < 0){
+		pkt->timestamp_nsec += 1000000000;
+		pkt->timestamp_sec -= 1;
+	}
 	int fd =(*client).fd;
 	int ret = proto_send_packet(fd,pkt,data);
 	V(&((*client).mutex));
@@ -247,8 +249,8 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	head->type = CHLA_ACK_PKT;
-	head->payload_length = datalen;
-	head->msgid = msgid;
+	head->payload_length = htonl(datalen);
+	head->msgid = htonl(msgid);
 	int ret = client_send_packet(client,head,data);
 	free(head);
 	return ret;
@@ -266,8 +268,8 @@ int client_send_nack(CLIENT *client, uint32_t msgid){
 	CHLA_PACKET_TYPE pkty= CHLA_NACK_PKT;
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	head->type = pkty;
-	head->payload_length = 0;
-	head->msgid = msgid;
+	head->payload_length = htonl(0);
+	head->msgid = htonl(msgid);
 	int ret = client_send_packet(client,head,NULL);
 	free(head);
 	return ret;
