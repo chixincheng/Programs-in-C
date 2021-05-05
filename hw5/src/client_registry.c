@@ -61,7 +61,7 @@ void creg_fini(CLIENT_REGISTRY *cr){
 CLIENT *creg_register(CLIENT_REGISTRY *cr, int fd){
 	CLIENT *newcl;
 	P(&((*cr).mutex));
-	if((*cr).count < 64){
+	if((*cr).count < MAX_CLIENTS){
 		for(int i=0;i<MAX_CLIENTS;i++){
 			if((*cr).clientlist[i] == NULL){//search for first open place
 				newcl = client_create(cr,fd);//refc =1
@@ -158,6 +158,9 @@ void creg_shutdown_all(CLIENT_REGISTRY *cr){
 			shutdown(fd,SHUT_RDWR);//shut down,disable reception and transmission
 			(*cr).count--;
 		}
+	}
+	while((*cr).count != 0){
+		;//block in here until total connection reaches 0
 	}
 	V(&((*cr).mutex));
 }

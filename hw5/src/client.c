@@ -130,6 +130,7 @@ int client_logout(CLIENT *client){
 	if((*client).log == -1){//not logged in
 		return -1;
 	}
+	ureg_unregister(user_registry,user_get_handle(client->user));
 	user_unref((*client).user,"discard user from client");
 
 	//do we need to check for refc = 0 and free?
@@ -273,4 +274,8 @@ int client_send_nack(CLIENT *client, uint32_t msgid){
 	int ret = client_send_packet(client,head,NULL);
 	free(head);
 	return ret;
+}
+
+int client_get_log(CLIENT *client){
+	return client->log;
 }

@@ -120,6 +120,7 @@ void ureg_unregister(USER_REGISTRY *ureg, char *handle){
 				user_unref((*ureg).userlist[i],"user registry's pointer is deleted");//increase ref count;
 				(*ureg).userlist[i] = NULL;//remove the user with the associate handle
 				(*ureg).count--;
+				i = 100;
 			}
 		}
 	}

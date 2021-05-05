@@ -202,9 +202,9 @@ MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
 }
 
 
-typedef void (MAILBOX_DISCARD_HOOK)(MAILBOX_ENTRY *);
+/*typedef void (MAILBOX_DISCARD_HOOK)(MAILBOX_ENTRY *);
 
 //Set the discard hook for a mailbox.
 void mb_set_discard_hook(MAILBOX *mb, MAILBOX_DISCARD_HOOK *){
 
-}
+}*/
