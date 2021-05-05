@@ -74,6 +74,8 @@ void client_unref(CLIENT *client, char *why){
 	(*client).refc--;//decrement ref count
 	V(&((*client).mutex));
 	if(((*client).refc) == 0){//check this
+		user_unref(client->user,"free the client");
+		mb_unref(client->mail,"free the client");
 		free(client);
 	}
 }
@@ -132,8 +134,6 @@ int client_logout(CLIENT *client){
 	}
 	ureg_unregister(user_registry,user_get_handle(client->user));
 	user_unref((*client).user,"discard user from client");
-
-	//do we need to check for refc = 0 and free?
 
 	(*client).user = NULL;//discard user
 	mb_unref((*client).mail,"discard mailbox from client");
@@ -250,7 +250,6 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	head->type = CHLA_ACK_PKT;
-	head->payload_length = htonl(datalen);
 	head->msgid = htonl(msgid);
 	int ret = client_send_packet(client,head,data);
 	free(head);

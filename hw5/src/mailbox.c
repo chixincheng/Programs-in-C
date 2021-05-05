@@ -6,7 +6,7 @@
 
 //linked list node for mailbox queue
 typedef struct entrynode ENTRYNODE;
-
+typedef void (MAILBOX_DISCARD_HOOK)(MAILBOX_ENTRY *);
 typedef struct entrynode{
 	MAILBOX_ENTRY *en;
 	ENTRYNODE *next;
@@ -17,6 +17,7 @@ typedef struct mailbox{
 	int refc;
 	char *handle;
 	volatile int func;//0 = functioning, -1 = defunct
+	MAILBOX_DISCARD_HOOK * discardhook;
 	sem_t mutex;
 	ENTRYNODE *front;
 	ENTRYNODE *rear;
@@ -39,6 +40,7 @@ MAILBOX *mb_init(char *handle){
 	newmail->refc = 1;
 	newmail->handle = handle;
 	newmail->func = 0;
+	newmail->discardhook = NULL;
 	sem_init(&(newmail->mutex),0,1);//init mutex to be 1
 	newmail->front = newmail->rear =NULL;
 	return newmail;
@@ -67,7 +69,12 @@ void mb_unref(MAILBOX *mb, char *why){
 	P(&((*mb).mutex));
 	mb->refc--;
 	V(&((*mb).mutex));
-	if(mb->refc == 0){
+	if(mb->refc == 0){//free all entries and the mailbox
+		while(mb->front != NULL){
+			ENTRYNODE *temp = mb->front;
+			mb->front = mb->front->next;
+			free(temp);
+		}
 		free(mb);
 	}
 }
@@ -202,9 +209,7 @@ MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
 }
 
 
-/*typedef void (MAILBOX_DISCARD_HOOK)(MAILBOX_ENTRY *);
-
 //Set the discard hook for a mailbox.
-void mb_set_discard_hook(MAILBOX *mb, MAILBOX_DISCARD_HOOK *){
-
-}*/
+void mb_set_discard_hook(MAILBOX *mb, MAILBOX_DISCARD_HOOK *hook){
+	mb->discardhook = hook;
+}
