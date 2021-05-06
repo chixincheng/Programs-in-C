@@ -47,6 +47,7 @@ USER_REGISTRY *ureg_init(void){
  */
 void ureg_fini(USER_REGISTRY *ureg){
 	P(&((*ureg).mutex));
+	printf("%s\n", "Enter ureg_fini");
 	for(int i=0;i<(*ureg).count;i++){
 		if((*ureg).userlist[i] != NULL){
 			free((*ureg).userlist[i]);//free all user
@@ -116,7 +117,7 @@ void ureg_unregister(USER_REGISTRY *ureg, char *handle){
 	P(&((*ureg).mutex));//lock the array while searching
 	for(int i=0;i<100;i++){
 		if((*ureg).userlist[i] != NULL){//if a user exist
-			if(strcmp(user_get_handle((*ureg).userlist[i]),handle) == 0){//handle exist
+			if(user_get_handle((*ureg).userlist[i]),handle){//handle exist
 				user_unref((*ureg).userlist[i],"user registry's pointer is deleted");//increase ref count;
 				(*ureg).userlist[i] = NULL;//remove the user with the associate handle
 				(*ureg).count--;

@@ -51,7 +51,7 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
  */
 int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	//header is in network byte order, caller should call ntohl to convert to host byte order
-	printf("%s\n", "enter rece pack");
+	printf("%s\n", "waiting for packet");
 	int ret=rio_readn(fd,hdr,sizeof(CHLA_PACKET_HEADER));//read a packet header store into hdr.
 	printf("%s\n", "received packet");
 	if(ret == -1){//error in reading

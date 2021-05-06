@@ -84,8 +84,9 @@ int main(int argc, char* argv[]){
     printf("%s\n", "exit while");
     for(int i=0;i<c;i++){
         Pthread_join(tid[i],NULL);
-        free(connfd[c]);
+        free(connfd[i]);
     }
+    free(connfd[c]);
     terminate(EXIT_SUCCESS);
 }
 
@@ -95,6 +96,7 @@ int main(int argc, char* argv[]){
 static void terminate(int status) {
     // Shut down all existing client connections.
     // This will trigger the eventual termination of service threads.
+    printf("%s\n", "Enter terminate");
     creg_shutdown_all(client_registry);
 
     // Finalize modules.
