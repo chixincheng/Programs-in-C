@@ -162,7 +162,9 @@ USER *client_get_user(CLIENT *client, int no_ref){
 		return (*client).user;
 	}
 	else{//ref count increase, caller need to decrease
-		user_ref((*client).user,"increase count for returning pointer to user");
+		if(client->user != NULL){
+			user_ref((*client).user,"increase count for returning pointer to user");
+		}
 		return (*client).user;
 	}
 }

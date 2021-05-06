@@ -169,9 +169,10 @@ void mb_add_notice(MAILBOX *mb, NOTICE_TYPE ntype, int msgid){
 		if(mb->rear == NULL){
 			mb->front = mb->rear = node;
 		}
-		//add new entry to the end and change the end
-		mb->rear->next = node;
-		mb->rear = node;
+		else{	//add new entry to the end and change the end
+			mb->rear->next = node;
+			mb->rear = node;
+		}
 	}
 	else{
 		printf("%s\n", "Mailbox is in defunct state, can not add notice");

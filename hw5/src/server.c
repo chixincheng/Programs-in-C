@@ -37,18 +37,15 @@ void *chla_client_service(void *arg){
 			}
 			else{
 				client_send_nack(cl,ntohl(msgid));//login fail
-				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 		}
 		else if(type == CHLA_LOGOUT_PKT){//logout request
 			int log = client_logout(cl);
 			if(log != 0){
 				client_send_nack(cl,ntohl(msgid));//logout fail
-				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 			else{
 				client_send_ack(cl,ntohl(msgid),payload,ntohl(payloadlen));//logout success
-				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 		}
 		else if(type == CHLA_USERS_PKT){//user request
@@ -68,14 +65,13 @@ void *chla_client_service(void *arg){
 					payl = realloc(payl,len);//realloc payload size
 					strcat(payl,h);//append user into payload
 					printf("%s\n", h);
+					user_unref(u,"pointer deleted");
 				}
-				user_unref(u,"pointer deleted");
 				client_unref(connlist[cont],"pointer from allclient is deleted");
 				connlist[cont] = NULL;//delete pointer
 				cont++;
 			}
 			client_send_ack(cl,ntohl(msgid),payl,len);
-			mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 		}
 		else if(type == CHLA_SEND_PKT){//send request
 			int fail = -5;
