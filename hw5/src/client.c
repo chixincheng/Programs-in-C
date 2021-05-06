@@ -8,6 +8,7 @@
 #include "csapp.h"
 #include "globals.h"
 #include "protocol.h"
+#include "helper.h"
 
 typedef struct client{
 	int fd;
@@ -72,6 +73,7 @@ CLIENT *client_ref(CLIENT *client, char *why){
 void client_unref(CLIENT *client, char *why){
 	P(&((*client).mutex));
 	(*client).refc--;//decrement ref count
+	printf("%s%i\n", "still have reference count",client->refc);
 	V(&((*client).mutex));
 	if(((*client).refc) == 0){//check this
 		user_unref(client->user,"free the client, pointer from client obj is discrded");
@@ -132,16 +134,16 @@ int client_logout(CLIENT *client){
 	if((*client).log == -1){//not logged in
 		return -1;
 	}
+	P(&((*client).mutex));
+	mb_shutdown((*client).mail);
 	ureg_unregister(user_registry,user_get_handle(client->user));
 	user_unref((*client).user,"discard user from client");
-
 	(*client).user = NULL;//discard user
-	mb_shutdown((*client).mail);
-	mb_unref((*client).mail,"discard mailbox from client");
 	printf("%s\n", "mailbox enter shutdown");
-	(*client).mail = NULL;//discard mailbox
 	(*client).log = -1;//logged out
-	printf("%s\n", "mailbox shutdown complete");
+	mb_unref((*client).mail,"discard mailbox from client");
+	(*client).mail = NULL;//discard mailbox
+	V(&((*client).mutex));
 	return 0;
 }
 
@@ -254,6 +256,8 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 	head->type = CHLA_ACK_PKT;
 	head->payload_length = htonl(datalen);
 	head->msgid = htonl(msgid);
+	head->timestamp_sec = 0;
+	head->timestamp_nsec = 0;
 	int ret = client_send_packet(client,head,data);
 	free(head);
 	return ret;
@@ -273,11 +277,13 @@ int client_send_nack(CLIENT *client, uint32_t msgid){
 	head->type = pkty;
 	head->payload_length = htonl(0);
 	head->msgid = htonl(msgid);
+	head->timestamp_sec=0;
+	head->timestamp_nsec=0;
 	int ret = client_send_packet(client,head,NULL);
 	free(head);
 	return ret;
 }
 
-int client_get_log(CLIENT *client){
+int client_get_log(CLIENT * client){
 	return client->log;
 }

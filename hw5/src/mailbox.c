@@ -69,14 +69,18 @@ void mb_ref(MAILBOX *mb, char *why){
 void mb_unref(MAILBOX *mb, char *why){
 	P(&((*mb).mutex));
 	mb->refc--;
+	printf("%s%i\n", "still have reference count",mb->refc);
 	V(&((*mb).mutex));
 	if(mb->refc == 0){//free all entries and the mailbox
-		while(mb->front != NULL){
-			ENTRYNODE *temp = mb->front;
-			mb->front = mb->front->next;
-			free(temp);
+		MAILBOX_ENTRY *ret = mb_next_entry(mb);
+		if(ret == NULL){
+			while(mb->tobefree != NULL){
+				free(mb->tobefree);
+				mb->tobefree = NULL;
+			}
+			sleep(1);
+			free(mb);
 		}
-		free(mb);
 	}
 }
 
@@ -195,15 +199,17 @@ MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
 	if(mb->func == -1 && mb->front == NULL && mb->rear == NULL){//mailbox is defunct and all entries is taken out
 		if(mb->tobefree != NULL){
 			free(mb->tobefree);
+			mb->tobefree = NULL;
 		}
+		printf("%s\n", "mb_next_entry returning null to shutdown");
 		return NULL;
 	}
 	else{
 		if(mb->tobefree != NULL){
 			free(mb->tobefree);
+			mb->tobefree = NULL;
 		}
-		int change = -1;
-		while(change == -1){//while change did not happen, blocking
+		while(mb->func == 0 || mb->front != NULL){//while change did not happen, blocking
 			if(mb->front != NULL){//entry exist
 				mb->tobefree = mb->front;
 				MAILBOX_ENTRY *ret = (mb->front)->en;
@@ -212,13 +218,12 @@ MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
 				if(mb->front == NULL){//if front is null, rear = null
 					mb->rear = NULL;
 				}
-
-				change = 0;
 				return ret;
 				//caller free msg body, caller decrement count on
 				//sender's mailbox
 			}
 		}
+		return NULL;
 	}
 	return NULL;
 }

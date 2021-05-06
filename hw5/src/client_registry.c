@@ -4,6 +4,7 @@
 
 #include "client_registry.h"
 #include "csapp.h"
+#include "helper.h"
 
 
 typedef struct client_registry{
@@ -39,9 +40,10 @@ CLIENT_REGISTRY *creg_init(){
  */
 void creg_fini(CLIENT_REGISTRY *cr){
 	P(&((*cr).mutex));
+	printf("%s\n", "Enter creg_fini");
 	for(int i=0;i<(*cr).fcount;i++){
 		if((*cr).clientlist[i] != NULL){
-
+			client_unref((*cr).clientlist[i],"client_registry fini");
 			free((*cr).clientlist[i]);//free all client
 		}
 	}
@@ -154,6 +156,7 @@ CLIENT **creg_all_clients(CLIENT_REGISTRY *cr){
  */
 void creg_shutdown_all(CLIENT_REGISTRY *cr){
 	P(&((*cr).mutex));
+	printf("%s\n", "Enter creg_shutdown_all");
 	cr->fcount = cr -> count;
 	for(int i=0;i<(*cr).count;i++){
 		if((*cr).clientlist[i] != NULL){

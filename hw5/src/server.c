@@ -6,6 +6,7 @@
 #include "server.h"
 #include "client_registry.h"
 #include "csapp.h"
+#include "helper.h"
 
 
 void *mailboxservice(void *arg);
@@ -15,9 +16,10 @@ void *chla_client_service(void *arg){
 	CHLA_PACKET_HEADER *hdr = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	hdr->type = -1;
 	void *payload = NULL;
-	CLIENT *cl = creg_register(client_registry,fd);
+	CLIENT *cl = creg_register(client_registry,fd);//refc=2
 	MAILBOX *from =NULL;
 	int run = 0;
+	int mailstart = -1;
 	//
 	pthread_t tid;
 	//
@@ -28,12 +30,13 @@ void *chla_client_service(void *arg){
 		uint32_t msgid = hdr->msgid;//network byte order
 		uint32_t payloadlen = hdr->payload_length;//network byte order
 		if(type == CHLA_LOGIN_PKT){//login request
-			int log = client_login(cl,handle);
+			int log = client_login(cl,handle);//mb refc=1
 			if(log != -1){
 				client_send_ack(cl,ntohl(msgid),payload,ntohl(payloadlen));//login success
 				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 				//new mailbox service thread start here after client login
 				Pthread_create(&tid,NULL,mailboxservice,client_get_mailbox(cl,1));
+				mailstart = 0;
 			}
 			else{
 				client_send_nack(cl,ntohl(msgid));//login fail
@@ -71,6 +74,7 @@ void *chla_client_service(void *arg){
 				connlist[cont] = NULL;//delete pointer
 				cont++;
 			}
+			free(connlist);
 			client_send_ack(cl,ntohl(msgid),payl,len);
 		}
 		else if(type == CHLA_SEND_PKT){//send request
@@ -123,8 +127,8 @@ void *chla_client_service(void *arg){
 						}
 						free(head);
 					}
+					user_unref(u,"pointer deleted");
 				}
-				user_unref(u,"pointer deleted");
 				client_unref(connlist[cont],"pointer from allclient is deleted");
 				connlist[cont] = NULL;//delete pointer
 				cont++;
@@ -135,7 +139,15 @@ void *chla_client_service(void *arg){
 			free(connlist);//free the malloc array
 		}
 	}
+	if(client_get_log(cl) == 0){
+		client_logout(cl);
+		sleep(1);
+	}
+	free(payload);
 	free(hdr);
+	if(mailstart == 0){
+		Pthread_join(tid,NULL);
+	}
 	Pthread_exit(arg);
 	return 0;
 }
@@ -162,8 +174,8 @@ void *mailboxservice(void *arg){
 					if(strcmp(h,handle) == 0){
 						client_send_packet(connlist[cont],head,payload);
 					}
+					user_unref(u,"pointer deleted");
 				}
-				user_unref(u,"pointer deleted");
 				client_unref(connlist[cont],"pointer from allclient is deleted");
 				connlist[cont] = NULL;//delete pointer
 				cont++;
@@ -195,8 +207,8 @@ void *mailboxservice(void *arg){
 						if(strcmp(h,handle) == 0){
 							client_send_packet(connlist[cont],head,NULL);
 						}
+						user_unref(u,"pointer deleted");
 					}
-					user_unref(u,"pointer deleted");
 					client_unref(connlist[cont],"pointer from allclient is deleted");
 					connlist[cont] = NULL;//delete pointer
 					cont++;
@@ -210,6 +222,7 @@ void *mailboxservice(void *arg){
 		}
 		free(ent);
 	}
+	printf("%s\n", "mailbox shutdown complete");
 	Pthread_exit(arg);
 	return 0;
 }
