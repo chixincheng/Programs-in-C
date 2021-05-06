@@ -57,8 +57,10 @@ int processprint(CONVERSION **path,PRINTER p,JOB j,FILE *out);
 
 volatile sig_atomic_t flag = -5;//process id will be stored
 volatile JOB_STATUS schan = -5;//job status will be stored
+volatile int exitsign = 0;
 
 void sighandler(){
+	sf_cmd_error("enter");
 	int chils;
 	flag = waitpid(-1,&chils,0);
 	if(WIFEXITED(chils)){//exit normally
@@ -73,9 +75,17 @@ void sighandler(){
 	if(WIFSTOPPED(chils)){//process stopped
 		schan = JOB_PAUSED;
 	}
+	if(WIFSIGNALED(chils)){//stop by signal
+		sf_cmd_error("triggered");
+		exitsign = -1;
+	}
+
 }
 
 void callback(){
+	if(exitsign == -1){
+		exit(-1);
+	}
 	if(flag != -5){//flag got changed
 		for(int i =0;i<MAX_JOBS;i++){
 			int sid =jobarray[i].gid;
