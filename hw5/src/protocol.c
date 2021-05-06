@@ -24,8 +24,9 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 		errno = EIO;
 		return -1;
 	}
-	if((*hdr).payload_length > 0){
-		ret = rio_writen(fd,payload,(*hdr).payload_length);
+	uint32_t sz = ntohl(hdr->payload_length);
+	if(sz > 0){
+		ret = rio_writen(fd,payload,sz);
 	}
 	if(ret == -1){//error in writing
 		errno = EIO;

@@ -250,6 +250,7 @@ int client_send_packet(CLIENT *client, CHLA_PACKET_HEADER *pkt, void *data){
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 	CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 	head->type = CHLA_ACK_PKT;
+	head->payload_length = htonl(datalen);
 	head->msgid = htonl(msgid);
 	int ret = client_send_packet(client,head,data);
 	free(head);

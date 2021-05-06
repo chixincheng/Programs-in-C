@@ -68,16 +68,27 @@ int main(int argc, char* argv[]){
 
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
+    pthread_t tid[100];
+    for(int i=0;i<100;i++){
+        tid[i] = 0;
+    }
+    int c = 0;
+    int *connfd[100];
     while(exitsign == 0){//while sighup is not received
-        pthread_t tid;
         clientlen = sizeof(struct sockaddr_storage);
-        int *connfd = malloc(sizeof(int));
-        *connfd = accept(liserver, (SA *)&clientaddr,&clientlen);
-        if(*connfd >= 0){//on success, return a nonnegative interger
-            Pthread_create(&tid,NULL,chla_client_service,connfd);
+        connfd[c] = malloc(sizeof(int));
+        *(connfd[c]) = accept(liserver, (SA *)&clientaddr,&clientlen);
+        if(*(connfd[c]) >= 0){//on success, return a nonnegative interger
+            Pthread_create(&(tid[c]),NULL,chla_client_service,connfd[c]);
+            printf("%s%i\n", "thread started at fd",*(connfd[c]));
+            c++;
         }
     }
     printf("%s\n", "exit while");
+    for(int i=0;i<c;i++){
+        Pthread_join(tid[i],NULL);
+        free(connfd[c]);
+    }
     terminate(EXIT_SUCCESS);
 }
 

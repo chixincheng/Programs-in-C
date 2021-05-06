@@ -8,6 +8,7 @@
 
 typedef struct client_registry{
 	int count;
+	int fcount;
 	sem_t mutex;
 	CLIENT *clientlist[MAX_CLIENTS];//64
 }CLIENT_REGISTRY;
@@ -22,6 +23,7 @@ typedef struct client_registry{
 CLIENT_REGISTRY *creg_init(){
 	CLIENT_REGISTRY *newcr = (CLIENT_REGISTRY*)malloc(sizeof(CLIENT_REGISTRY));
 	newcr->count = 0;
+	newcr->fcount = 0;
 	for(int i=0;i<MAX_CLIENTS;i++){
 		(*newcr).clientlist[i] = NULL;
 	}
@@ -37,7 +39,7 @@ CLIENT_REGISTRY *creg_init(){
  */
 void creg_fini(CLIENT_REGISTRY *cr){
 	P(&((*cr).mutex));
-	for(int i=0;i<(*cr).count;i++){
+	for(int i=0;i<(*cr).fcount;i++){
 		if((*cr).clientlist[i] != NULL){
 
 			free((*cr).clientlist[i]);//free all client
@@ -152,6 +154,7 @@ CLIENT **creg_all_clients(CLIENT_REGISTRY *cr){
  */
 void creg_shutdown_all(CLIENT_REGISTRY *cr){
 	P(&((*cr).mutex));
+	cr->fcount = cr -> count;
 	for(int i=0;i<(*cr).count;i++){
 		if((*cr).clientlist[i] != NULL){
 			int fd = client_get_fd((*cr).clientlist[i]);
