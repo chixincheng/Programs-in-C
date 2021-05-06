@@ -78,7 +78,7 @@ void *chla_client_service(void *arg){
 			mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 		}
 		else if(type == CHLA_SEND_PKT){//send request
-			int s = -5;
+			int fail = -5;
 			char *temp = (char*)malloc(ntohl(payloadlen));
 			int ct = 0;
 			while(*(handle+ct) != '\n'){
@@ -94,6 +94,7 @@ void *chla_client_service(void *arg){
 				if(u != NULL){
 					char *h = user_get_handle(u);//get handle from user
 					if(strcmp(h,temp) == 0){
+						fail = 0;
 						CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
 						head->type = CHLA_MESG_PKT;
 						head->payload_length = payloadlen;//already in network byte order
@@ -101,7 +102,6 @@ void *chla_client_service(void *arg){
 						//set from mailbox
 						from = client_get_mailbox(cl,0);
 						//send msg packet to other client
-						s =0;
 						client_send_ack(cl,ntohl(msgid),payload,0);//send ack
 						mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 						USER *usen = client_get_user(cl,1);//ref will not increase
@@ -133,12 +133,10 @@ void *chla_client_service(void *arg){
 				connlist[cont] = NULL;//delete pointer
 				cont++;
 			}
-			if(s == -5){
-				client_send_nack(cl,ntohl(msgid));
-				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
+			if(fail == -5){
+				mb_add_notice(client_get_mailbox(cl,1),BOUNCE_NOTICE_TYPE,ntohl(msgid));
 			}
 			free(connlist);//free the malloc array
-			free(temp);
 		}
 	}
 	free(hdr);
@@ -150,7 +148,7 @@ void *mailboxservice(void *arg){
 	MAILBOX *mb = (MAILBOX*)arg;
 	MAILBOX_ENTRY *ent;
 
-	while((ent = mb_next_entry(mb)) != NULL){//while mailbox is not defunct
+	while((ent = mb_next_entry(mb)) != NULL){//while mailbox is not defunct or still have notice/message
 		if(ent->type == MESSAGE_ENTRY_TYPE){
 			MESSAGE msg = (ent->content).message;
 			void *payload = msg.body;
@@ -174,11 +172,47 @@ void *mailboxservice(void *arg){
 				connlist[cont] = NULL;//delete pointer
 				cont++;
 			}
+			mb_unref(msg.from,"msg has been processed, pointer from message is discarded");
 			free(connlist);//free the malloc array
+			free(head);
+			free(payload);
 		}
 		else if(ent->type == NOTICE_ENTRY_TYPE){
-			;
+			NOTICE ntc = (ent->content).notice;
+			if(ntc.type == NO_NOTICE_TYPE){//ack or nack and stuff
+				;
+			}
+			else if(ntc.type == BOUNCE_NOTICE_TYPE){
+				MAILBOX_DISCARD_HOOK *hook = (void*)ent;
+				mb_set_discard_hook(mb,hook);//setting discard hook
+				CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
+				head->type = CHLA_BOUNCE_PKT;
+				head->msgid = htonl(ntc.msgid);
+				head->payload_length = 0;
+				char *handle = mb_get_handle(mb);
+				CLIENT ** connlist = creg_all_clients(client_registry);//return all connected client
+				int cont =0;
+				while(connlist[cont] != NULL){
+					USER *u = client_get_user(connlist[cont],0);//get user from client
+					if(u != NULL){
+						char *h = user_get_handle(u);//get handle from user
+						if(strcmp(h,handle) == 0){
+							client_send_packet(connlist[cont],head,NULL);
+						}
+					}
+					user_unref(u,"pointer deleted");
+					client_unref(connlist[cont],"pointer from allclient is deleted");
+					connlist[cont] = NULL;//delete pointer
+					cont++;
+				}
+				free(connlist);//free the malloc array
+				free(head);
+			}
+			else if(ntc.type == RRCPT_NOTICE_TYPE){
+				;
+			}
 		}
+		free(ent);
 	}
 	Pthread_exit(arg);
 	return 0;

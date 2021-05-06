@@ -6,7 +6,6 @@
 
 //linked list node for mailbox queue
 typedef struct entrynode ENTRYNODE;
-typedef void (MAILBOX_DISCARD_HOOK)(MAILBOX_ENTRY *);
 typedef struct entrynode{
 	MAILBOX_ENTRY *en;
 	ENTRYNODE *next;
@@ -21,6 +20,7 @@ typedef struct mailbox{
 	sem_t mutex;
 	ENTRYNODE *front;
 	ENTRYNODE *rear;
+	ENTRYNODE *tobefree;
 }MAILBOX;
 
 //create new entry node for linked list
@@ -43,6 +43,7 @@ MAILBOX *mb_init(char *handle){
 	newmail->discardhook = NULL;
 	sem_init(&(newmail->mutex),0,1);//init mutex to be 1
 	newmail->front = newmail->rear =NULL;
+	newmail->tobefree = NULL;
 	return newmail;
 }
 
@@ -143,7 +144,7 @@ void mb_add_message(MAILBOX *mb, int msgid, MAILBOX *from, void *body, int lengt
 		}
 	}
 	else{
-		printf("%s\n", "sender mailbox is in defunct state, can not send message");
+		printf("%s\n", "sender mailbox is in defunct state, can not add message");
 	}
 	V(&((*from).mutex));//unlock sender mailbox
 	V(&((*mb).mutex));//unlock receiver mailbox
@@ -156,20 +157,25 @@ void mb_add_message(MAILBOX *mb, int msgid, MAILBOX *from, void *body, int lengt
  */
 void mb_add_notice(MAILBOX *mb, NOTICE_TYPE ntype, int msgid){
 	P(&((*mb).mutex));//lock mailbox
-	NOTICE not = {.type = ntype, .msgid = msgid};
-	MAILBOX_ENTRY *entry = (MAILBOX_ENTRY *)malloc(sizeof(MAILBOX_ENTRY));
-	entry->type = NOTICE_ENTRY_TYPE;
-	entry->content.notice = not;
-	//create entrynode for the queue
-	ENTRYNODE *node = newentry(entry);
+	if(mb->func == 0){//not in defunct state
+		NOTICE not = {.type = ntype, .msgid = msgid};
+		MAILBOX_ENTRY *entry = (MAILBOX_ENTRY *)malloc(sizeof(MAILBOX_ENTRY));
+		entry->type = NOTICE_ENTRY_TYPE;
+		entry->content.notice = not;
+		//create entrynode for the queue
+		ENTRYNODE *node = newentry(entry);
 
-	//if queue is empty
-	if(mb->rear == NULL){
-		mb->front = mb->rear = node;
+		//if queue is empty
+		if(mb->rear == NULL){
+			mb->front = mb->rear = node;
+		}
+		//add new entry to the end and change the end
+		mb->rear->next = node;
+		mb->rear = node;
 	}
-	//add new entry to the end and change the end
-	mb->rear->next = node;
-	mb->rear = node;
+	else{
+		printf("%s\n", "Mailbox is in defunct state, can not add notice");
+	}
 	V(&((*mb).mutex));//unlock mailbox
 }
 
@@ -185,19 +191,27 @@ void mb_add_notice(MAILBOX *mb, NOTICE_TYPE ntype, int msgid){
  * that service should be terminated.
  */
 MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
-	if(mb->func == -1){//mailbox is defunct
+	if(mb->func == -1 && mb->front == NULL && mb->rear == NULL){//mailbox is defunct and all entries is taken out
+		if(mb->tobefree != NULL){
+			free(mb->tobefree);
+		}
 		return NULL;
 	}
 	else{
+		if(mb->tobefree != NULL){
+			free(mb->tobefree);
+		}
 		int change = -1;
 		while(change == -1){//while change did not happen, blocking
 			if(mb->front != NULL){//entry exist
+				mb->tobefree = mb->front;
 				MAILBOX_ENTRY *ret = (mb->front)->en;
 
 				(mb->front) = (mb->front)->next;//move front one node up
 				if(mb->front == NULL){//if front is null, rear = null
 					mb->rear = NULL;
 				}
+
 				change = 0;
 				return ret;
 				//caller free msg body, caller decrement count on
@@ -208,6 +222,7 @@ MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
 	return NULL;
 }
 
+typedef void (MAILBOX_DISCARD_HOOK)(MAILBOX_ENTRY *);
 
 //Set the discard hook for a mailbox.
 void mb_set_discard_hook(MAILBOX *mb, MAILBOX_DISCARD_HOOK *hook){

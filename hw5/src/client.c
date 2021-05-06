@@ -74,8 +74,8 @@ void client_unref(CLIENT *client, char *why){
 	(*client).refc--;//decrement ref count
 	V(&((*client).mutex));
 	if(((*client).refc) == 0){//check this
-		user_unref(client->user,"free the client");
-		mb_unref(client->mail,"free the client");
+		user_unref(client->user,"free the client, pointer from client obj is discrded");
+		mb_unref(client->mail,"free the client, pointer from client obj is discrded");
 		free(client);
 	}
 }
@@ -136,9 +136,9 @@ int client_logout(CLIENT *client){
 	user_unref((*client).user,"discard user from client");
 
 	(*client).user = NULL;//discard user
+	mb_shutdown((*client).mail);
 	mb_unref((*client).mail,"discard mailbox from client");
 	printf("%s\n", "mailbox enter shutdown");
-	mb_shutdown((*client).mail);
 	(*client).mail = NULL;//discard mailbox
 	(*client).log = -1;//logged out
 	printf("%s\n", "mailbox shutdown complete");
