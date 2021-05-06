@@ -8,6 +8,8 @@
 #include "csapp.h"
 
 
+void *mailboxservice(void *arg);
+
 void *chla_client_service(void *arg){
 	int fd = *((int*)arg);
 	CHLA_PACKET_HEADER *hdr = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
@@ -16,6 +18,9 @@ void *chla_client_service(void *arg){
 	CLIENT *cl = creg_register(client_registry,fd);
 	MAILBOX *from =NULL;
 	int run = 0;
+	//
+	pthread_t tid;
+	//
 	while(run != -1){
 		run = proto_recv_packet(fd,hdr,&payload);
 		CHLA_PACKET_TYPE type = hdr->type;
@@ -26,18 +31,24 @@ void *chla_client_service(void *arg){
 			int log = client_login(cl,handle);
 			if(log != -1){
 				client_send_ack(cl,ntohl(msgid),payload,ntohl(payloadlen));//login success
+				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
+				//new mailbox service thread start here after client login
+				Pthread_create(&tid,NULL,mailboxservice,client_get_mailbox(cl,1));
 			}
 			else{
 				client_send_nack(cl,ntohl(msgid));//login fail
+				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 		}
 		else if(type == CHLA_LOGOUT_PKT){//logout request
 			int log = client_logout(cl);
 			if(log != 0){
 				client_send_nack(cl,ntohl(msgid));//logout fail
+				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 			else{
 				client_send_ack(cl,ntohl(msgid),payload,ntohl(payloadlen));//logout success
+				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 		}
 		else if(type == CHLA_USERS_PKT){//user request
@@ -64,6 +75,7 @@ void *chla_client_service(void *arg){
 				cont++;
 			}
 			client_send_ack(cl,ntohl(msgid),payl,len);
+			mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 		}
 		else if(type == CHLA_SEND_PKT){//send request
 			int s = -5;
@@ -91,6 +103,7 @@ void *chla_client_service(void *arg){
 						//send msg packet to other client
 						s =0;
 						client_send_ack(cl,ntohl(msgid),payload,0);//send ack
+						mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 						USER *usen = client_get_user(cl,1);//ref will not increase
 						char *sender = user_get_handle(usen);
 						int c = 0;
@@ -105,7 +118,13 @@ void *chla_client_service(void *arg){
 							c++;
 						}
 
-						client_send_packet(connlist[cont],head,temp);
+						int ret =client_send_packet(connlist[cont],head,temp);
+						if(ret == 0){//send successful
+							mb_add_message(client_get_mailbox(connlist[cont],1),ntohl(msgid),from,temp,ntohl(payloadlen));
+						}
+						else{//send fail
+							mb_add_notice(client_get_mailbox(cl,1),BOUNCE_NOTICE_TYPE,ntohl(msgid));
+						}
 						free(head);
 					}
 				}
@@ -116,41 +135,38 @@ void *chla_client_service(void *arg){
 			}
 			if(s == -5){
 				client_send_nack(cl,ntohl(msgid));
+				mb_add_notice(client_get_mailbox(cl,1),NO_NOTICE_TYPE,ntohl(msgid));
 			}
 			free(connlist);//free the malloc array
 			free(temp);
 		}
-		else if(type == CHLA_MESG_PKT){//receive send request
-			//add message to mailbox
-			printf("%s\n", handle);
-			char *han;
-			if(from != NULL){
-				mb_add_message(client_get_mailbox(cl,1),htonl(msgid),from,payload,htonl(payloadlen));
-				han = mb_get_handle(from);
-				mb_unref(from,"delete pointer from the mailbox to add mesg");
-				from = NULL;//reset 'from' mailbox
-			}
-			int ct=0;
-			while(*(han+ct) != '\0'){
-				ct++;
-			}
+	}
+	free(hdr);
+	Pthread_exit(arg);
+	return 0;
+}
 
-			printf("%s%s%s%s\n", "Message fromdaww",han,": ",han+ct);
+void *mailboxservice(void *arg){
+	MAILBOX *mb = (MAILBOX*)arg;
+	MAILBOX_ENTRY *ent;
 
+	while((ent = mb_next_entry(mb)) != NULL){//while mailbox is not defunct
+		if(ent->type == MESSAGE_ENTRY_TYPE){
+			MESSAGE msg = (ent->content).message;
+			void *payload = msg.body;
+			CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
+			head->type = CHLA_RCVD_PKT;
+			head->msgid = htonl(msg.msgid);
+			head->payload_length = 0;
+			char *handle = mb_get_handle(msg.from);
 			CLIENT ** connlist = creg_all_clients(client_registry);//return all connected client
 			int cont =0;
 			while(connlist[cont] != NULL){
 				USER *u = client_get_user(connlist[cont],0);//get user from client
 				if(u != NULL){
 					char *h = user_get_handle(u);//get handle from user
-					if(strcmp(h,han) == 0){
-						CHLA_PACKET_HEADER *head = (CHLA_PACKET_HEADER*)malloc(sizeof(CHLA_PACKET_HEADER));
-						head->type = CHLA_RCVD_PKT;
-						head->payload_length = 0;
-						head->msgid = msgid;
-						//send msg packet to other client
+					if(strcmp(h,handle) == 0){
 						client_send_packet(connlist[cont],head,payload);
-						free(head);
 					}
 				}
 				user_unref(u,"pointer deleted");
@@ -160,8 +176,10 @@ void *chla_client_service(void *arg){
 			}
 			free(connlist);//free the malloc array
 		}
+		else if(ent->type == NOTICE_ENTRY_TYPE){
+			;
+		}
 	}
-	free(hdr);
 	Pthread_exit(arg);
 	return 0;
 }

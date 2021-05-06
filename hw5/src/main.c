@@ -69,9 +69,6 @@ int main(int argc, char* argv[]){
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
     pthread_t tid[100];
-    for(int i=0;i<100;i++){
-        tid[i] = 0;
-    }
     int c = 0;
     int *connfd[100];
     while(exitsign == 0){//while sighup is not received

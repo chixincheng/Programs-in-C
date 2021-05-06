@@ -205,7 +205,7 @@ MAILBOX_ENTRY *mb_next_entry(MAILBOX *mb){
 			}
 		}
 	}
-	return NULL;;
+	return NULL;
 }
 
 
