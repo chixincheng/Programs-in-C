@@ -73,7 +73,6 @@ CLIENT *client_ref(CLIENT *client, char *why){
 void client_unref(CLIENT *client, char *why){
 	P(&((*client).mutex));
 	(*client).refc--;//decrement ref count
-	printf("%s%i\n", "still have reference count",client->refc);
 	V(&((*client).mutex));
 	if(((*client).refc) == 0){//check this
 		user_unref(client->user,"free the client, pointer from client obj is discrded");

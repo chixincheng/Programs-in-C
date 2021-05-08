@@ -139,12 +139,9 @@ void mb_add_message(MAILBOX *mb, int msgid, MAILBOX *from, void *body, int lengt
 		if(mb->rear == NULL){
 			mb->front = mb->rear = node;
 		}
-		//add new entry to the end and change the end
-		mb->rear->next = node;
-		mb->rear = node;
-
-		if(mb != from){//compare address of mailbox
-			mb_ref(from,"increase refcount of sender by mb_add_message");
+		else{//add new entry to the end and change the end
+			mb->rear->next = node;
+			mb->rear = node;
 		}
 	}
 	else{
@@ -152,6 +149,9 @@ void mb_add_message(MAILBOX *mb, int msgid, MAILBOX *from, void *body, int lengt
 	}
 	V(&((*from).mutex));//unlock sender mailbox
 	V(&((*mb).mutex));//unlock receiver mailbox
+	if(mb != from){//compare address of mailbox
+		mb_ref(from,"increase refcount of sender by mb_add_message");
+	}
 }
 
 /*
