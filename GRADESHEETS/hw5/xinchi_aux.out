@@ -1,0 +1,161 @@
+[----] Criterion v2.3.3
+[====] Running 5 tests from blackbox_suite:
+[RUN ] blackbox_suite::00_start_server
+[RUN ] blackbox_suite::01_connect
+[RUN ] blackbox_suite::02_connect_alice
+[RUN ] blackbox_suite::03_connect_bob
+[RUN ] blackbox_suite::04_connect_carol
+server_suite/00_start_server
+Starting server...pid = 477775
+Charla test client.
+Commands are:
+	login <handle>
+	logout
+	users
+	send <handle> <msg>
+Connected to server localhost:9999
+> Charla test client.
+Commands are:
+	login <handle>
+	logout
+	users
+	send <handle> <msg>
+Connected to server localhost:9999
+> Charla test client.
+Commands are:
+	login <handle>
+	logout
+	users
+	send <handle> <msg>
+Connected to server localhost:9999
+> server_suite/01_connect
+Connected to server localhost:9999
+[PASS] blackbox_suite::01_connect: (0.00s)
+alice
+OK
+> bob
+OK
+> carol
+OK
+> OK
+> [PASS] blackbox_suite::02_connect_alice: (2.00s)
+Message from alic: hello
+> OK
+> [PASS] blackbox_suite::03_connect_bob: (2.59s)
+OK
+> [PASS] blackbox_suite::04_connect_carol: (2.59s)
+Sending SIGHUP to server pid 477775
+Server wait() returned = 0x9
+Server terminated with signal 9
+==477775== Memcheck, a memory error detector
+==477775== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==477775== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==477775== Command: bin/charla -p 9999
+==477775== Parent PID: 477748
+==477775== 
+==477775== Thread 2:
+==477775== Syscall param write(buf) points to uninitialised byte(s)
+==477775==    at 0x487C2CF: __libc_write (write.c:26)
+==477775==    by 0x487C2CF: write (write.c:24)
+==477775==    by 0x10D9D0: rio_writen (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10B4AB: proto_send_packet (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10C37A: client_send_packet (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10C426: client_send_ack (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E32D: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a826b1 is 1 bytes inside a block of size 20 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10C3CB: client_send_ack (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E32D: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Invalid read of size 1
+==477775==    at 0x483FEE8: strcmp (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10E6FC: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a82a15 is 0 bytes after a block of size 5 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B58A: proto_recv_packet (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E27E: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Conditional jump or move depends on uninitialised value(s)
+==477775==    at 0x483FEF7: strcmp (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10E6FC: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Conditional jump or move depends on uninitialised value(s)
+==477775==    at 0x10E6FF: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Invalid read of size 1
+==477775==    at 0x10E87E: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a836fa is 0 bytes after a block of size 10 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B58A: proto_recv_packet (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E27E: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Invalid write of size 1
+==477775==    at 0x483F0AC: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B1AB: mb_add_message (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E921: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a84438 is 0 bytes after a block of size 8 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B18D: mb_add_message (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E921: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Invalid read of size 1
+==477775==    at 0x483F0B2: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B1AB: mb_add_message (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E921: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a8383a is 0 bytes after a block of size 10 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10E61B: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Invalid write of size 1
+==477775==    at 0x483F0BE: strcpy (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B1AB: mb_add_message (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E921: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a8443a is 2 bytes after a block of size 8 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B18D: mb_add_message (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E921: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+==477775== Thread 3:
+==477775== Invalid read of size 1
+==477775==    at 0x10E7FD: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775==  Address 0x4a82a15 is 0 bytes after a block of size 5 alloc'd
+==477775==    at 0x483B7F3: malloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==477775==    by 0x10B58A: proto_recv_packet (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x10E27E: chla_client_service (in /home/gene/grader-s19/hw5/repos/xinchi/hw5/bin/charla)
+==477775==    by 0x4871608: start_thread (pthread_create.c:477)
+==477775==    by 0x49AD292: clone (clone.S:95)
+==477775== 
+[----] tests/charla_tests.c:64: Assertion failed: Server did not terminate after SIGHUP
+[FAIL] blackbox_suite::00_start_server: (15.04s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 5 | Passing: 4 | Failing: 1 | Crashing: 0 

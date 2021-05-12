@@ -1,0 +1,179 @@
+[----] Criterion v2.3.3
+[====] Running 11 tests from client_registry_suite:
+[RUN ] client_registry_suite::all_clients_empty
+[PASS] client_registry_suite::all_clients_empty: (0.00s)
+[RUN ] client_registry_suite::all_clients_nonempty
+[PASS] client_registry_suite::all_clients_nonempty: (0.00s)
+[RUN ] client_registry_suite::basic_one_registry
+[----] tests/client_registry_test.c:239: Unexpected signal caught below this line!
+[FAIL] client_registry_suite::basic_one_registry: CRASH!
+[RUN ] client_registry_suite::basic_one_registry_premature
+[----] tests/client_registry_test.c:305: Unexpected signal caught below this line!
+[FAIL] client_registry_suite::basic_one_registry_premature: CRASH!
+[RUN ] client_registry_suite::basic_two_registries
+[----] tests/client_registry_test.c:267: Unexpected signal caught below this line!
+[FAIL] client_registry_suite::basic_two_registries: CRASH!
+[RUN ] client_registry_suite::init
+[PASS] client_registry_suite::init: (0.00s)
+[RUN ] client_registry_suite::init_fini
+[PASS] client_registry_suite::init_fini: (0.00s)
+[RUN ] client_registry_suite::init_reg_fini
+[PASS] client_registry_suite::init_reg_fini: (0.00s)
+[RUN ] client_registry_suite::init_reg_unreg_fini
+[PASS] client_registry_suite::init_reg_unreg_fini: (0.00s)
+[RUN ] client_registry_suite::many_threads_one_registry
+[----] tests/client_registry_test.c:349: Unexpected signal caught below this line!
+[FAIL] client_registry_suite::many_threads_one_registry: CRASH!
+[RUN ] client_registry_suite::many_threads_one_registry_premature
+[----] tests/client_registry_test.c:374: Unexpected signal caught below this line!
+[FAIL] client_registry_suite::many_threads_one_registry_premature: CRASH!
+[====] Running 17 tests from client_suite:
+[RUN ] client_suite::concurrent_ref
+[----] tests/client_test.c:346: Unexpected signal caught below this line!
+[FAIL] client_suite::concurrent_ref: CRASH!
+[RUN ] client_suite::create
+[PASS] client_suite::create: (0.00s)
+[RUN ] client_suite::create_get_mailbox
+[----] tests/client_test.c:158: Unexpected signal caught below this line!
+[FAIL] client_suite::create_get_mailbox: CRASH!
+[RUN ] client_suite::create_get_user
+[PASS] client_suite::create_get_user: (0.00s)
+[RUN ] client_suite::create_login
+[PASS] client_suite::create_login: (0.00s)
+[RUN ] client_suite::create_login_get_mailbox
+[PASS] client_suite::create_login_get_mailbox: (0.00s)
+[RUN ] client_suite::create_login_get_user
+[PASS] client_suite::create_login_get_user: (0.00s)
+[RUN ] client_suite::create_login_logout
+[PASS] client_suite::create_login_logout: (1.00s)
+[RUN ] client_suite::create_login_logout_get_mailbox
+[----] tests/client_test.c:213: Unexpected signal caught below this line!
+[FAIL] client_suite::create_login_logout_get_mailbox: CRASH!
+[RUN ] client_suite::create_login_logout_get_user
+[PASS] client_suite::create_login_logout_get_user: (1.00s)
+[RUN ] client_suite::create_send_ack
+[PASS] client_suite::create_send_ack: (0.00s)
+[RUN ] client_suite::create_send_nack
+[PASS] client_suite::create_send_nack: (0.00s)
+[RUN ] client_suite::create_send_packet
+test_output/client_send_packet tests/rsrc/client_send_packet differ: byte 13, line 1
+[----] tests/client_test.c:257: Assertion failed: Packet sent did not match expected
+[FAIL] client_suite::create_send_packet: (0.01s)
+[RUN ] client_suite::create_unref
+[----] tests/client_test.c:54: Unexpected signal caught below this line!
+[FAIL] client_suite::create_unref: CRASH!
+[RUN ] client_suite::register_login_many
+[----] tests/client_test.c:139: Assertion failed: Returned value (-1) was not 0
+[FAIL] client_suite::register_login_many: (0.00s)
+[RUN ] client_suite::register_login_twice_diff
+[PASS] client_suite::register_login_twice_diff: (0.00s)
+[RUN ] client_suite::register_login_twice_same
+[PASS] client_suite::register_login_twice_same: (0.00s)
+[====] Running 10 tests from mailbox_suite:
+[RUN ] mailbox_suite::concurrent_add_consume
+[PASS] mailbox_suite::concurrent_add_consume: (0.13s)
+[RUN ] mailbox_suite::concurrent_ref
+[FAIL] mailbox_suite::concurrent_ref: Timed out. (15.00s)
+[RUN ] mailbox_suite::init
+[PASS] mailbox_suite::init: (0.00s)
+[RUN ] mailbox_suite::init_add_msg_next
+[PASS] mailbox_suite::init_add_msg_next: (0.00s)
+[RUN ] mailbox_suite::init_add_msg_unref
+[FAIL] mailbox_suite::init_add_msg_unref: Timed out. (5.00s)
+[RUN ] mailbox_suite::init_add_notice_next
+[PASS] mailbox_suite::init_add_notice_next: (0.00s)
+[RUN ] mailbox_suite::init_shutdown_unref
+[PASS] mailbox_suite::init_shutdown_unref: (1.00s)
+[RUN ] mailbox_suite::init_unref
+[FAIL] mailbox_suite::init_unref: Timed out. (5.00s)
+[RUN ] mailbox_suite::next_entry_empty
+[PASS] mailbox_suite::next_entry_empty: (0.00s)
+[RUN ] mailbox_suite::next_entry_shutdown
+[PASS] mailbox_suite::next_entry_shutdown: (1.00s)
+[====] Running 9 tests from protocol_suite:
+[RUN ] protocol_suite::recv_empty
+[PASS] protocol_suite::recv_empty: (0.00s)
+[RUN ] protocol_suite::recv_error
+[PASS] protocol_suite::recv_error: (0.00s)
+[RUN ] protocol_suite::recv_no_payload
+[PASS] protocol_suite::recv_no_payload: (0.00s)
+[RUN ] protocol_suite::recv_short_header
+[----] tests/protocol_test.c:195: Assertion failed: Returned value was 0
+[FAIL] protocol_suite::recv_short_header: (0.00s)
+[RUN ] protocol_suite::recv_short_payload
+[----] tests/protocol_test.c:218: Assertion failed: Returned value was 0
+[FAIL] protocol_suite::recv_short_payload: (0.00s)
+[RUN ] protocol_suite::recv_with_payload
+[PASS] protocol_suite::recv_with_payload: (0.00s)
+[RUN ] protocol_suite::send_error
+[PASS] protocol_suite::send_error: (0.00s)
+[RUN ] protocol_suite::send_no_payload
+[PASS] protocol_suite::send_no_payload: (0.00s)
+[RUN ] protocol_suite::send_with_payload
+[PASS] protocol_suite::send_with_payload: (0.00s)
+[====] Running 11 tests from server_suite:
+[RUN ] server_suite::login_again_same_user
+[PASS] server_suite::login_again_same_user: (0.00s)
+[RUN ] server_suite::login_logout
+[PASS] server_suite::login_logout: (0.00s)
+[RUN ] server_suite::login_logout_login
+[PASS] server_suite::login_logout_login: (0.00s)
+[RUN ] server_suite::login_many_users
+[----] tests/server_test.c:469: Assertion failed: USERS output was incorrect: 
+[----]   u0u4u10u9u3u6u2u11u12u1u14u13u8u5u7
+[FAIL] server_suite::login_many_users: (0.05s)
+[RUN ] server_suite::login_send_many_users
+[----] tests/server_test.c:74: Assertion failed: Packet type (BOUNCE) was not the expected type (ACK)
+[FAIL] server_suite::login_send_many_users: (0.01s)
+[ERR ] Could not write the "assert" message down the event pipe: Bad file descriptor.
+[----] Warning! The test `server_suite::login_send_many_users` crashed during its setup or teardown.
+[RUN ] server_suite::login_two_conns_diff
+[PASS] server_suite::login_two_conns_diff: (0.00s)
+[RUN ] server_suite::login_two_conns_diff_users
+[----] tests/server_test.c:356: Assertion failed: Payload length (8) was not the expected value (12)
+[FAIL] server_suite::login_two_conns_diff_users: (0.00s)
+[RUN ] server_suite::login_two_conns_diff_users_send1
+[----] tests/server_test.c:74: Assertion failed: Packet type (BOUNCE) was not the expected type (ACK)
+[FAIL] server_suite::login_two_conns_diff_users_send1: (0.00s)
+[RUN ] server_suite::login_two_conns_same
+[----] tests/server_test.c:321: Unexpected signal caught below this line!
+[FAIL] server_suite::login_two_conns_same: CRASH!
+[RUN ] server_suite::ping
+[PASS] server_suite::ping: (0.00s)
+[RUN ] server_suite::valid_login
+[PASS] server_suite::valid_login: (0.00s)
+[====] Running 10 tests from user_registry_suite:
+[RUN ] user_registry_suite::concurrency
+[PASS] user_registry_suite::concurrency: (0.02s)
+[RUN ] user_registry_suite::init_fini
+[PASS] user_registry_suite::init_fini: (0.00s)
+[RUN ] user_registry_suite::init_reg_fini
+[PASS] user_registry_suite::init_reg_fini: (0.00s)
+[RUN ] user_registry_suite::reg3_one_registry
+[PASS] user_registry_suite::reg3_one_registry: (0.00s)
+[RUN ] user_registry_suite::reg_one_registry
+[PASS] user_registry_suite::reg_one_registry: (0.00s)
+[RUN ] user_registry_suite::reg_release_unreg_one_registry
+[PASS] user_registry_suite::reg_release_unreg_one_registry: (0.00s)
+[RUN ] user_registry_suite::reg_two_registries
+[PASS] user_registry_suite::reg_two_registries: (0.00s)
+[RUN ] user_registry_suite::release_rereg_one_registry
+[PASS] user_registry_suite::release_rereg_one_registry: (0.00s)
+[RUN ] user_registry_suite::rereg_one_registry
+[PASS] user_registry_suite::rereg_one_registry: (0.00s)
+[RUN ] user_registry_suite::unreg_empty_one_registry
+[PASS] user_registry_suite::unreg_empty_one_registry: (0.00s)
+[====] Running 5 tests from user_suite:
+[RUN ] user_suite::concurrent_ref
+[PASS] user_suite::concurrent_ref: (2.52s)
+[RUN ] user_suite::create
+[PASS] user_suite::create: (0.00s)
+[RUN ] user_suite::create_many
+[PASS] user_suite::create_many: (0.00s)
+[RUN ] user_suite::create_modify_handle
+[----] tests/user_test.c:46: Assertion failed: User name () does not match expected (Alice)
+[FAIL] user_suite::create_modify_handle: (0.00s)
+[RUN ] user_suite::create_multiple
+[PASS] user_suite::create_multiple: (0.00s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 73 | Passing: 51 | Failing: 22 | Crashing: 10 

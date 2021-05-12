@@ -1,0 +1,9 @@
+Graded Commit:3d352b388776e1047cf6e1fe4a5d6eaeb7984c86
+
+TEST NAME, POINTS,OUT OF
+blackbox_suite/00_start_server,0,1,1 assertion(s) failed.: tests/charla_tests.c:64: Server did not terminate after SIGHUP
+blackbox_suite/01_connect,1,1,
+blackbox_suite/02_connect_alice,1,1,
+blackbox_suite/03_connect_bob,1,1,
+blackbox_suite/04_connect_carol,1,1,
+total,4,5
