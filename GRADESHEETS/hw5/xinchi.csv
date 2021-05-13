@@ -52,12 +52,12 @@ server_suite/login_again_same_user,1,1,
 server_suite/login_logout,1,1,
 server_suite/login_logout_login,1,1,
 server_suite/login_many_users,0,1,"1 assertion(s) failed.: tests/server_test.c:469: USERS output was incorrect: 
-        u0u4u10u9u3u6u2u11u12u1u14u13u8u5u7"
+        u0u1u4u7u2u13u14u12u11u3u6u5u10u8u9"
 server_suite/login_send_many_users,0,1,1 assertion(s) failed.: tests/server_test.c:74: Packet type (BOUNCE) was not the expected type (ACK)
 server_suite/login_two_conns_diff,1,1,
 server_suite/login_two_conns_diff_users,0,1,1 assertion(s) failed.: tests/server_test.c:356: Payload length (8) was not the expected value (12)
 server_suite/login_two_conns_diff_users_send1,0,1,1 assertion(s) failed.: tests/server_test.c:74: Packet type (BOUNCE) was not the expected type (ACK)
-server_suite/login_two_conns_same,0,1,The test crashed.: None
+server_suite/login_two_conns_same,1,1,
 server_suite/ping,1,1,
 server_suite/valid_login,1,1,
 user_registry_suite/concurrency,1,1,
@@ -75,4 +75,4 @@ user_suite/create,1,1,
 user_suite/create_many,1,1,
 user_suite/create_modify_handle,0,1,1 assertion(s) failed.: tests/user_test.c:46: User name () does not match expected (Alice)
 user_suite/create_multiple,1,1,
-total,51,73
+total,52,73

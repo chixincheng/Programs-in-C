@@ -110,23 +110,21 @@ test_output/client_send_packet tests/rsrc/client_send_packet differ: byte 13, li
 [RUN ] protocol_suite::send_no_payload
 [PASS] protocol_suite::send_no_payload: (0.00s)
 [RUN ] protocol_suite::send_with_payload
-[PASS] protocol_suite::send_with_payload: (0.00s)
+[PASS] protocol_suite::send_with_payload: (0.01s)
 [====] Running 11 tests from server_suite:
 [RUN ] server_suite::login_again_same_user
 [PASS] server_suite::login_again_same_user: (0.00s)
 [RUN ] server_suite::login_logout
-[PASS] server_suite::login_logout: (0.00s)
+[PASS] server_suite::login_logout: (1.00s)
 [RUN ] server_suite::login_logout_login
 [PASS] server_suite::login_logout_login: (0.00s)
 [RUN ] server_suite::login_many_users
 [----] tests/server_test.c:469: Assertion failed: USERS output was incorrect: 
-[----]   u0u4u10u9u3u6u2u11u12u1u14u13u8u5u7
-[FAIL] server_suite::login_many_users: (0.05s)
+[----]   u0u1u4u7u2u13u14u12u11u3u6u5u10u8u9
+[FAIL] server_suite::login_many_users: (0.03s)
 [RUN ] server_suite::login_send_many_users
 [----] tests/server_test.c:74: Assertion failed: Packet type (BOUNCE) was not the expected type (ACK)
 [FAIL] server_suite::login_send_many_users: (0.01s)
-[ERR ] Could not write the "assert" message down the event pipe: Bad file descriptor.
-[----] Warning! The test `server_suite::login_send_many_users` crashed during its setup or teardown.
 [RUN ] server_suite::login_two_conns_diff
 [PASS] server_suite::login_two_conns_diff: (0.00s)
 [RUN ] server_suite::login_two_conns_diff_users
@@ -136,8 +134,7 @@ test_output/client_send_packet tests/rsrc/client_send_packet differ: byte 13, li
 [----] tests/server_test.c:74: Assertion failed: Packet type (BOUNCE) was not the expected type (ACK)
 [FAIL] server_suite::login_two_conns_diff_users_send1: (0.00s)
 [RUN ] server_suite::login_two_conns_same
-[----] tests/server_test.c:321: Unexpected signal caught below this line!
-[FAIL] server_suite::login_two_conns_same: CRASH!
+[PASS] server_suite::login_two_conns_same: (0.00s)
 [RUN ] server_suite::ping
 [PASS] server_suite::ping: (0.00s)
 [RUN ] server_suite::valid_login
@@ -165,7 +162,7 @@ test_output/client_send_packet tests/rsrc/client_send_packet differ: byte 13, li
 [PASS] user_registry_suite::unreg_empty_one_registry: (0.00s)
 [====] Running 5 tests from user_suite:
 [RUN ] user_suite::concurrent_ref
-[PASS] user_suite::concurrent_ref: (2.52s)
+[PASS] user_suite::concurrent_ref: (2.75s)
 [RUN ] user_suite::create
 [PASS] user_suite::create: (0.00s)
 [RUN ] user_suite::create_many
@@ -176,4 +173,4 @@ test_output/client_send_packet tests/rsrc/client_send_packet differ: byte 13, li
 [RUN ] user_suite::create_multiple
 [PASS] user_suite::create_multiple: (0.00s)
 [----] Writing xml report in `crit.xml`.
-[====] Synthesis: Tested: 73 | Passing: 51 | Failing: 22 | Crashing: 10 
+[====] Synthesis: Tested: 73 | Passing: 52 | Failing: 21 | Crashing: 9 
