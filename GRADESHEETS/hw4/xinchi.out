@@ -1,0 +1,854 @@
+[----] Criterion v2.3.3
+[====] Running 17 tests from basic_suite:
+[RUN ] basic_suite::conversion_cmd_error_test
+Running test basic_suite/conversion_cmd_error_test
+1620907719.703060: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+imp>1620907719.703954: Driver <~~ INIT (sent at 1620907719.703871)
+1620907719.703966: >>> conversion
+1620907719.703966: [expect CMD_ERROR]
+Undeclared type:(null)
+imp>1620907719.704083: Driver <~~ CMD_ERROR (sent at 1620907719.704042)
+1620907719.704095: >>> conversion aaa bbb
+1620907719.704095: [expect CMD_ERROR]
+Undeclared type:aaa
+imp>1620907719.704170: Driver <~~ CMD_ERROR (sent at 1620907719.704152)
+1620907719.704187: >>> conversion aaa bbb util/convert aaa bbb
+1620907719.704187: [expect CMD_ERROR]
+Undeclared type:aaa
+imp>1620907719.704303: Driver <~~ CMD_ERROR (sent at 1620907719.704286)
+1620907719.704307: >>> quit
+1620907719.704307: [expect FINI]
+1620907719.704394: Driver <~~ FINI (sent at 1620907719.704379)
+1620907719.704402: [expect (eof)]
+Short count reading event
+End of test basic_suite/conversion_cmd_error_test
+[PASS] basic_suite::conversion_cmd_error_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::conversion_cmd_ok_test
+Running test basic_suite/conversion_cmd_ok_test
+1620907719.752922: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907719.754156: Driver <~~ INIT (sent at 1620907719.754062)
+1620907719.754164: >>> type aaa
+imp>1620907719.754164: [expect TYPE_DEFINED]
+imp>1620907719.754258: Driver <~~ TYPE_DEFINED (sent at 1620907719.754229)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907719.754298: >>> type bbb
+1620907719.754298: [expect TYPE_DEFINED]
+1620907719.754323: Driver <~~ CMD_OK (sent at 1620907719.754240)
+imp>1620907719.754406: Driver <~~ TYPE_DEFINED (sent at 1620907719.754363)
+TRACKER: Defining type bbb
+TRACKER: Defined type bbb
+1620907719.754425: >>> conversion aaa bbb util/convert aaa bbb
+1620907719.754425: [expect CONV_DEFINED]
+1620907719.754446: Driver <~~ CMD_OK (sent at 1620907719.754375)
+imp>1620907719.754584: Driver <~~ CONV_DEFINED (sent at 1620907719.754562)
+1620907719.754594: >>> quit
+1620907719.754594: [expect FINI]
+1620907719.754741: Driver <~~ FINI (sent at 1620907719.754718)
+1620907719.754753: [expect (eof)]
+Short count reading event
+End of test basic_suite/conversion_cmd_ok_test
+[PASS] basic_suite::conversion_cmd_ok_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::disable_cmd_error_test
+Running test basic_suite/disable_cmd_error_test
+1620907719.808130: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907719.809085: Driver <~~ INIT (sent at 1620907719.809002)
+imp>1620907719.809092: >>> disable alice
+1620907719.809092: [expect CMD_ERROR]
+imp>1620907719.909394: Driver: timeout (0, 100000)
+Timeout reading event from child
+Aborting test basic_suite/disable_cmd_error_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] basic_suite::disable_cmd_error_test: (0.11s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::disable_cmd_ok_test
+Running test basic_suite/disable_cmd_ok_test
+1620907719.972514: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907719.973608: Driver <~~ INIT (sent at 1620907719.973522)
+1620907719.973617: >>> type aaa
+1620907719.973617: [expect TYPE_DEFINED]
+imp>imp>1620907719.973742: Driver <~~ TYPE_DEFINED (sent at 1620907719.973695)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907719.973773: >>> printer alice aaa
+1620907719.973773: [expect PRTR_DEFINED]
+1620907719.973795: Driver <~~ CMD_OK (sent at 1620907719.973704)
+Printer: id=0 name=alice type=aaa Status=disable
+imp>1620907719.973919: Driver <~~ PRTR_DEFINED (sent at 1620907719.973870)
+1620907719.973942: >>> enable alice
+1620907719.973942: [expect PRTR_STATUS]
+1620907719.973965: Driver <~~ CMD_OK (sent at 1620907719.973886)
+Printer: id=0 name=alice type=aaa Status=idle
+imp>1620907719.974075: Driver <~~ PRTR_STATUS (sent at 1620907719.974027)
+1620907719.974086: >>> disable alice
+1620907719.974086: [expect PRTR_STATUS]
+1620907719.974108: Driver <~~ CMD_OK (sent at 1620907719.974043)
+imp>1620907719.974261: Driver <~~ PRTR_STATUS (sent at 1620907719.974171)
+1620907719.974272: >>> quit
+1620907719.974272: [expect FINI]
+1620907719.974435: Driver <~~ FINI (sent at 1620907719.974386)
+1620907719.974449: [expect (eof)]
+Short count reading event
+End of test basic_suite/disable_cmd_ok_test
+[PASS] basic_suite::disable_cmd_ok_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::enable_cmd_error_test
+Running test basic_suite/enable_cmd_error_test
+1620907720.025683: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.026506: Driver <~~ INIT (sent at 1620907720.026435)
+1620907720.026514: >>> enable bob
+imp>1620907720.026514: [expect CMD_ERROR]
+Printer: id=0 name=(null) type=(null) Status=idle
+imp>1620907720.026605: Driver <~~ CMD_OK (sent at 1620907720.026566)
+Read event type CMD_OK, expected type CMD_ERROR
+Aborting test basic_suite/enable_cmd_error_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] basic_suite::enable_cmd_error_test: (0.00s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::enable_cmd_ok_test
+Running test basic_suite/enable_cmd_ok_test
+1620907720.076676: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.077520: Driver <~~ INIT (sent at 1620907720.077449)
+1620907720.077528: >>> type aaa
+imp>1620907720.077528: [expect TYPE_DEFINED]
+imp>1620907720.077619: Driver <~~ TYPE_DEFINED (sent at 1620907720.077575)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907720.077652: >>> printer alice aaa
+1620907720.077652: [expect PRTR_DEFINED]
+1620907720.077681: Driver <~~ CMD_OK (sent at 1620907720.077582)
+Printer: id=0 name=alice type=aaa Status=disable
+imp>1620907720.077777: Driver <~~ PRTR_DEFINED (sent at 1620907720.077728)
+1620907720.077799: >>> enable alice
+1620907720.077799: [expect PRTR_STATUS]
+1620907720.077818: Driver <~~ CMD_OK (sent at 1620907720.077743)
+Printer: id=0 name=alice type=aaa Status=idle
+imp>1620907720.077907: Driver <~~ PRTR_STATUS (sent at 1620907720.077859)
+1620907720.077919: >>> quit
+1620907720.077919: [expect FINI]
+1620907720.077934: Driver <~~ CMD_OK (sent at 1620907720.077868)
+1620907720.078011: Driver <~~ FINI (sent at 1620907720.077993)
+1620907720.078023: [expect (eof)]
+Short count reading event
+End of test basic_suite/enable_cmd_ok_test
+[PASS] basic_suite::enable_cmd_ok_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::help_cmd_test
+Running test basic_suite/help_cmd_test
+1620907720.136052: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.137155: Driver <~~ INIT (sent at 1620907720.137071)
+1620907720.137164: >>> help
+1620907720.137164: [expect CMD_OK]
+imp>The available commands are: 
+help, quit, type(file_type), printer(printer_name, file_type)
+conversion(file_type1,file_type2,conversion_program[arg1 arg2...]), printers
+jobs, print(file_name,[printer1,printer2,...]), cancel(job_number)
+pause(job_number), resume(job_number), disable(job_number), enable(job_number)
+imp>1620907720.137274: Driver <~~ CMD_OK (sent at 1620907720.137227)
+1620907720.137288: >>> quit
+1620907720.137288: [expect FINI]
+1620907720.137464: Driver <~~ FINI (sent at 1620907720.137415)
+1620907720.137477: [expect (eof)]
+Short count reading event
+End of test basic_suite/help_cmd_test
+[PASS] basic_suite::help_cmd_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::jobs_cmd_test
+Running test basic_suite/jobs_cmd_test
+1620907720.191693: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.192828: Driver <~~ INIT (sent at 1620907720.192799)
+1620907720.192838: >>> jobs
+1620907720.192838: [expect CMD_OK]
+imp>1620907720.193034: Driver <~~ CMD_OK (sent at 1620907720.193015)
+1620907720.193041: >>> quit
+1620907720.193041: [expect FINI]
+imp>1620907720.193142: Driver <~~ FINI (sent at 1620907720.193127)
+1620907720.193148: [expect (eof)]
+Short count reading event
+End of test basic_suite/jobs_cmd_test
+[PASS] basic_suite::jobs_cmd_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::print_cmd_error_test
+Running test basic_suite/print_cmd_error_test
+1620907720.247340: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+imp>1620907720.248483: Driver <~~ INIT (sent at 1620907720.248357)
+1620907720.248493: >>> print
+1620907720.248493: [expect CMD_ERROR]
+1620907720.348589: Driver: timeout (0, 100000)
+Timeout reading event from child
+Aborting test basic_suite/print_cmd_error_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] basic_suite::print_cmd_error_test: (0.11s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::print_cmd_ok_test
+Running test basic_suite/print_cmd_ok_test
+1620907720.393989: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.394811: Driver <~~ INIT (sent at 1620907720.394730)
+1620907720.394824: >>> type aaa
+imp>1620907720.394824: [expect TYPE_DEFINED]
+imp>1620907720.394930: Driver <~~ TYPE_DEFINED (sent at 1620907720.394886)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907720.394955: >>> print test_scripts/testfile.aaa
+1620907720.394955: [expect JOB_CREATED]
+1620907720.394984: Driver <~~ CMD_OK (sent at 1620907720.394893)
+imp>1620907720.395078: Driver <~~ JOB_CREATED (sent at 1620907720.395059)
+1620907720.395092: >>> quit
+1620907720.395092: [expect FINI]
+1620907720.395211: Driver <~~ FINI (sent at 1620907720.395163)
+1620907720.395224: [expect (eof)]
+Short count reading event
+End of test basic_suite/print_cmd_ok_test
+[PASS] basic_suite::print_cmd_ok_test: (0.00s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::printer_cmd_error_test
+Running test basic_suite/printer_cmd_error_test
+1620907720.438160: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.438989: Driver <~~ INIT (sent at 1620907720.438916)
+1620907720.438996: >>> printer Alice
+imp>1620907720.438996: [expect CMD_ERROR]
+Unknown file type :(null)
+imp>1620907720.439091: Driver <~~ CMD_ERROR (sent at 1620907720.439052)
+1620907720.439106: >>> printer Alice pdf
+1620907720.439106: [expect CMD_ERROR]
+Unknown file type :pdf
+imp>1620907720.439168: Driver <~~ CMD_ERROR (sent at 1620907720.439153)
+1620907720.439176: >>> quit
+1620907720.439176: [expect FINI]
+1620907720.439265: Driver <~~ FINI (sent at 1620907720.439246)
+1620907720.439274: [expect (eof)]
+Short count reading event
+End of test basic_suite/printer_cmd_error_test
+[PASS] basic_suite::printer_cmd_error_test: (0.00s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::printer_cmd_ok_test
+Running test basic_suite/printer_cmd_ok_test
+1620907720.482216: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.483045: Driver <~~ INIT (sent at 1620907720.482973)
+1620907720.483052: >>> type pdf
+imp>1620907720.483052: [expect TYPE_DEFINED]
+imp>1620907720.483117: Driver <~~ TYPE_DEFINED (sent at 1620907720.483102)
+TRACKER: Defining type pdf
+TRACKER: Defined type pdf
+1620907720.483146: >>> printer Alice pdf
+1620907720.483146: [expect PRTR_DEFINED]
+1620907720.483167: Driver <~~ CMD_OK (sent at 1620907720.483110)
+Printer: id=0 name=Alice type=pdf Status=disable
+imp>1620907720.483234: Driver <~~ PRTR_DEFINED (sent at 1620907720.483216)
+1620907720.483250: >>> quit
+1620907720.483250: [expect FINI]
+1620907720.483267: Driver <~~ CMD_OK (sent at 1620907720.483232)
+1620907720.483324: Driver <~~ FINI (sent at 1620907720.483310)
+1620907720.483333: [expect (eof)]
+Short count reading event
+End of test basic_suite/printer_cmd_ok_test
+[PASS] basic_suite::printer_cmd_ok_test: (0.00s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::printers_cmd_test
+Running test basic_suite/printers_cmd_test
+1620907720.526145: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.526981: Driver <~~ INIT (sent at 1620907720.526909)
+1620907720.526988: >>> printers
+imp>1620907720.526988: [expect CMD_OK]
+imp>1620907720.527078: Driver <~~ CMD_OK (sent at 1620907720.527030)
+1620907720.527092: >>> quit
+1620907720.527092: [expect FINI]
+1620907720.527169: Driver <~~ FINI (sent at 1620907720.527153)
+1620907720.527173: [expect (eof)]
+Short count reading event
+End of test basic_suite/printers_cmd_test
+[PASS] basic_suite::printers_cmd_test: (0.00s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::quit_cmd_test
+Running test basic_suite/quit_cmd_test
+1620907720.569974: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.570794: Driver <~~ INIT (sent at 1620907720.570721)
+1620907720.570801: >>> quit
+imp>1620907720.570801: [expect FINI]
+1620907720.570913: Driver <~~ FINI (sent at 1620907720.570875)
+1620907720.570921: [expect (eof)]
+Short count reading event
+End of test basic_suite/quit_cmd_test
+[PASS] basic_suite::quit_cmd_test: (0.00s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::type_cmd_error_test
+Running test basic_suite/type_cmd_error_test
+1620907720.614170: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.615012: Driver <~~ INIT (sent at 1620907720.614940)
+1620907720.615018: >>> type
+imp>1620907720.615018: [expect CMD_ERROR]
+1620907720.715138: Driver: timeout (0, 100000)
+Timeout reading event from child
+Aborting test basic_suite/type_cmd_error_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] basic_suite::type_cmd_error_test: (0.11s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::type_cmd_ok_test
+Running test basic_suite/type_cmd_ok_test
+1620907720.762492: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.763328: Driver <~~ INIT (sent at 1620907720.763256)
+1620907720.763335: >>> type pdf
+imp>1620907720.763335: [expect TYPE_DEFINED]
+1620907720.763403: Driver <~~ TYPE_DEFINED (sent at 1620907720.763383)
+TRACKER: Defining type pdf
+TRACKER: Defined type pdf
+1620907720.763422: >>> quit
+1620907720.763422: [expect FINI]
+1620907720.763447: Driver <~~ CMD_OK (sent at 1620907720.763436)
+imp>1620907720.763551: Driver <~~ FINI (sent at 1620907720.763513)
+1620907720.763563: [expect (eof)]
+Short count reading event
+End of test basic_suite/type_cmd_ok_test
+[PASS] basic_suite::type_cmd_ok_test: (0.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] basic_suite::unknown_cmd_test
+Running test basic_suite/unknown_cmd_test
+1620907720.809594: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.810611: Driver <~~ INIT (sent at 1620907720.810588)
+1620907720.810619: >>> unknown
+1620907720.810619: [expect CMD_ERROR]
+imp>imp>1620907720.910724: Driver: timeout (0, 100000)
+Timeout reading event from child
+Aborting test basic_suite/unknown_cmd_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] basic_suite::unknown_cmd_test: (0.11s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[====] Running 2 tests from conversion_suite:
+[RUN ] conversion_suite::multiple_conversion
+Running test conversion_suite/multiple_conversion
+1620907720.958046: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907720.958874: Driver <~~ INIT (sent at 1620907720.958797)
+1620907720.958887: >>> type aaa
+imp>1620907720.958887: [expect TYPE_DEFINED]
+imp>1620907720.958977: Driver <~~ TYPE_DEFINED (sent at 1620907720.958931)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907720.959016: >>> type bbb
+1620907720.959016: [expect TYPE_DEFINED]
+1620907720.959043: Driver <~~ CMD_OK (sent at 1620907720.958937)
+imp>1620907720.959097: Driver <~~ TYPE_DEFINED (sent at 1620907720.959078)
+TRACKER: Defining type bbb
+TRACKER: Defined type bbb
+1620907720.959106: >>> type ccc
+1620907720.959106: [expect TYPE_DEFINED]
+1620907720.959120: Driver <~~ CMD_OK (sent at 1620907720.959088)
+imp>1620907720.959202: Driver <~~ TYPE_DEFINED (sent at 1620907720.959183)
+TRACKER: Defining type ccc
+TRACKER: Defined type ccc
+1620907720.959208: >>> type pdf
+1620907720.959208: [expect TYPE_DEFINED]
+1620907720.959223: Driver <~~ CMD_OK (sent at 1620907720.959194)
+imp>1620907720.959258: Driver <~~ TYPE_DEFINED (sent at 1620907720.959244)
+TRACKER: Defining type pdf
+TRACKER: Defined type pdf
+1620907720.959265: >>> type txt
+1620907720.959265: [expect TYPE_DEFINED]
+1620907720.959277: Driver <~~ CMD_OK (sent at 1620907720.959251)
+imp>1620907720.959355: Driver <~~ TYPE_DEFINED (sent at 1620907720.959337)
+TRACKER: Defining type txt
+TRACKER: Defined type txt
+1620907720.959361: >>> conversion aaa bbb util/convert aaa bbb
+1620907720.959361: [expect CONV_DEFINED]
+1620907720.959374: Driver <~~ CMD_OK (sent at 1620907720.959348)
+imp>1620907720.959464: Driver <~~ CONV_DEFINED (sent at 1620907720.959450)
+1620907720.959468: >>> conversion bbb ccc util/convert bbb ccc
+1620907720.959468: [expect CONV_DEFINED]
+imp>1620907720.959568: Driver <~~ CONV_DEFINED (sent at 1620907720.959553)
+1620907720.959572: >>> conversion ccc pdf util/convert ccc pdf
+1620907720.959572: [expect CONV_DEFINED]
+imp>1620907720.959695: Driver <~~ CONV_DEFINED (sent at 1620907720.959657)
+1620907720.959703: >>> conversion pdf txt util/convert pdf txt
+1620907720.959703: [expect CONV_DEFINED]
+1620907720.959811: Driver <~~ CONV_DEFINED (sent at 1620907720.959797)
+1620907720.959817: >>> printer Check txt
+1620907720.959817: [expect PRTR_DEFINED]
+imp>1620907720.959878: Driver <~~ PRTR_DEFINED (sent at 1620907720.959867)
+1620907720.959890: >>> enable Check
+1620907720.959890: [expect PRTR_STATUS]
+1620907720.959920: Driver <~~ CMD_OK (sent at 1620907720.959910)
+Printer: id=0 name=Check type=txt Status=disable
+imp>1620907720.959968: Driver <~~ PRTR_STATUS (sent at 1620907720.959959)
+1620907720.959977: >>> print test_scripts/testfile1.aaa
+1620907720.959977: [expect JOB_FINISHED]
+1620907720.959999: Driver <~~ CMD_OK (sent at 1620907720.959990)
+Printer: id=0 name=Check type=txt Status=idle
+imp>1620907720.960080: Driver <~~ JOB_CREATED (sent at 1620907720.960071)
+[FAIL] conversion_suite::multiple_conversion: Timed out. (20.00s)
+[RUN ] conversion_suite::one_conversion
+Running test conversion_suite/one_conversion
+1620907740.962583: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907740.963423: Driver <~~ INIT (sent at 1620907740.963349)
+1620907740.963430: >>> type aaa
+imp>1620907740.963430: [expect TYPE_DEFINED]
+imp>1620907740.963526: Driver <~~ TYPE_DEFINED (sent at 1620907740.963482)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907740.963553: >>> type bbb
+1620907740.963553: [expect TYPE_DEFINED]
+1620907740.963568: Driver <~~ CMD_OK (sent at 1620907740.963488)
+imp>1620907740.963662: Driver <~~ TYPE_DEFINED (sent at 1620907740.963622)
+TRACKER: Defining type bbb
+TRACKER: Defined type bbb
+1620907740.963671: >>> printer Bob bbb
+1620907740.963671: [expect PRTR_DEFINED]
+1620907740.963685: Driver <~~ CMD_OK (sent at 1620907740.963631)
+Printer: id=0 name=Bob type=bbb Status=disable
+imp>1620907740.963778: Driver <~~ PRTR_DEFINED (sent at 1620907740.963739)
+1620907740.963795: >>> conversion aaa bbb util/convert aaa bbb
+1620907740.963795: [expect CONV_DEFINED]
+1620907740.963812: Driver <~~ CMD_OK (sent at 1620907740.963750)
+imp>1620907740.963952: Driver <~~ CONV_DEFINED (sent at 1620907740.963911)
+1620907740.963959: >>> enable Bob
+1620907740.963959: [expect CMD_OK]
+Printer: id=0 name=Bob type=bbb Status=idle
+imp>1620907740.964040: Driver <~~ PRTR_STATUS (sent at 1620907740.963996)
+1620907740.964055: Driver <~~ CMD_OK (sent at 1620907740.964004)
+1620907740.964059: >>> print test_scripts/testfile.aaa
+1620907740.964059: [expect JOB_FINISHED]
+1620907740.964146: Driver <~~ JOB_CREATED (sent at 1620907740.964131)
+1620907742.964214: Driver: timeout (2, 0)
+Timeout reading event from child
+Aborting test conversion_suite/one_conversion
+[----] tests/__helper.c:287: Assertion failed: Should be exactly one spool output file got 0
+[FAIL] conversion_suite::one_conversion: (12.01s)
+Test Teardown
+util/printer: no process found
+util/convert: no process found
+HELPER: Waiting for printer to spool output to file
+HELPER: Running valid conversion pipeline test
+[====] Running 4 tests from jobs_suite:
+[RUN ] jobs_suite::cancel_job_test
+Running test jobs_suite/cancel_job_test
+1620907753.012121: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907753.013150: Driver <~~ INIT (sent at 1620907753.013060)
+1620907753.013160: >>> type aaa
+imp>1620907753.013160: [expect TYPE_DEFINED]
+imp>1620907753.013278: Driver <~~ TYPE_DEFINED (sent at 1620907753.013219)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907753.013320: >>> print test_scripts/testfile.aaa
+1620907753.013320: [expect JOB_CREATED]
+1620907753.013342: Driver <~~ CMD_OK (sent at 1620907753.013228)
+imp>1620907753.013486: Driver <~~ JOB_CREATED (sent at 1620907753.013440)
+1620907753.013510: >>> cancel 0
+1620907753.013510: [expect JOB_ABORTED]
+imp>1620907753.113820: Driver: timeout (0, 100000)
+Timeout reading event from child
+Aborting test jobs_suite/cancel_job_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] jobs_suite::cancel_job_test: (0.11s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] jobs_suite::delete_job
+Running test jobs_suite/delete_job
+1620907753.174099: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907753.175056: Driver <~~ INIT (sent at 1620907753.174969)
+1620907753.175064: >>> type aaa
+imp>1620907753.175064: [expect TYPE_DEFINED]
+imp>1620907753.175171: Driver <~~ TYPE_DEFINED (sent at 1620907753.175116)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907753.175211: >>> printer Alice aaa
+1620907753.175211: [expect PRTR_DEFINED]
+1620907753.175231: Driver <~~ CMD_OK (sent at 1620907753.175124)
+Printer: id=0 name=Alice type=aaa Status=disable
+imp>1620907753.175331: Driver <~~ PRTR_DEFINED (sent at 1620907753.175288)
+1620907753.175357: >>> enable Alice
+1620907753.175357: [expect CMD_OK]
+1620907753.175378: Driver <~~ CMD_OK (sent at 1620907753.175307)
+1620907753.175381: >>> print test_scripts/testfile.aaa
+1620907753.175381: [expect JOB_FINISHED]
+Printer: id=0 name=Alice type=aaa Status=idle
+imp>1620907753.175472: Driver <~~ PRTR_STATUS (sent at 1620907753.175429)
+1620907753.175488: Driver <~~ CMD_OK (sent at 1620907753.175441)
+1620907753.175567: Driver <~~ JOB_CREATED (sent at 1620907753.175521)
+1620907755.175652: Driver: timeout (2, 0)
+Timeout reading event from child
+Aborting test jobs_suite/delete_job
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] jobs_suite::delete_job: (2.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] jobs_suite::multi_pause_multi_resume
+Running test jobs_suite/multi_pause_multi_resume
+1620907755.231407: [expect INIT]
+Waiting for connection...
+imp>Connected to child: fd = 10
+1620907755.232509: Driver <~~ INIT (sent at 1620907755.232268)
+1620907755.232517: >>> type aaa
+1620907755.232517: [expect TYPE_DEFINED]
+imp>1620907755.232647: Driver <~~ TYPE_DEFINED (sent at 1620907755.232602)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907755.232677: >>> type bbb
+1620907755.232677: [expect TYPE_DEFINED]
+1620907755.232695: Driver <~~ CMD_OK (sent at 1620907755.232613)
+imp>1620907755.232780: Driver <~~ TYPE_DEFINED (sent at 1620907755.232730)
+TRACKER: Defining type bbb
+TRACKER: Defined type bbb
+1620907755.232797: >>> printer pA aaa
+1620907755.232797: [expect PRTR_DEFINED]
+1620907755.232815: Driver <~~ CMD_OK (sent at 1620907755.232739)
+Printer: id=0 name=pA type=aaa Status=disable
+imp>1620907755.232913: Driver <~~ PRTR_DEFINED (sent at 1620907755.232864)
+1620907755.232938: >>> printer pB bbb
+1620907755.232938: [expect PRTR_DEFINED]
+1620907755.232958: Driver <~~ CMD_OK (sent at 1620907755.232876)
+Printer: id=1 name=pB type=bbb Status=disable
+imp>1620907755.233049: Driver <~~ PRTR_DEFINED (sent at 1620907755.233006)
+1620907755.233067: >>> printer pB2 bbb
+1620907755.233067: [expect PRTR_DEFINED]
+1620907755.233091: Driver <~~ CMD_OK (sent at 1620907755.233018)
+Printer: id=2 name=pB2 type=bbb Status=disable
+imp>1620907755.233172: Driver <~~ PRTR_DEFINED (sent at 1620907755.233118)
+1620907755.233192: >>> enable pA
+1620907755.233192: [expect PRTR_STATUS]
+1620907755.233220: Driver <~~ CMD_OK (sent at 1620907755.233126)
+Printer: id=0 name=pA type=aaa Status=idle
+imp>1620907755.233291: Driver <~~ PRTR_STATUS (sent at 1620907755.233271)
+1620907755.233298: >>> enable pB
+1620907755.233298: [expect PRTR_STATUS]
+1620907755.233321: Driver <~~ CMD_OK (sent at 1620907755.233286)
+Printer: id=1 name=pB type=bbb Status=idle
+imp>1620907755.233374: Driver <~~ PRTR_STATUS (sent at 1620907755.233356)
+1620907755.233380: >>> enable pB2
+1620907755.233380: [expect PRTR_STATUS]
+1620907755.233403: Driver <~~ CMD_OK (sent at 1620907755.233367)
+Printer: id=2 name=pB2 type=bbb Status=idle
+imp>1620907755.233464: Driver <~~ PRTR_STATUS (sent at 1620907755.233446)
+1620907755.233470: >>> print test_scripts/testfileBIG.aaa
+1620907755.233470: [expect JOB_CREATED]
+1620907755.233491: Driver <~~ CMD_OK (sent at 1620907755.233458)
+1620907755.233603: Driver <~~ JOB_CREATED (sent at 1620907755.233585)
+1620907755.233621: >>> pause 0
+1620907755.233621: [expect JOB_STATUS]
+[FAIL] jobs_suite::multi_pause_multi_resume: Timed out. (20.00s)
+[RUN ] jobs_suite::pause_resume_job
+Running test jobs_suite/pause_resume_job
+1620907775.235782: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907775.236727: Driver <~~ INIT (sent at 1620907775.236649)
+1620907775.236735: >>> type aaa
+imp>1620907775.236735: [expect TYPE_DEFINED]
+imp>1620907775.236831: Driver <~~ TYPE_DEFINED (sent at 1620907775.236780)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907775.236856: >>> printer delay_printer aaa
+1620907775.236856: [expect PRTR_DEFINED]
+1620907775.236872: Driver <~~ CMD_OK (sent at 1620907775.236786)
+Printer: id=0 name=delay_printer type=aaa Status=disable
+imp>1620907775.236957: Driver <~~ PRTR_DEFINED (sent at 1620907775.236937)
+1620907775.236976: >>> print test_scripts/testfileBIG.aaa
+1620907775.236976: [expect JOB_CREATED]
+1620907775.236997: Driver <~~ CMD_OK (sent at 1620907775.236955)
+imp>1620907775.237116: Driver <~~ JOB_CREATED (sent at 1620907775.237078)
+1620907775.237137: >>> enable delay_printer
+1620907775.237137: [expect JOB_STARTED]
+1620907775.237225: Driver <~~ PRTR_STATUS (sent at 1620907775.237207)
+1620907775.237422: Driver <~~ JOB_STATUS (sent at 1620907775.237379)
+1620907775.237443: Driver <~~ PRTR_STATUS (sent at 1620907775.237396)
+1620907775.237587: Driver <~~ JOB_STARTED (sent at 1620907775.237562)
+1620907775.237598: >>> pause 0
+1620907775.237598: [expect JOB_STATUS]
+1620907780.241946: Driver <~~ PRTR_STATUS (sent at 1620907780.241913)
+imp>imp>1620907780.604252: Driver <~~ PRTR_STATUS (sent at 1620907780.604204)
+Short count reading event
+Aborting test jobs_suite/pause_resume_job
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] jobs_suite::pause_resume_job: (5.73s)
+Test Teardown
+Stopping printer delay_printer (pid 749464)
+util/printer: no process found
+util/convert: no process found
+[====] Running 5 tests from printer_suite:
+[RUN ] printer_suite::create_job_before_printer_test
+Running test printer_suite/create_job_before_printer_test
+1620907781.021067: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907781.022074: Driver <~~ INIT (sent at 1620907781.021973)
+imp>1620907781.022084: >>> type aaa
+1620907781.022084: [expect TYPE_DEFINED]
+imp>1620907781.022215: Driver <~~ TYPE_DEFINED (sent at 1620907781.022156)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907781.022257: >>> print test_scripts/testfile.aaa
+1620907781.022257: [expect JOB_CREATED]
+1620907781.022283: Driver <~~ CMD_OK (sent at 1620907781.022165)
+imp>1620907781.022422: Driver <~~ JOB_CREATED (sent at 1620907781.022376)
+1620907781.022446: >>> printer p1 aaa
+1620907781.022446: [expect PRTR_DEFINED]
+Printer: id=0 name=p1 type=aaa Status=disable
+imp>1620907781.022555: Driver <~~ PRTR_DEFINED (sent at 1620907781.022510)
+1620907781.022581: >>> enable p1
+1620907781.022581: [expect JOB_FINISHED]
+1620907781.022603: Driver <~~ CMD_OK (sent at 1620907781.022522)
+1620907781.022689: Driver <~~ PRTR_STATUS (sent at 1620907781.022644)
+1620907781.022938: Driver <~~ JOB_STATUS (sent at 1620907781.022879)
+1620907781.022966: Driver <~~ PRTR_STATUS (sent at 1620907781.022906)
+1620907781.023119: Driver <~~ JOB_STARTED (sent at 1620907781.023088)
+imp>1620907782.028884: Driver <~~ PRTR_STATUS (sent at 1620907782.028777)
+imp>1620907782.387485: Driver <~~ PRTR_STATUS (sent at 1620907782.387404)
+Short count reading event
+Aborting test printer_suite/create_job_before_printer_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] printer_suite::create_job_before_printer_test: (1.73s)
+Test Teardown
+Stopping printer p1 (pid 749496)
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] printer_suite::enable_printer_after_job_created_test
+Running test printer_suite/enable_printer_after_job_created_test
+1620907782.797261: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907782.798348: Driver <~~ INIT (sent at 1620907782.798255)
+1620907782.798357: >>> type aaa
+imp>1620907782.798357: [expect TYPE_DEFINED]
+imp>1620907782.798477: Driver <~~ TYPE_DEFINED (sent at 1620907782.798427)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907782.798529: >>> printer p1 aaa
+1620907782.798529: [expect PRTR_DEFINED]
+1620907782.798552: Driver <~~ CMD_OK (sent at 1620907782.798436)
+Printer: id=0 name=p1 type=aaa Status=disable
+imp>1620907782.798664: Driver <~~ PRTR_DEFINED (sent at 1620907782.798611)
+1620907782.798694: >>> print test_scripts/testfile.aaa
+1620907782.798694: [expect JOB_CREATED]
+1620907782.798720: Driver <~~ CMD_OK (sent at 1620907782.798633)
+imp>1620907782.798878: Driver <~~ JOB_CREATED (sent at 1620907782.798825)
+1620907782.798903: >>> enable p1
+1620907782.798903: [expect JOB_FINISHED]
+1620907782.799013: Driver <~~ PRTR_STATUS (sent at 1620907782.798965)
+1620907782.799264: Driver <~~ JOB_STATUS (sent at 1620907782.799207)
+1620907782.799295: Driver <~~ PRTR_STATUS (sent at 1620907782.799237)
+1620907782.799459: Driver <~~ JOB_STARTED (sent at 1620907782.799424)
+imp>1620907783.805405: Driver <~~ PRTR_STATUS (sent at 1620907783.805303)
+imp>1620907784.165000: Driver <~~ PRTR_STATUS (sent at 1620907784.164914)
+Short count reading event
+Aborting test printer_suite/enable_printer_after_job_created_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] printer_suite::enable_printer_after_job_created_test: (1.73s)
+Test Teardown
+Stopping printer p1 (pid 749523)
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] printer_suite::multiple_jobs_different_printers_test
+Running test printer_suite/multiple_jobs_different_printers_test
+1620907784.577016: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907784.578052: Driver <~~ INIT (sent at 1620907784.577998)
+1620907784.578061: >>> type aaa
+1620907784.578061: [expect TYPE_DEFINED]
+imp>1620907784.578201: Driver <~~ TYPE_DEFINED (sent at 1620907784.578176)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907784.578231: >>> printer p1 aaa
+1620907784.578231: [expect PRTR_DEFINED]
+1620907784.578265: Driver <~~ CMD_OK (sent at 1620907784.578250)
+imp>Printer: id=0 name=p1 type=aaa Status=disable
+imp>1620907784.578356: Driver <~~ PRTR_DEFINED (sent at 1620907784.578329)
+1620907784.578389: >>> printer p2 aaa
+1620907784.578389: [expect PRTR_DEFINED]
+1620907784.578422: Driver <~~ CMD_OK (sent at 1620907784.578348)
+Printer: id=1 name=p2 type=aaa Status=disable
+imp>1620907784.578516: Driver <~~ PRTR_DEFINED (sent at 1620907784.578484)
+1620907784.578536: >>> print test_scripts/testfile.aaa p1
+1620907784.578536: [expect JOB_CREATED]
+1620907784.578564: Driver <~~ CMD_OK (sent at 1620907784.578500)
+imp>1620907784.578703: Driver <~~ JOB_CREATED (sent at 1620907784.578681)
+1620907784.578717: >>> print test_scripts/testfile.aaa p2
+1620907784.578717: [expect JOB_CREATED]
+imp>1620907784.578888: Driver <~~ JOB_CREATED (sent at 1620907784.578842)
+1620907784.578908: >>> enable p1
+1620907784.578908: [expect JOB_FINISHED]
+1620907784.578997: Driver <~~ PRTR_STATUS (sent at 1620907784.578975)
+1620907794.579082: Driver: timeout (10, 0)
+Timeout reading event from child
+Aborting test printer_suite/multiple_jobs_different_printers_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] printer_suite::multiple_jobs_different_printers_test: (10.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] printer_suite::multiple_jobs_single_printer_test
+Running test printer_suite/multiple_jobs_single_printer_test
+1620907794.630582: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907794.631653: Driver <~~ INIT (sent at 1620907794.631559)
+1620907794.631663: >>> type aaa
+imp>1620907794.631663: [expect TYPE_DEFINED]
+imp>1620907794.631787: Driver <~~ TYPE_DEFINED (sent at 1620907794.631731)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907794.631835: >>> print test_scripts/testfile.aaa
+1620907794.631835: [expect JOB_CREATED]
+1620907794.631860: Driver <~~ CMD_OK (sent at 1620907794.631740)
+imp>1620907794.632019: Driver <~~ JOB_CREATED (sent at 1620907794.631972)
+1620907794.632046: >>> print test_scripts/testfile.aaa
+1620907794.632046: [expect JOB_CREATED]
+imp>1620907794.632209: Driver <~~ JOB_CREATED (sent at 1620907794.632161)
+1620907794.632228: >>> printer p1 aaa
+1620907794.632228: [expect PRTR_DEFINED]
+Printer: id=0 name=p1 type=aaa Status=disable
+imp>1620907794.632334: Driver <~~ PRTR_DEFINED (sent at 1620907794.632311)
+1620907794.632352: >>> enable p1
+1620907794.632352: [expect JOB_FINISHED]
+1620907794.632403: Driver <~~ CMD_OK (sent at 1620907794.632326)
+1620907794.632592: Driver <~~ PRTR_STATUS (sent at 1620907794.632535)
+1620907804.632705: Driver: timeout (10, 0)
+Timeout reading event from child
+Aborting test printer_suite/multiple_jobs_single_printer_test
+[----] tests/__helper.c:211: Assertion failed: The test driver returned an error (-1)
+[FAIL] printer_suite::multiple_jobs_single_printer_test: (10.01s)
+Test Teardown
+bin/imprimer: no process found
+util/printer: no process found
+util/convert: no process found
+[RUN ] printer_suite::print_first_available
+Running test printer_suite/print_first_available
+1620907804.690026: [expect INIT]
+Waiting for connection...
+Connected to child: fd = 10
+1620907804.691025: Driver <~~ INIT (sent at 1620907804.690919)
+imp>1620907804.691046: >>> type aaa
+1620907804.691046: [expect TYPE_DEFINED]
+imp>1620907804.691169: Driver <~~ TYPE_DEFINED (sent at 1620907804.691125)
+TRACKER: Defining type aaa
+TRACKER: Defined type aaa
+1620907804.691219: >>> print test_scripts/testfile.aaa
+1620907804.691219: [expect JOB_CREATED]
+1620907804.691244: Driver <~~ CMD_OK (sent at 1620907804.691134)
+imp>1620907804.691364: Driver <~~ JOB_CREATED (sent at 1620907804.691341)
+1620907804.691386: >>> print test_scripts/testfile.aaa
+1620907804.691386: [expect JOB_CREATED]
+imp>1620907804.691537: Driver <~~ JOB_CREATED (sent at 1620907804.691515)
+1620907804.691543: >>> print test_scripts/testfile.aaa
+1620907804.691543: [expect JOB_CREATED]
+imp>1620907804.691669: Driver <~~ JOB_CREATED (sent at 1620907804.691627)
+1620907804.691684: >>> printer Alice1 aaa
+1620907804.691684: [expect PRTR_DEFINED]
+Printer: id=0 name=Alice1 type=aaa Status=disable
+imp>1620907804.691802: Driver <~~ PRTR_DEFINED (sent at 1620907804.691758)
+1620907804.691830: >>> printer Alice2 aaa
+1620907804.691830: [expect PRTR_DEFINED]
+1620907804.691860: Driver <~~ CMD_OK (sent at 1620907804.691770)
+Printer: id=1 name=Alice2 type=aaa Status=disable
+imp>1620907804.691948: Driver <~~ PRTR_DEFINED (sent at 1620907804.691926)
+1620907804.691955: >>> printer Alice3 aaa
+1620907804.691955: [expect PRTR_DEFINED]
+1620907804.691975: Driver <~~ CMD_OK (sent at 1620907804.691941)
+Printer: id=2 name=Alice3 type=aaa Status=disable
+imp>1620907804.692026: Driver <~~ PRTR_DEFINED (sent at 1620907804.692010)
+1620907804.692039: >>> enable Alice2
+1620907804.692039: [expect JOB_FINISHED]
+1620907804.692066: Driver <~~ CMD_OK (sent at 1620907804.692020)
+1620907804.692139: Driver <~~ PRTR_STATUS (sent at 1620907804.692120)
+[FAIL] printer_suite::print_first_available: Timed out. (10.00s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 28 | Passing: 12 | Failing: 16 | Crashing: 0 

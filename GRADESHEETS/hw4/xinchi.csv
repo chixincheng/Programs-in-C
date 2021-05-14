@@ -1,0 +1,32 @@
+Graded Commit:db695395e58155478ed3ed6f344dc7c34faafd24
+
+TEST NAME, POINTS,OUT OF
+basic_suite/conversion_cmd_error_test,1,1,
+basic_suite/conversion_cmd_ok_test,1,1,
+basic_suite/disable_cmd_error_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+basic_suite/disable_cmd_ok_test,1,1,
+basic_suite/enable_cmd_error_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+basic_suite/enable_cmd_ok_test,1,1,
+basic_suite/help_cmd_test,1,1,
+basic_suite/jobs_cmd_test,1,1,
+basic_suite/print_cmd_error_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+basic_suite/print_cmd_ok_test,1,1,
+basic_suite/printer_cmd_error_test,1,1,
+basic_suite/printer_cmd_ok_test,1,1,
+basic_suite/printers_cmd_test,1,1,
+basic_suite/quit_cmd_test,1,1,
+basic_suite/type_cmd_error_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+basic_suite/type_cmd_ok_test,1,1,
+basic_suite/unknown_cmd_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+conversion_suite/multiple_conversion,0,1,The test timed out.: None
+conversion_suite/one_conversion,0,1,1 assertion(s) failed.: tests/__helper.c:287: Should be exactly one spool output file got 0
+jobs_suite/cancel_job_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+jobs_suite/delete_job,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+jobs_suite/multi_pause_multi_resume,0,1,The test timed out.: None
+jobs_suite/pause_resume_job,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+printer_suite/create_job_before_printer_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+printer_suite/enable_printer_after_job_created_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+printer_suite/multiple_jobs_different_printers_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+printer_suite/multiple_jobs_single_printer_test,0,1,1 assertion(s) failed.: tests/__helper.c:211: The test driver returned an error (-1)
+printer_suite/print_first_available,0,1,The test timed out.: None
+total,12,28
